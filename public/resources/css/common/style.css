@@ -1,0 +1,12 @@
+.board_empty {padding: 60px 0; text-align: center; font-size: 0.9rem; line-height: 1.3rem; color: #999;}
+
+.page {display: flex; justify-content: center; margin: 30px 0 0 0;}
+.paging ul {display: flex; align-items: center; gap: 6px;}
+.paging li {display: flex;}
+.paging li a,
+.paging li span {display: flex; justify-content: center; align-items: center; min-width: 32px; height: 32px; padding: 0 6px; border-radius: 4px; background: #EBEFF2; font-size: 0.8rem; line-height: 1.2rem; color: #212121;}
+.paging li a {cursor: pointer;}
+.paging li a:hover {background: #E0E0E0;}
+.paging li.on span {background: #212121; color: #fff; font-weight: 700;}
+.paging li.paging_nav a {background: transparent; color: #666; font-weight: 600;}
+.paging li.paging_nav a:hover {background: transparent; text-decoration: underline;}
