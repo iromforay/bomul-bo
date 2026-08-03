@@ -47,6 +47,10 @@ abstract class BaseController extends Controller
     private $debug=0;
     protected $session_id;
     private $log;
+    protected $body;
+    protected $sub_body;
+    protected $title;
+    protected $description;
     public function __construct()
     {
         header('Access-Control-Allow-Origin: *' );
@@ -145,18 +149,16 @@ abstract class BaseController extends Controller
 
     }
 
-    /**
-     * @param $layout
-     */
-
-    /**
-     * Be sure to declare properties for any property fetch you initialized.
-     * The creation of dynamic property is deprecated in PHP 8.2.
-     */
-    /*
-    public function view(string $name, array $data = [],array $options = [])
+    // Admin은 layout이 admin_default 하나뿐이라 layout 인자를 따로 받지 않는다 -
+    // (layout, name, data) 3인자 시그니처였을 때 컨트롤러가 2인자로 호출하며 타입 불일치가 반복됐음.
+    public function view(string $name = "", array $data = [], array $options = [])
     {
-     //   $data['FRESH_TIME'] = isset($data['FRESH_TIME'])? DATE('YmdHis') : FRESH_TIME;
+        $data['common']= $this->body??array(""); // 공통 변수값 입력.
+        $data['sub']= $this->sub_body??""; // 전용 변수값 입력.
+        $data['common']['title']= $this->title??""; //헤더영역내 title
+        $data['common']['description']= $this->description??""; //meta description / og:description
+
+        $data['FRESH_TIME'] = isset($data['FRESH_TIME'])? DATE('YmdHis') : FRESH_TIME;
 
         $temp_layout = array(
             'header_menu' =>view("common/admin_menu",$data),
@@ -164,27 +166,8 @@ abstract class BaseController extends Controller
             'content' => view($name, $data,$options),
             'footer'=>view("common/admin_footer",$data)
         );
-        if(ENVIRONMENT =="development"){
-            $temp_layout['develop'] = view("common/develop");
-        }else{
-            $temp_layout['develop'] = "";
-        }
-        echo view(
-            "layout/admin_default", $temp_layout,$options
-        );
+        echo  view("layout/admin_default",$temp_layout,$options);
 
-    }
-    */
-    public function view( array $data = [])
-    {
-        if($this->debug){
-            echo "<pre>";
-            print_r($data);
-            echo "</pre>";
-            exit;
-        }
-        echo AT_Result::toJson($data);
-        exit;
     }
     // protected $session;
 

@@ -1,62 +1,50 @@
-<div id="header">
-    <div class="sections section_00">
-        <div class="width_con no_pad">
-            <div class="row row1">
-                <div class="logo">
-                    <a href="<?php echo Admin_SITE; ?>"><img src="<?php echo RS_IMG; ?>/common/logo.png" /></a>
-                </div>
-                <div class="extra_con">
-                    <ul class="login_menu">
-                        <?php if(0){ ?>
-
-                            <li>
-                                <a href=" <?php echo Admin_SITE; ?>/Mypage">
-                                    <span>내정보</span>
-                                </a>
-                                <span class="news"><i class="fa-solid fa-bell"></i></span>
-                                <span class="my_news">6</span>
-                                <div class="gnb_notice">
-                                    <div id="notice"></div>
-                                    <div class="all_notice"><span>내 알림 전체보기</span></div>
-                                </div>
-                            </li>
-                            <li>
-                                <a href="javascript:logout();">
-                                    <span>로그아웃</span>
-                                </a>
-                            </li>
-                        <?php }else{ ?>
-                            <li>
-                                <a href="javascript:login();">
-                                    <span>로그인</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="https://help.all-teaching.com/">
-                                    <span>회원가입</span>
-                                </a>
-                            </li>
-                        <?php } ?>
-                    </ul>
-                </div>
-                <div class="mob_con">
-                    <div class="btn_open">
-                        <div></div>
-                    </div>
-                </div>
-            </div>
-            <div class="row row2">
-                <ul class="nav">
-                    <li><a href="<?php echo Admin_SITE; ?>/Setup/Home">기본설정</a></li>
-                    <li><a href="<?php echo Admin_SITE; ?>/Boards/list">게시판관리</a></li>
-                    <li><a href="<?php echo Admin_SITE; ?>/Pager/list">페이지관리</a></li>
-                    <li><a href="<?php echo Admin_SITE; ?>/Menu/list">메뉴관리</a></li>
-                    <li><a href="<?php echo Admin_SITE; ?>/Member/list">회원 관리</a></li>
-                    <li><a href="<?php echo Admin_SITE; ?>/Service/list">부가 서비스</a></li>
-                </ul>
-            </div>
-        </div>
+<?php $active = $active ?? ''; ?>
+<div class="util-bar">
+    <div class="left">
+        <span>공인중개사무소: <b style="color:#fff"><?= htmlspecialchars($common['company_name'] ?? SHOP_CODE ?? '', ENT_QUOTES) ?></b></span>
+        <span>FID: <?= htmlspecialchars(SHOP_CODE ?? '', ENT_QUOTES) ?></span>
     </div>
-    <div class="h_modal"></div>
-    <dov class="h_post"></dov>
+    <div class="right">
+        <span>관리자님 환영합니다</span>
+        <span>내정보</span>
+        <span>로그아웃</span>
+    </div>
 </div>
+
+<div class="top-nav">
+    <button type="button" class="side-toggle" id="jsSideToggle" aria-label="메뉴 열기">≡</button>
+    <div class="brand">보이는 매물 · ADMIN</div>
+    <ul>
+        <li class="<?= $active === 'dashboard' ? 'active' : '' ?>"><a href="<?= Admin_SITE ?? '' ?>/Home">대시보드</a></li>
+        <li class="<?= $active === 'property' ? 'active' : '' ?>"><a href="<?= Admin_SITE ?? '' ?>/Property">매물관리</a></li>
+        <li class="<?= $active === 'inquiry' ? 'active' : '' ?>"><a href="<?= Admin_SITE ?? '' ?>/Inquiry">문의관리</a></li>
+        <li class="<?= $active === 'member' ? 'active' : '' ?>"><a href="<?= Admin_SITE ?? '' ?>/Member">회원관리</a></li>
+        <li class="<?= $active === 'setup' ? 'active' : '' ?>"><a href="<?= Admin_SITE ?? '' ?>/Setup">사이트설정</a></li>
+        <li class="<?= $active === 'stat' ? 'active' : '' ?>"><a href="<?= Admin_SITE ?? '' ?>/Stat">통계</a></li>
+    </ul>
+</div>
+
+<aside class="side" id="jsSide">
+    <div class="grp-title">대시보드</div>
+    <ul>
+        <li class="on"><a href="<?= Admin_SITE ?? '' ?>/Home"><span class="ico">■</span>전체 현황</a></li>
+        <li><a href="<?= Admin_SITE ?? '' ?>/Home/log"><span class="ico">■</span>최근 활동 로그</a></li>
+    </ul>
+    <div class="grp-title">매물관리</div>
+    <ul>
+        <li><a href="<?= Admin_SITE ?? '' ?>/Property"><span class="ico">▸</span>매물 목록</a></li>
+        <li><a href="<?= Admin_SITE ?? '' ?>/Property/write"><span class="ico">▸</span>매물 등록</a></li>
+        <li><a href="<?= Admin_SITE ?? '' ?>/Property/order"><span class="ico">▸</span>노출 순서 관리</a></li>
+    </ul>
+    <div class="grp-title">문의/신청</div>
+    <ul>
+        <li><a href="<?= Admin_SITE ?? '' ?>/Inquiry"><span class="ico">▸</span>상담 문의 내역</a></li>
+        <li><a href="<?= Admin_SITE ?? '' ?>/Inquiry/visit"><span class="ico">▸</span>방문 예약</a></li>
+    </ul>
+    <div class="grp-title">사이트설정</div>
+    <ul>
+        <li><a href="<?= Admin_SITE ?? '' ?>/Setup"><span class="ico">▸</span>기본정보/로고</a></li>
+        <li><a href="<?= Admin_SITE ?? '' ?>/Menu"><span class="ico">▸</span>메뉴 관리</a></li>
+        <li><a href="<?= Admin_SITE ?? '' ?>/Banner"><span class="ico">▸</span>배너/팝업</a></li>
+    </ul>
+</aside>

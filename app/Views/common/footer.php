@@ -1,54 +1,32 @@
-<footer class="footer_con folding">
+<footer class="footer">
+    <div class="width_con footer__inner">
 
-    <div class="width_con">
-
-        <div class="tit">
-            <h5>
-                <?=$common['company_name']??"회사"?>
-                <span>▲</span>
-            </h5>
-            <p>Copyrightⓒ 2023 <a href="https://www.bomul.ai.kr" target="_blank" rel="noopener noreferrer">보이는 매물</a> All rights reserved.</p>
-        </div>
-
-        <p class="footer_desc">
-            <?if(strlen($common['footer_copy'])>0){
-                echo $common['footer_copy'];
-                }else{?>
-                    Copyrightⓒ 2023 <a href="https://www.bomul.ai.kr" target="_blank" rel="noopener noreferrer">보이는 매물</a> All rights reserved.
-            <?}?>
-            <br>
-            Copyrightⓒ 2023 <a href="https://www.bomul.ai.kr" target="_blank" rel="noopener noreferrer">보이는 매물</a> All rights reserved.
-        </p>
-        <?if($common['link_menu_show']=="Y"){?>
-        <div class="bottom_btn_con">
-            <div class="inner">
-                <div class="naver_con">
-                    <a href="" target="_blank" data-track-click="reserve">
-                        <img src="<?= RS_IMG ?>/header/naver.png" alt="네이버 예약">
-                        <p>예약하기</p>
-                    </a>
-                </div>
-
-                <div class="kakao_con">
-                    <a href="" target="_blank" data-track-click="kakao">
-                        <img src="<?= RS_IMG ?>/header/kakao.png" alt="카카오톡 채널">
-                        <p>카톡채널추가</p>
-                    </a>
-                </div>
+        <div class="footer__top">
+            <div class="footer__brand">
+                <p class="footer__logo">보이는 매물</p>
+                <p class="footer__desc">공인중개사를 위한 매물 홈페이지 제작 &amp; 관리 서비스</p>
             </div>
+
+            <nav class="footer__links" aria-label="바로가기">
+                <a href="/#about">서비스 소개</a>
+                <a href="/#features">주요 기능</a>
+                <a href="/#pricing">요금 안내</a>
+                <a href="/#apply">신청하기</a>
+            </nav>
         </div>
-        <?}?>
+
+        <hr class="footer__divider">
+
+        <div class="footer__bottom">
+            <ul class="footer__biz">
+                <li><?= htmlspecialchars($common['company_name'] ?? '보이는 매물', ENT_QUOTES) ?></li>
+                <li>대표 [대표자명]</li>
+                <li>사업자등록번호 [000-00-00000]</li>
+                <li>주소 [주소를 입력하세요]</li>
+                <li>고객센터 [번호를 입력하세요]</li>
+            </ul>
+            <p class="footer__copy">Copyright &copy; <?= date('Y') ?> 보이는 매물. All rights reserved.</p>
+        </div>
+
     </div>
-
 </footer>
-
-<script>
-    // 페이지별 값만 여기서 심고, 실제 수집 로직은 정적 파일(common/track.js)에서 처리한다.
-    var BOMUL_TRACK_CONFIG = {
-        pageType: <?= json_encode($common['code'] ?? '', JSON_UNESCAPED_UNICODE) ?>,
-        propertyNo: <?= json_encode(isset($row['property_no']) ? (int)$row['property_no'] : null) ?>,
-        // 반드시 "이 페이지" 요청의 Referer - 트래킹 요청 자체의 Referer(document.referrer)는 신뢰 불가
-        landingReferrer: <?= json_encode($_SERVER['HTTP_REFERER'] ?? '', JSON_UNESCAPED_UNICODE) ?>
-    };
-</script>
-<script src="<?= RS_JS ?>/common/track.js?var=<?=FRESH_TIME?>"></script>

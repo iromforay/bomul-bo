@@ -11,7 +11,7 @@ class Home extends BaseController
     public function __construct()
     {
         parent::__construct();
-        $this->vdir="Admin/";
+      //  $this->vdir="Admin/";
         return $this;
     }
 
@@ -19,6 +19,6 @@ class Home extends BaseController
     {
 
         $data=array();
-        echo $this->view($this->vdir."index",$data);
+        echo $this->view("default","index",$data);
     }
 }
