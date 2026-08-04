@@ -62,6 +62,55 @@ main {padding-top: var(--header-h);}
 .paging li.paging_nav a {background: transparent; color: #666; font-weight: 600;}
 .paging li.paging_nav a:hover {background: transparent; text-decoration: underline;}
 
+/* ---------- features ---------- */
+.feature-grid {display:grid; grid-template-columns: repeat(3, 1fr); gap:24px; margin-top:48px;}
+.feature-card {padding:32px 24px; border:1px solid var(--color-line); border-radius:12px; background:#fff;}
+.feature-card__icon {width:44px; height:44px; border-radius:10px; background:#EEF2FF; color:var(--color-primary); display:flex; align-items:center; justify-content:center; font-size:20px; margin-bottom:16px;}
+.feature-card__title {font-size:1.05rem; font-weight:700;}
+.feature-card__desc {margin-top:8px; font-size:0.9rem; color:var(--color-body);}
+
+/* ---------- pricing ---------- */
+.pricing-grid {display:grid; grid-template-columns: repeat(3, 1fr); gap:24px; margin-top:48px; align-items:stretch;}
+.pricing-card {position:relative; display:flex; flex-direction:column; padding:32px 28px; border:1px solid var(--color-line); border-radius:12px; background:#fff;}
+.pricing-card--featured {border-color:var(--color-primary); box-shadow:0 8px 24px rgba(37,99,235,.12);}
+.pricing-card__badge {position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--color-primary); color:#fff; font-size:0.7rem; font-weight:700; padding:4px 12px; border-radius:999px; white-space:nowrap;}
+.pricing-card__name {font-size:0.95rem; font-weight:700; color:var(--color-muted);}
+.pricing-card__price {margin-top:12px; font-size:1.9rem; font-weight:800; color:var(--color-ink);}
+.pricing-card__price span {font-size:0.85rem; font-weight:600; color:var(--color-muted);}
+.pricing-card__price--tbd {font-size:1.1rem; font-weight:700; color:var(--color-muted);}
+.pricing-card__desc {margin-top:8px; font-size:0.85rem; color:var(--color-muted);}
+.pricing-card__features {margin:20px 0 0; display:flex; flex-direction:column; gap:10px; font-size:0.85rem; flex:1;}
+.pricing-card .btn {margin-top:24px;}
+
+/* ---------- faq ---------- */
+.faq-list {max-width:720px; margin:48px auto 0; display:flex; flex-direction:column; gap:12px;}
+.faq-item {border:1px solid var(--color-line); border-radius:10px; background:#fff; padding:4px 20px;}
+.faq-item summary {padding:16px 0; font-weight:700; color:var(--color-ink); cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center; gap:12px;}
+.faq-item summary::-webkit-details-marker {display:none;}
+.faq-item summary::after {content:'+'; flex-shrink:0; font-size:1.2rem; color:var(--color-muted); transition:transform .15s ease;}
+.faq-item[open] summary::after {transform:rotate(45deg);}
+.faq-item p {margin:0 0 16px; font-size:0.9rem; color:var(--color-body);}
+
+/* ---------- inquiry (상담신청) ---------- */
+.inquiry-form {max-width:480px; margin:40px auto 0; display:flex; flex-direction:column; gap:14px;}
+.inquiry-form input,
+.inquiry-form textarea {padding:12px 14px; border:1px solid var(--color-line); border-radius:8px; font-size:0.9rem; font-family:inherit; width:100%;}
+.inquiry-form textarea {resize:vertical; min-height:100px;}
+.inquiry-form .btn {margin-top:4px;}
+
+/* ---------- apply (회원가입/서비스신청) ---------- */
+.apply-steps {display:grid; grid-template-columns: repeat(4, 1fr); gap:20px; margin:48px 0 40px;}
+.apply-step {text-align:center; padding:20px;}
+.apply-step__num {width:36px; height:36px; margin:0 auto 12px; border-radius:50%; background:var(--color-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.9rem;}
+.apply-step__title {font-size:0.9rem; font-weight:700; color:var(--color-ink);}
+.apply-step__desc {margin-top:4px; font-size:0.8rem; color:var(--color-muted);}
+.apply-cta {text-align:center; margin-top:8px;}
+
+@media (max-width: 860px) {
+    .feature-grid, .pricing-grid {grid-template-columns: 1fr;}
+    .apply-steps {grid-template-columns: repeat(2, 1fr);}
+}
+
 /* ---------- footer ---------- */
 .footer {background: var(--color-ink); color: #CBD5E1;}
 .footer__inner {padding: 64px 0 32px;}

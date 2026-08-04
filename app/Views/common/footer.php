@@ -20,8 +20,8 @@
         <div class="footer__bottom">
             <ul class="footer__biz">
                 <li><?= htmlspecialchars($common['company_name'] ?? '보이는 매물', ENT_QUOTES) ?></li>
-                <li>대표 [대표자명]</li>
-                <li>사업자등록번호 [000-00-00000]</li>
+                <li>대표 나병연</li>
+                <li>사업자등록번호 [257-38-01646]</li>
                 <li>주소 [주소를 입력하세요]</li>
                 <li>고객센터 [번호를 입력하세요]</li>
             </ul>

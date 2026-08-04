@@ -12,11 +12,12 @@
                 <li><a href="/#features">주요 기능</a></li>
                 <li><a href="/#pricing">요금 안내</a></li>
                 <li><a href="/#faq">자주 묻는 질문</a></li>
+                <li><a href="/#inquiry">상담 신청</a></li>
             </ul>
         </nav>
 
         <div class="header__actions">
-            <a href="/#apply" class="btn btn--primary">무료 상담 신청</a>
+            <a href="/#apply" class="btn btn--primary">가입 신청하기</a>
             <button type="button" class="header__toggle" id="jsNavToggle" aria-label="메뉴 열기" aria-expanded="false" aria-controls="jsMobNav">
                 <span></span><span></span><span></span>
             </button>
@@ -34,7 +35,8 @@
         <li><a href="/#features">주요 기능</a></li>
         <li><a href="/#pricing">요금 안내</a></li>
         <li><a href="/#faq">자주 묻는 질문</a></li>
+        <li><a href="/#inquiry">상담 신청</a></li>
     </ul>
-    <a href="/#apply" class="btn btn--primary btn--block">무료 상담 신청</a>
+    <a href="/#apply" class="btn btn--primary btn--block">가입 신청하기</a>
 </div>
 <div class="mob-nav__dim" id="jsNavDim"></div>
