@@ -51,7 +51,7 @@ class ManagerService
         $entity->setUseYn($use_yn);
 
         if ($this->model->sql_save($entity)) {
-            return AT_Result::toSuccessData();
+            return AT_Result::toSuccessData("관리자 등록에 성공했습니다.");
         }
 
         return AT_Result::toFailData("등록에 실패했습니다.");
@@ -84,7 +84,7 @@ class ManagerService
         }
 
         if ($this->model->sql_edit($entity)) {
-            return AT_Result::toSuccessData();
+            return AT_Result::toSuccessData("관리자 정보를 수정했습니다.");
         }
 
         return AT_Result::toFailData("수정에 실패했습니다.");
@@ -100,7 +100,7 @@ class ManagerService
         }
 
         if ($this->model->sql_delete($manager_no)) {
-            return AT_Result::toSuccessData();
+            return AT_Result::toSuccessData("관리자를 삭제했습니다.");
         }
 
         return AT_Result::toFailData("삭제에 실패했습니다.");

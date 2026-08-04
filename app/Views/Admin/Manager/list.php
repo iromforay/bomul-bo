@@ -11,12 +11,7 @@ $err = session()->getFlashdata('err');
     </div>
 </div>
 
-<?php if ($msg): ?>
-    <div class="panel" style="border-color:#2E7D32;"><div style="padding:10px 14px; color:#2E7D32; font-size:12.5px;"><?= htmlspecialchars($msg, ENT_QUOTES) ?></div></div>
-<?php endif; ?>
-<?php if ($err): ?>
-    <div class="panel" style="border-color:#B3261E;"><div style="padding:10px 14px; color:#B3261E; font-size:12.5px;"><?= htmlspecialchars($err, ENT_QUOTES) ?></div></div>
-<?php endif; ?>
+<?= view('common/admin_alert', ['msg' => $msg, 'err' => $err]) ?>
 
 <div class="panel">
     <div class="panel-head">

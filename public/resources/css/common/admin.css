@@ -90,12 +90,34 @@ tbody td:last-child {border-right:none;}
 tbody tr:hover {background:#F2F6F9;}
 tbody tr:nth-child(even) {background:#FAFBFC;}
 tbody tr:nth-child(even):hover {background:#F2F6F9;}
+tbody tr.row-link {cursor:pointer;}
+tbody tr.row-link:hover {background:#E9F1F8;}
 
 .badge {display:inline-block; padding:2px 8px; font-size:10.5px; font-weight:700; border:1px solid transparent;}
 .badge.done {color:#fff; background: var(--ok);}
 .badge.wait {color:#fff; background: var(--warn);}
 .badge.new {color:#fff; background: var(--accent);}
 .badge.stop {color:#fff; background: var(--danger);}
+.badge.hold {color:#fff; background: var(--muted);}
+
+/* ---------- alert banner ---------- */
+.alert {position:relative; display:flex; align-items:center; padding:10px 40px 10px 14px; margin-bottom:14px; border:1px solid; border-radius:4px; font-size:12.5px; transition:opacity .3s ease;}
+.alert.is-hiding {opacity:0;}
+.alert--success {border-color: var(--ok); background:#EDF7ED; color: var(--ok);}
+.alert--error {border-color: var(--danger); background:#FDECEA; color: var(--danger);}
+.alert__close {position:absolute; top:50%; right:8px; transform:translateY(-50%); width:22px; height:22px; padding:0; background:none; border:none; font-size:16px; line-height:1; color:inherit; cursor:pointer;}
+
+/* ---------- drag & drop upload ---------- */
+.upload-drop {position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:22px 16px; border:2px dashed var(--line); border-radius:6px; text-align:center; cursor:pointer; background:#FAFBFC; transition:border-color .15s ease, background .15s ease;}
+.upload-drop:hover {border-color: var(--accent);}
+.upload-drop.is-dragover {border-color: var(--accent); background:#EFF5FA;}
+.upload-drop.is-uploading {opacity:.6; pointer-events:none;}
+.upload-drop.has-file {border-style:solid; border-color: var(--ok); background:#EDF7ED;}
+.upload-drop input[type="file"] {display:none;}
+.upload-drop .upload-hint {font-size:11.5px; color: var(--muted);}
+.upload-drop .upload-preview {display:flex; flex-direction:column; align-items:center; gap:6px; font-size:12px; font-weight:700; color: var(--navy); word-break:break-all;}
+.upload-drop .upload-thumb {max-width:140px; max-height:100px; object-fit:cover; border:1px solid var(--line); border-radius:4px;}
+.upload-drop .upload-remove {margin-top:2px; padding:3px 10px; font-size:11px; border:1px solid var(--danger); color: var(--danger); background:#fff;}
 
 .foot-bar {display:flex; align-items:center; justify-content:space-between; padding:8px 12px; font-size:11px; color: var(--muted); flex-wrap:wrap; gap:8px;}
 .pager {display:flex; gap:4px;}

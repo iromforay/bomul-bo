@@ -2,9 +2,6 @@
 
 namespace App\Controllers;
 
-use App\Controllers\Admin\BaseController;
-use App\Libraries\AT_Cookie;
-
 class Home extends BaseController
 {
     private  $vdir;

@@ -2,8 +2,6 @@
 
 namespace App\Controllers;
 
-use App\Libraries\AT_Result;
-use App\Service\LoginService;
 use CodeIgniter\Controller;
 use CodeIgniter\HTTP\CLIRequest;
 use CodeIgniter\HTTP\IncomingRequest;
@@ -52,16 +50,23 @@ abstract class BaseController extends Controller
         // E.g.: $this->session = \Config\Services::session();
     }
 
-    public function view($data)
+    // www 공개 사이트용 - header_menu/header/footer + layout/default로 감싸서 렌더링.
+    // (예전엔 Home.php가 실수로 Admin\BaseController를 상속해서 admin 레이아웃 + 로그인 게이트가
+    // 씌워지는 버그가 있었음 - www 방문자가 ad.bomul.ai.kr/Login으로 리다이렉트되던 원인)
+    public function view(string $layout = "", string $name = "", array $data = [], array $options = [])
     {
-        if($this->debug){
-                echo "<pre>";
-                print_r($data);
-                echo "</pre>";
-                exit;
-            }
-       echo AT_Result::toJson($data);
-       exit;
+        $layout = $layout !== "" ? $layout : "default";
+        $data['common'] = $data['common'] ?? [];
+        $data['FRESH_TIME'] = $data['FRESH_TIME'] ?? FRESH_TIME;
+
+        $temp_layout = [
+            'header_menu' => view("common/header_menu", $data),
+            'header'      => view("common/header", $data),
+            'content'     => view($name, $data, $options),
+            'footer'      => view("common/footer", $data),
+        ];
+
+        echo view("layout/" . $layout, $temp_layout, $options);
     }
     /*
     * $page_num : 현재페이지 (기본 :1)

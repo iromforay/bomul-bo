@@ -19,6 +19,12 @@ class Customer_Entity
     private $biz_reg_verified_yn;
     private $broker_reg_verified_yn;
     private $use_yn;
+    private $service_yn;
+    private $service_expire_date;
+    private $biz_reg_file_dir;
+    private $biz_reg_file_name;
+    private $broker_reg_file_dir;
+    private $broker_reg_file_name;
     private $fid;
     private $member_no;
     private $migrated_yn;
@@ -215,6 +221,104 @@ class Customer_Entity
     public function setUseYn($use_yn): void
     {
         $this->use_yn = $use_yn;
+    }
+
+    // 서비스(구독) 사용여부 - 계정 사용여부(use_yn)와 별개. 결제로 Y가 되고 만료되면 N.
+    /**
+     * @return mixed
+     */
+    public function getServiceYn()
+    {
+        return $this->service_yn;
+    }
+
+    /**
+     * @param mixed $service_yn
+     */
+    public function setServiceYn($service_yn): void
+    {
+        $this->service_yn = $service_yn;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getServiceExpireDate()
+    {
+        return $this->service_expire_date;
+    }
+
+    /**
+     * @param mixed $service_expire_date
+     */
+    public function setServiceExpireDate($service_expire_date): void
+    {
+        $this->service_expire_date = $service_expire_date;
+    }
+
+    // 사업자등록증/중개사무소등록증 파일 - File_Upload 라이브러리 결과의 file_path/file_name 그대로 저장
+    /**
+     * @return mixed
+     */
+    public function getBizRegFileDir()
+    {
+        return $this->biz_reg_file_dir;
+    }
+
+    /**
+     * @param mixed $biz_reg_file_dir
+     */
+    public function setBizRegFileDir($biz_reg_file_dir): void
+    {
+        $this->biz_reg_file_dir = $biz_reg_file_dir;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getBizRegFileName()
+    {
+        return $this->biz_reg_file_name;
+    }
+
+    /**
+     * @param mixed $biz_reg_file_name
+     */
+    public function setBizRegFileName($biz_reg_file_name): void
+    {
+        $this->biz_reg_file_name = $biz_reg_file_name;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getBrokerRegFileDir()
+    {
+        return $this->broker_reg_file_dir;
+    }
+
+    /**
+     * @param mixed $broker_reg_file_dir
+     */
+    public function setBrokerRegFileDir($broker_reg_file_dir): void
+    {
+        $this->broker_reg_file_dir = $broker_reg_file_dir;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getBrokerRegFileName()
+    {
+        return $this->broker_reg_file_name;
+    }
+
+    /**
+     * @param mixed $broker_reg_file_name
+     */
+    public function setBrokerRegFileName($broker_reg_file_name): void
+    {
+        $this->broker_reg_file_name = $broker_reg_file_name;
     }
 
     // 2차도메인 - 가입 시점엔 null, 서비스 신청 단계에서 고객이 입력/선택

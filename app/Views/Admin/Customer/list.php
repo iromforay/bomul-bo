@@ -11,12 +11,7 @@ $err = session()->getFlashdata('err');
     </div>
 </div>
 
-<?php if ($msg): ?>
-    <div class="panel" style="border-color:#2E7D32;"><div style="padding:10px 14px; color:#2E7D32; font-size:12.5px;"><?= htmlspecialchars($msg, ENT_QUOTES) ?></div></div>
-<?php endif; ?>
-<?php if ($err): ?>
-    <div class="panel" style="border-color:#B3261E;"><div style="padding:10px 14px; color:#B3261E; font-size:12.5px;"><?= htmlspecialchars($err, ENT_QUOTES) ?></div></div>
-<?php endif; ?>
+<?= view('common/admin_alert', ['msg' => $msg, 'err' => $err]) ?>
 
 <div class="panel">
     <div class="panel-head">
@@ -35,7 +30,7 @@ $err = session()->getFlashdata('err');
             <tr><td colspan="12" style="text-align:center; color:#6B7A88;">등록된 고객이 없습니다.</td></tr>
         <?php else: ?>
             <?php foreach ($list as $row): ?>
-                <tr>
+                <tr class="row-link" onclick="location.href='<?= Admin_SITE ?>/Customer/view/<?= (int) $row['customer_no'] ?>'">
                     <td><?= (int) $row['customer_no'] ?></td>
                     <td><?= htmlspecialchars($row['customer_id'], ENT_QUOTES) ?></td>
                     <td><?= htmlspecialchars($row['customer_name'], ENT_QUOTES) ?></td>
@@ -44,20 +39,8 @@ $err = session()->getFlashdata('err');
                     <td><?= htmlspecialchars($row['broker_reg_no'], ENT_QUOTES) ?></td>
                     <td><?= htmlspecialchars($row['phone'], ENT_QUOTES) ?></td>
                     <td><?= htmlspecialchars($row['email'], ENT_QUOTES) ?></td>
-                    <td>
-                        <?php if (($row['biz_reg_verified_yn'] ?? 'N') === 'Y'): ?>
-                            <span class="badge done">검증됨</span>
-                        <?php else: ?>
-                            <span class="badge wait">대기</span>
-                        <?php endif; ?>
-                    </td>
-                    <td>
-                        <?php if (($row['broker_reg_verified_yn'] ?? 'N') === 'Y'): ?>
-                            <span class="badge done">검증됨</span>
-                        <?php else: ?>
-                            <span class="badge wait">대기</span>
-                        <?php endif; ?>
-                    </td>
+                    <td><?= verify_status_badge($row['biz_reg_verified_yn'] ?? null) ?></td>
+                    <td><?= verify_status_badge($row['broker_reg_verified_yn'] ?? null) ?></td>
                     <td>
                         <?php if (($row['use_yn'] ?? 'Y') === 'Y'): ?>
                             <span class="badge done">사용</span>

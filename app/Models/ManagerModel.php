@@ -55,6 +55,7 @@ class ManagerModel extends CI_Model
     {
         $set = [];
 
+        !is_null($entity->getManagerId())   ? $set[] = "`manager_id`=".   $this->db->escape($entity->getManagerId())   : "";
         !is_null($entity->getManagerPw())   ? $set[] = "`manager_pw`=".   $this->db->escape($entity->getManagerPw())   : "";
         !is_null($entity->getManagerName()) ? $set[] = "`manager_name`=". $this->db->escape($entity->getManagerName()) : "";
         !is_null($entity->getUseYn())       ? $set[] = "`use_yn`=".      $this->db->escape($entity->getUseYn())       : "";
