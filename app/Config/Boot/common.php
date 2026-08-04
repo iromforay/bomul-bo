@@ -10,6 +10,35 @@
  * 정상적으로 읽을 수 있다(Config/Constants.php는 이보다 먼저 실행되어 .env를 못 읽는다).
  */
 
+// "//host" 형태(프로토콜 상대경로)는 CI4의 Config\App::$baseURL 검증을 통과 못 한다
+// ("is not a valid URL" ConfigException) - 스킴을 붙여줘야 하는데, https로 고정해버리면 80포트(http)로
+// 들어온 요청에서도 CSS/JS/이미지가 전부 https://를 물어서 그 도메인 443이 안 살아있으면 리소스가
+// 통째로 깨진다. 그래서 지금 요청이 실제로 http/https 중 뭔지 감지해서 그 스킴을 그대로 따라간다.
+// site_ad.php/site_www.php에서 SITE 정의할 때 사용.
+function bomul_current_scheme(): string
+{
+    $https = $_SERVER['HTTPS'] ?? '';
+    if ($https !== '' && strtolower($https) !== 'off') {
+        return 'https';
+    }
+    // nginx 등 리버스 프록시 뒤에서 SSL을 종료하는 구성 대비
+    if (strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') {
+        return 'https';
+    }
+    return 'http';
+}
+
+function bomul_normalize_site_url(string $raw): string
+{
+    if (preg_match('#^https?://#i', $raw)) {
+        return $raw; // 이미 스킴이 명시돼 있으면 .env 값을 그대로 존중
+    }
+    if (str_starts_with($raw, '//')) {
+        return bomul_current_scheme() . ':' . $raw;
+    }
+    return $raw;
+}
+
 $root_path = dirname(__DIR__, 3);
 
 define('ROOT_PATH', $root_path);
@@ -17,19 +46,15 @@ define('APP', ROOT_PATH.'/app');
 define('VIEW', APP.'/Views');
 define('APP_PDS', ROOT_PATH.'/public/pds/');
 
-define('SITE', getenv("site_url"));
-define('SITE_PDS', SITE.'/pds/');
-define('COMMON_PDS', 'http://api.bomul.ai.kr/pds/');
-// ad.bomul.ai.kr는 서브도메인 자체가 Admin 네임스페이스 기본값이라 URL에 /Admin 세그먼트가 없다.
-define('Admin_SITE', SITE);
-define('LOGIN_SERVER', 'https://');
-define('RS', SITE.'/resources');
-define('RS_IMG', SITE.'/resources/img');
-define('RS_CSS', SITE.'/resources/css');
-define('RS_JS', SITE.'/resources/js');
-define('RS_TH', RS.'/third_party');
-define('PDS_URL', SITE.'pds/');
-define('FRESH_TIME', date("YmdHis"));
+// SITE(및 RS_CSS 등 파생 상수)는 여기서 정의하지 않는다 - www/ad가 코드베이스 하나를 같이 쓰는데
+// 도메인마다 값이 달라야 해서, Boot/{env}.php가 site_ad.php/site_www.php 중 하나를 골라
+// require한 뒤 site_common.php로 파생 상수를 채우는 방식으로 분리했다 (site_ad.php/site_www.php/
+// site_common.php 참고).
+//
+// Admin 백오피스는 어느 도메인(www/ad)에서 실행되든 항상 같은 고정 주소를 가리켜야 한다
+// (예: www에서 "관리자 로그인" 링크를 걸 때도 ad.bomul.ai.kr로 가야 함) - 그래서 SITE와 달리
+// 도메인 분기 없이 .env의 ad_site를 그대로 고정 사용.
+define('Admin_SITE', getenv('ad_site'));
 
 define('AES_KEY', getenv("AES_KEY"));
 define('LOG_DIR', getenv("LOG_DIR"));

@@ -25,8 +25,8 @@ abstract class BaseController extends Controller
         $session_id = $_SERVER['HTTP_AUTHORIZATION']??"";
         $SHOP_CODE = str_replace("Bearer ","",$session_id);
 
-        define('SHOP_CODE', $SHOP_CODE); //상점코드 - help 아이디
-        $this->set_domain();
+      //  define('SHOP_CODE', $SHOP_CODE); //상점코드 - help 아이디
+      //  $this->set_domain();
         return $this;
     }
     public function set_domain()

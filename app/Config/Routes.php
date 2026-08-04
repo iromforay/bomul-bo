@@ -48,8 +48,10 @@ if ($host === 'ad.bomul.ai.kr') {
         return service('response')->setStatusCode(200);
     });
 
-    // 🔥 API는 기존 그대로 (Api/Admin 자동 라우팅 유지)
+    // 자동 라우팅 안 씀 - 명시적 라우트만 사용 (auto-route는 컨트롤러명이 그대로 URL로 노출되고,
+    // 의도치 않은 public 메서드까지 라우팅되는 위험이 있어 ad와 동일하게 명시적으로 통일)
     $routes->setDefaultNamespace('App\Controllers');
-    $routes->setAutoRoute(true);
+    $routes->get('/',     'Home::getindex');
+    $routes->get('Home',  'Home::getindex');
 }
 

@@ -16,7 +16,10 @@ class App extends BaseConfig
      *
      * E.g., http://example.com/
      */
-    public string $baseURL = Admin_SITE;
+    // 프레임워크 자체 baseURL(디버그바 AJAX, base_url() 헬퍼 등)은 지금 요청 중인 도메인을
+    // 따라가야 한다 - Admin_SITE는 항상 ad.bomul.ai.kr 고정이라 여기 쓰면 www/api에서도
+    // CI4 내부 URL 생성이 전부 ad.bomul.ai.kr을 가리키게 된다.
+    public string $baseURL = SITE;
 
     /**
      * Allowed Hostnames in the Site URL other than the hostname in the baseURL.

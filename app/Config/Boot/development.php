@@ -32,37 +32,12 @@ defined('SHOW_DEBUG_BACKTRACE') || define('SHOW_DEBUG_BACKTRACE', true);
  | items. It can always be used within your own application too.
  */
 defined('CI_DEBUG') || define('CI_DEBUG', true);
-$root_path = str_replace("/app/Config/Boot/development.php","",__FILE__);
 
+// Admin_SITE/LOG_DIR 등 도메인 무관 공통 상수는 common.php 한 곳에서만 정의한다 - 예전엔 여기 따로
+// 복붙돼 있었는데 common.php 쪽 값과 어긋나기 시작해서(COMMON_PDS/Admin_SITE 등) 헷갈렸다.
+require_once __DIR__ . '/common.php';
 
-define('ROOT_PATH', $root_path);
-define('APP', ROOT_PATH.'/app');
-define('VIEW', APP.'/Views');
-define('APP_PDS', ROOT_PATH.'/public/pds/');
-
-
-//define('ATH_SYS_SESSION', ROOT_PATH . '/temp/session');
-//define('ATH_LOG', '/home/eduline/log/help');
-//define('ATH_SYS_LOG', ROOT_PATH . '/temp/log/');
-//define('ATH_SYS_PDS', ROOT_PATH . '/public_html/pds');
-//define('SITE',getenv("site_url"));
-define('SITE',getenv("site_url"));
-define('SITE_PDS', SITE.'/pds/');
-define('COMMON_PDS', 'https://ad.bomul.ai.kr/pds/');
-// ad.bomul.ai.kr는 서브도메인 자체가 Admin 네임스페이스 기본값이라 URL에 /Admin 세그먼트가 없다.
-define('Admin_SITE', "https://ad.bomul.ai.kr");
-define('LOGIN_SERVER', 'https://');
-define('RS', SITE.'/resources');
-define('RS_IMG', SITE.'/resources/img');
-define('RS_CSS', SITE.'/resources/css');
-define('RS_JS', SITE.'/resources/js');
-define('RS_TH', RS.'/third_party');
-define('PDS_URL', SITE.'pds/');
-define('FRESH_TIME', date("YmdHis"));
-
-define('AES_KEY',getenv("AES_KEY"));
-define('LOG_DIR',getenv("LOG_DIR"));
-if (! defined('ENVIRONMENT')) {
-    define('ENVIRONMENT', env('CI_ENVIRONMENT', 'development'));
-}
-//define('ENVIRONMENT',getenv('CI_ENVIRONMENT','development'));
+// SITE는 도메인별로 갈린다 - ad.bomul.ai.kr이면 site_ad.php, 그 외(www/apex)면 site_www.php.
+$host = $_SERVER['HTTP_HOST'] ?? '';
+require_once __DIR__ . '/' . ($host === 'ad.bomul.ai.kr' ? 'site_ad.php' : 'site_www.php');
+require_once __DIR__ . '/site_common.php';
