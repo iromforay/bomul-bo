@@ -23,6 +23,18 @@ class ManagerModel extends CI_Model
         return $rows[0] ?? null;
     }
 
+    // 아이디 중복체크용 - use_yn 상관없이 전체에서 확인 (manager_id는 UNIQUE)
+    public function existsByLoginId($manager_id, $exclude_no = null)
+    {
+        $sql = "SELECT `manager_no` FROM `$this->table` WHERE `manager_id` = " . $this->db->escape($manager_id);
+        if ($exclude_no !== null) {
+            $sql .= " AND `manager_no` != " . $this->db->escape($exclude_no);
+        }
+        $sql .= " LIMIT 1";
+        $rows = $this->getExecQuery($sql);
+        return !empty($rows);
+    }
+
     public function sql_save(Manager_Entity $entity)
     {
         $osql = " INSERT INTO `$this->table` SET
@@ -54,6 +66,12 @@ class ManagerModel extends CI_Model
         $sql = "UPDATE `$this->table` SET " . implode(",", $set) .
                " WHERE `$this->primaryKey` = " . $this->db->escape($entity->getManagerNo());
 
+        return $this->safeExecQuery($sql);
+    }
+
+    public function sql_delete($manager_no)
+    {
+        $sql = "DELETE FROM `$this->table` WHERE `$this->primaryKey` = " . $this->db->escape($manager_no);
         return $this->safeExecQuery($sql);
     }
 }

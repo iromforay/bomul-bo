@@ -19,6 +19,17 @@ if ($host === 'ad.bomul.ai.kr') {
     $routes->get('Login',  'Login::getIndex');
     $routes->post('Login', 'Login::postIndex');
     $routes->get('Logout', 'Login::getLogout');
+
+    $routes->get('Manager',                 'Manager::getIndex');
+    $routes->get('Manager/write',           'Manager::getWrite');
+    $routes->post('Manager/write',          'Manager::postWrite');
+    $routes->get('Manager/modify/(:num)',   'Manager::getModify/$1');
+    $routes->post('Manager/modify/(:num)',  'Manager::postModify/$1');
+    $routes->post('Manager/delete/(:num)',  'Manager::postDelete/$1');
+
+    $routes->get('Customer',        'Customer::getIndex');
+    $routes->get('Customer/write',  'Customer::getWrite');
+    $routes->post('Customer/write', 'Customer::postWrite');
     // 기본 자동 라우터 활성화
     //$routes->setAutoRoute(true);
 
