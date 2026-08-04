@@ -1,0 +1,47 @@
+:root{
+    --navy: #1F3B57;
+    --navy-dark: #16293D;
+    --line: #C7D0D9;
+    --bg: #EEF1F4;
+    --panel: #FFFFFF;
+    --text: #26313D;
+    --muted: #6B7A88;
+    --accent: #2C5F8A;
+    --danger: #B3261E;
+}
+* {box-sizing: border-box;}
+html, body {height:100%; margin:0;}
+body {
+    display:flex; align-items:center; justify-content:center;
+    background: linear-gradient(180deg, var(--navy-dark), var(--navy) 60%, var(--bg) 60%);
+    font-family: "Malgun Gothic","Segoe UI",Arial,sans-serif;
+    color: var(--text);
+}
+
+.login-wrap {width:100%; max-width:380px; padding: 24px;}
+
+.login-brand {text-align:center; margin-bottom:20px;}
+.login-brand .mark {display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:6px; background: var(--accent); color:#fff; font-weight:800; font-size:15px; margin-bottom:10px;}
+.login-brand h1 {margin:0; font-size:15px; font-weight:700; color:#fff; letter-spacing:.02em;}
+.login-brand p {margin:4px 0 0; font-size:11.5px; color:#B9C6D3;}
+
+.login-card {background: var(--panel); border:1px solid var(--line); border-radius:6px; padding: 26px 26px 22px; box-shadow: 0 12px 28px rgba(15,23,42,.18);}
+.login-card h2 {margin:0 0 18px; font-size:13.5px; font-weight:700; color: var(--navy); text-align:center;}
+
+.field {margin-bottom:12px;}
+.field label {display:block; font-size:11px; font-weight:700; color: var(--muted); margin-bottom:5px;}
+.field input[type="text"],
+.field input[type="password"] {width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:4px; font-size:13px; color: var(--text); background:#fff;}
+.field input:focus {outline:none; border-color: var(--accent);}
+
+.opts {display:flex; align-items:center; justify-content:space-between; margin: 4px 0 16px;}
+.opts label {display:flex; align-items:center; gap:6px; font-size:11.5px; color: var(--muted); cursor:pointer;}
+.opts a {font-size:11.5px; color: var(--muted);}
+.opts a:hover {color: var(--accent); text-decoration:underline;}
+
+.login-error {margin: 0 0 14px; padding:8px 10px; border:1px solid rgba(179,38,30,.3); background:#FDECEA; color: var(--danger); font-size:11.5px; border-radius:4px;}
+
+.btn-login {display:block; width:100%; padding:11px; border:none; border-radius:4px; background: var(--accent); color:#fff; font-size:13.5px; font-weight:700; cursor:pointer;}
+.btn-login:hover {background: var(--navy);}
+
+.login-foot {margin-top:18px; text-align:center; font-size:10.5px; color:#8A97A3;}

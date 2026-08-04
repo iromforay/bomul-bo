@@ -48,8 +48,9 @@ define('APP_PDS', ROOT_PATH.'/public/pds/');
 //define('SITE',getenv("site_url"));
 define('SITE',getenv("site_url"));
 define('SITE_PDS', SITE.'/pds/');
-define('COMMON_PDS', 'http://api.bomul.co.kr/pds/');
-define('Admin_SITE', SITE.'/Admin');
+define('COMMON_PDS', 'https://ad.bomul.ai.kr/pds/');
+// ad.bomul.ai.kr는 서브도메인 자체가 Admin 네임스페이스 기본값이라 URL에 /Admin 세그먼트가 없다.
+define('Admin_SITE', "https://ad.bomul.ai.kr");
 define('LOGIN_SERVER', 'https://');
 define('RS', SITE.'/resources');
 define('RS_IMG', SITE.'/resources/img');

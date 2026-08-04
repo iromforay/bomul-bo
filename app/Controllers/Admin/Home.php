@@ -18,6 +18,6 @@ class Home extends BaseController
     {
 
         $data=array();
-        echo $this->view($this->vdir."index",$data);
+        echo $this->view("index",$data);
     }
 }

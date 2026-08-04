@@ -14,6 +14,11 @@ if ($host === 'ad.bomul.ai.kr') {
     $routes->setDefaultNamespace('App\Controllers\Admin');
 
     $routes->get('/',   'Home::getindex');
+    $routes->get('Home',   'Home::getindex');
+
+    $routes->get('Login',  'Login::getIndex');
+    $routes->post('Login', 'Login::postIndex');
+    $routes->get('Logout', 'Login::getLogout');
     // 기본 자동 라우터 활성화
     //$routes->setAutoRoute(true);
 

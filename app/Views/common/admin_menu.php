@@ -1,13 +1,16 @@
-<?php $active = $active ?? ''; ?>
+<?php
+$active = $active ?? '';
+//$shopCode = defined('SHOP_CODE') ? SHOP_CODE : '';
+?>
 <div class="util-bar">
     <div class="left">
-        <span>공인중개사무소: <b style="color:#fff"><?= htmlspecialchars($common['company_name'] ?? SHOP_CODE ?? '', ENT_QUOTES) ?></b></span>
-        <span>FID: <?= htmlspecialchars(SHOP_CODE ?? '', ENT_QUOTES) ?></span>
+        <span>ID: <b style="color:#fff"></b></span>
+        <span></span>
     </div>
     <div class="right">
         <span>관리자님 환영합니다</span>
         <span>내정보</span>
-        <span>로그아웃</span>
+        <a href="<?= Admin_SITE ?? '' ?>/Logout">로그아웃</a>
     </div>
 </div>
 

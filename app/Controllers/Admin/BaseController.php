@@ -4,7 +4,6 @@ namespace App\Controllers\Admin;
 
 use App\Libraries\AT_Result;
 use App\Service\CI_Service;
-use App\Service\LoginService;
 use CodeIgniter\Controller;
 use CodeIgniter\HTTP\CLIRequest;
 use CodeIgniter\HTTP\IncomingRequest;
@@ -51,12 +50,22 @@ abstract class BaseController extends Controller
     protected $sub_body;
     protected $title;
     protected $description;
+
+    // Login 화면 자체는 세션이 없는 게 정상이라 auth() 대상에서 빼야 한다 - 안 빼면
+    // 로그인 화면 접근 -> auth() 실패 -> 로그인 화면으로 리다이렉트 -> auth() 실패 ... 로 무한 루프.
+    // Login 컨트롤러에서 true로 오버라이드해서 사용.
+    protected $skipAuth = false;
+
     public function __construct()
     {
         header('Access-Control-Allow-Origin: *' );
         header('Access-Control-Max-Age: 86400');
         header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
         header('Access-Control-Allow-Headers: Origin, Content-Type, X-Requested-With, Authorization');
+
+        if (! $this->skipAuth) {
+            $this->auth();
+        }
 
         return $this;
     }
@@ -130,23 +139,20 @@ abstract class BaseController extends Controller
         );
     }
 
-    public function is_login()
+    // 로그인 세션이 있으면 통과, 없으면 로그인 화면으로 리다이렉트.
+    // SHOP_CODE는 여기서 다루지 않는다 - ad(이 백오피스)는 미사용, 중개사용 bo 쪽 개념.
+    // $_SESSION을 직접 보지 않고 session() 헬퍼를 쓴다 - 이 요청에서 session()이 한 번도
+    // 호출된 적 없으면 CI4가 세션을 아직 시작하지 않아 $_SESSION 자체가 비어있을 수 있다.
+    public function auth()
     {
-        $login = new LoginService();
-        if(isset($_SESSION['login']['is_login']) and $_SESSION['login']['is_login']){
-            $shop_code = $_SESSION['login']['MB_ID'];
-            define('SHOP_CODE', $shop_code);
+        $login = session('login');
+
+        //if (! empty($login['is_login'])) {
+        if (isset($login['is_login']) && $login['is_login'] ) {
             return $this;
-        }else {
-            if ($login->is_login()) {
-                $shop_code = $_SESSION['login']['MB_ID'];
-                define('SHOP_CODE', $shop_code);
-                return $this;
-            } else {
-                $this->_redirect(Admin_SITE . "/Login");
-            }
         }
 
+        $this->_redirect(Admin_SITE . "/Login");
     }
 
     // Admin은 layout이 admin_default 하나뿐이라 layout 인자를 따로 받지 않는다 -
@@ -163,7 +169,7 @@ abstract class BaseController extends Controller
         $temp_layout = array(
             'header_menu' =>view("common/admin_menu",$data),
             'header'=>view("common/admin_header",$data),
-            'content' => view($name, $data,$options),
+            'content' => view("Admin/".$name, $data,$options),
             'footer'=>view("common/admin_footer",$data)
         );
         echo  view("layout/admin_default",$temp_layout,$options);
