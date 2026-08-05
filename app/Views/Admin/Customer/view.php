@@ -11,7 +11,7 @@
     <div class="panel-head"><h2>기본 정보</h2></div>
     <table class="form-table">
         <tbody>
-        <tr><th>고객번호</th><td><?= (int) $row['customer_no'] ?></td></tr>
+        <tr><th>고객번호</th><td><?= (int) $row['customer_idx'] ?></td></tr>
         <tr><th>아이디</th><td><?= htmlspecialchars($row['customer_id'], ENT_QUOTES) ?></td></tr>
         <tr><th>담당자명</th><td><?= htmlspecialchars($row['customer_name'], ENT_QUOTES) ?></td></tr>
         <tr><th>중개사무소명</th><td><?= htmlspecialchars($row['company_name'], ENT_QUOTES) ?></td></tr>
@@ -105,6 +105,6 @@
 </div>
 
 <div class="form-actions">
-    <a href="<?= Admin_SITE ?>/Customer/modify/<?= (int) $row['customer_no'] ?>"><button type="button" class="primary">수정</button></a>
+    <a href="<?= Admin_SITE ?>/Customer/modify/<?= (int) $row['customer_idx'] ?>"><button type="button" class="primary">수정</button></a>
     <a href="<?= Admin_SITE ?>/Customer"><button type="button">리스트</button></a>
 </div>

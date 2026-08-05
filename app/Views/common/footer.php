@@ -11,7 +11,7 @@
                 <a href="/#about">서비스 소개</a>
                 <a href="/#features">주요 기능</a>
                 <a href="/#pricing">요금 안내</a>
-                <a href="/#apply">신청하기</a>
+                <a href="/signup">신청하기</a>
             </nav>
         </div>
 

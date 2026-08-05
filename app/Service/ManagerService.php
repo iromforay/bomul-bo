@@ -7,14 +7,13 @@ use App\Libraries\AT_Result;
 
 // CI_Service를 상속하지 않는다 - ad(이 백오피스)는 SHOP_CODE를 안 쓰는데 CI_Service 생성자는
 // SHOP_CODE가 정의돼 있다고 가정한다 (LoginService와 동일한 이유).
-class ManagerService
+class ManagerService extends CI_Service
 {
-    private $db;
     private $model;
 
     public function __construct()
     {
-        $this->db = db_connect("default");
+        parent::__construct();
         $this->model = model('App\Models\ManagerModel', true, $this->db);
     }
 

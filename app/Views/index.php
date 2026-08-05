@@ -4,7 +4,7 @@
         <h1 class="hero__title">우리 사무소만의<br>매물 홈페이지를 만들어보세요</h1>
         <p class="hero__desc">보이는 매물은 공인중개사무소 전용 홈페이지 제작·관리 서비스입니다.<br>매물 등록부터 고객 상담까지, 필요한 기능을 한 곳에서 관리하세요.</p>
         <div class="hero__actions">
-            <a href="#apply" class="btn btn--primary">가입 신청하기</a>
+            <a href="/signup" class="btn btn--primary">가입 신청하기</a>
             <a href="#features" class="btn btn--outline">주요 기능 보기</a>
         </div>
     </div>
@@ -45,25 +45,26 @@
         <div class="pricing-grid">
             <div class="pricing-card">
                 <p class="pricing-card__name">1개월 이용권</p>
-                <p class="pricing-card__price pricing-card__price--tbd">추후 안내</p>
-                <p class="pricing-card__desc">가볍게 시작해보고 싶은 분께</p>
+                <p class="pricing-card__price">무료</p>
+                <p class="pricing-card__desc">먼저 무료로 체험해보세요</p>
                 <ul class="pricing-card__features">
                     <li>매물 홈페이지 1개</li>
                     <li>매물 등록 무제한</li>
                     <li>고객 상담 관리</li>
                 </ul>
-                <a href="#apply" class="btn btn--outline">신청하기</a>
+                <a href="/signup" class="btn btn--outline">신청하기</a>
             </div>
             <div class="pricing-card">
-                <p class="pricing-card__name">3개월 이용권</p>
-                <p class="pricing-card__price pricing-card__price--tbd">추후 안내</p>
-                <p class="pricing-card__desc">3개월 결제 시 월 환산 할인</p>
+                <p class="pricing-card__name">2개월 이용권</p>
+                <p class="pricing-card__price-original">500,000원</p>
+                <p class="pricing-card__price">무료<span class="pricing-card__event-badge">이벤트</span></p>
+                <p class="pricing-card__desc">지금 신청하면 이벤트로 무료 제공</p>
                 <ul class="pricing-card__features">
                     <li>1개월 이용권 포함 기능</li>
                     <li>통계 리포트</li>
                     <li>우선 고객지원</li>
                 </ul>
-                <a href="#apply" class="btn btn--outline">신청하기</a>
+                <a href="/signup" class="btn btn--outline">신청하기</a>
             </div>
             <div class="pricing-card pricing-card--featured">
                 <span class="pricing-card__badge">추천</span>
@@ -75,7 +76,7 @@
                     <li>자동 갱신</li>
                     <li>해지 시 남은 기간 이용 가능</li>
                 </ul>
-                <a href="#apply" class="btn btn--primary">신청하기</a>
+                <a href="/signup" class="btn btn--primary">신청하기</a>
             </div>
         </div>
     </div>

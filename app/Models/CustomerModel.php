@@ -8,7 +8,7 @@ class CustomerModel extends CI_Model
 {
     public function __construct($db)
     {
-        parent::__construct($db, "customer", "customer_no");
+        parent::__construct($db, "customer", "customer_idx");
         return $this;
     }
 
@@ -26,9 +26,9 @@ class CustomerModel extends CI_Model
     // 아이디 중복체크 - use_yn 상관없이 전체에서 확인 (customer_id는 UNIQUE)
     public function existsByLoginId($customer_id, $exclude_no = null)
     {
-        $sql = "SELECT `customer_no` FROM `$this->table` WHERE `customer_id` = " . $this->db->escape($customer_id);
+        $sql = "SELECT `customer_idx` FROM `$this->table` WHERE `customer_id` = " . $this->db->escape($customer_id);
         if ($exclude_no !== null) {
-            $sql .= " AND `customer_no` != " . $this->db->escape($exclude_no);
+            $sql .= " AND `customer_idx` != " . $this->db->escape($exclude_no);
         }
         $sql .= " LIMIT 1";
         $rows = $this->getExecQuery($sql);
@@ -40,9 +40,9 @@ class CustomerModel extends CI_Model
     // 이 체크와 별도로 중앙 member 쪽 중복도 반드시 확인해야 한다 (아직 미구현).
     public function existsByFid($fid, $exclude_no = null)
     {
-        $sql = "SELECT `customer_no` FROM `$this->table` WHERE `fid` = " . $this->db->escape($fid);
+        $sql = "SELECT `customer_idx` FROM `$this->table` WHERE `fid` = " . $this->db->escape($fid);
         if ($exclude_no !== null) {
-            $sql .= " AND `customer_no` != " . $this->db->escape($exclude_no);
+            $sql .= " AND `customer_idx` != " . $this->db->escape($exclude_no);
         }
         $sql .= " LIMIT 1";
         $rows = $this->getExecQuery($sql);
@@ -53,7 +53,7 @@ class CustomerModel extends CI_Model
     {
         $osql = " INSERT INTO `$this->table` SET
                         `customer_id`=%s, `customer_pw`=%s, `customer_name`=%s,
-                        `company_name`=%s, `biz_reg_no`=%s, `broker_reg_no`=%s, `phone`=%s, `email`=%s,
+                        `company_name`=%s, `biz_reg_no`=%s, `broker_reg_no`=%s, `phone`=%s, `email`=%s, `fid`=%s,
                         `biz_reg_verified_yn`=%s, `broker_reg_verified_yn`=%s,
                         `use_yn`=%s, `service_yn`=%s, `migrated_yn`=%s, `reg_date`=now()
                 ";
@@ -67,6 +67,7 @@ class CustomerModel extends CI_Model
             $this->db->escape($entity->getBrokerRegNo()),
             $this->db->escape($entity->getPhone()),
             $this->db->escape($entity->getEmail()),
+            $entity->getFid() !== null && $entity->getFid() !== '' ? $this->db->escape($entity->getFid()) : 'NULL',
             // 가입 시점엔 항상 미검증(N)/미이관(N)으로 시작 - entity 값과 무관하게 여기서 고정.
             // service_yn도 결제 전이라 무조건 N에서 시작.
             $this->db->escape('N'),
@@ -109,14 +110,14 @@ class CustomerModel extends CI_Model
         }
 
         $sql = "UPDATE `$this->table` SET " . implode(",", $set) .
-               " WHERE `$this->primaryKey` = " . $this->db->escape($entity->getCustomerNo());
+               " WHERE `$this->primaryKey` = " . $this->db->escape($entity->getCustomerIdx());
 
         return $this->safeExecQuery($sql);
     }
 
-    public function sql_delete($customer_no)
+    public function sql_delete($customer_idx)
     {
-        $sql = "DELETE FROM `$this->table` WHERE `$this->primaryKey` = " . $this->db->escape($customer_no);
+        $sql = "DELETE FROM `$this->table` WHERE `$this->primaryKey` = " . $this->db->escape($customer_idx);
         return $this->safeExecQuery($sql);
     }
 }

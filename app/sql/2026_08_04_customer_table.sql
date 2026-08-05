@@ -11,7 +11,7 @@
 -- 테이블(broker_reg_no 등 법정표시 필드 보유)로 시딩하는 걸로 추정, 아직 미구현.
 
 CREATE TABLE IF NOT EXISTS `customer` (
-    `customer_no`             INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `customer_idx`             INT UNSIGNED NOT NULL AUTO_INCREMENT,
     `customer_id`             VARCHAR(50)  NOT NULL COMMENT '로그인 아이디',
     `customer_pw`             CHAR(64)     NOT NULL COMMENT 'SHA-256 해시(hex) - 중앙 member.user_pwd 이관 호환',
     `customer_name`           VARCHAR(50)  NOT NULL COMMENT '담당자명',
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS `customer` (
     `migrated_yn`             CHAR(1)      NOT NULL DEFAULT 'N' COMMENT '중앙 member 이관 완료여부 Y/N',
     `migrated_date`           DATETIME     NULL     COMMENT '이관 처리일시',
     `reg_date`                DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`customer_no`),
+    PRIMARY KEY (`customer_idx`),
     UNIQUE KEY `uk_customer_id` (`customer_id`),
     KEY `ix_biz_reg_no` (`biz_reg_no`),
     KEY `ix_broker_reg_no` (`broker_reg_no`),

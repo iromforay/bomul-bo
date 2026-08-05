@@ -17,7 +17,14 @@
         </nav>
 
         <div class="header__actions">
-            <a href="/#apply" class="btn btn--primary">가입 신청하기</a>
+            <?php $customerLogin = session('customer_login') ?? []; ?>
+            <?php if (!empty($customerLogin['is_login'])): ?>
+                <span class="header__user"><?= htmlspecialchars($customerLogin['CUSTOMER_NAME'] ?? '', ENT_QUOTES) ?>님</span>
+                <a href="/logout" class="btn btn--outline">로그아웃</a>
+            <?php else: ?>
+                <a href="/login" class="btn btn--outline">로그인</a>
+                <a href="/signup" class="btn btn--primary">가입 신청하기</a>
+            <?php endif; ?>
             <button type="button" class="header__toggle" id="jsNavToggle" aria-label="메뉴 열기" aria-expanded="false" aria-controls="jsMobNav">
                 <span></span><span></span><span></span>
             </button>
@@ -37,6 +44,11 @@
         <li><a href="/#faq">자주 묻는 질문</a></li>
         <li><a href="/#inquiry">상담 신청</a></li>
     </ul>
-    <a href="/#apply" class="btn btn--primary btn--block">가입 신청하기</a>
+    <?php if (!empty($customerLogin['is_login'])): ?>
+        <a href="/logout" class="btn btn--outline btn--block">로그아웃</a>
+    <?php else: ?>
+        <a href="/login" class="btn btn--outline btn--block">로그인</a>
+        <a href="/signup" class="btn btn--primary btn--block">가입 신청하기</a>
+    <?php endif; ?>
 </div>
 <div class="mob-nav__dim" id="jsNavDim"></div>

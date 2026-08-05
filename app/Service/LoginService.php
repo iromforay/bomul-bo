@@ -6,14 +6,13 @@ use App\Libraries\AT_Result;
 
 // CI_Service를 상속하지 않는다 - CI_Service::__construct()는 SHOP_CODE가 이미 정의돼 있다고
 // 가정하는데, 로그인은 그 SHOP_CODE를 이제 막 찾아내는 시점이라 순서가 반대다.
-class LoginService
+class LoginService extends CI_Service
 {
-    private $db;
     private $model;
 
     public function __construct()
     {
-        $this->db = db_connect("default");
+        parent::__construct();
         $this->model = model('App\Models\ManagerModel', true, $this->db);
     }
 

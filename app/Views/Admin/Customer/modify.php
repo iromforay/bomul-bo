@@ -8,7 +8,7 @@ $verifyOptions = ['N' => '검증대기', 'W' => '보류', 'Y' => '검증완료',
     <h1>고객 수정</h1>
 </div>
 
-<form method="post" action="<?= Admin_SITE ?>/Customer/modify/<?= (int) $row['customer_no'] ?>">
+<form method="post" action="<?= Admin_SITE ?>/Customer/modify/<?= (int) $row['customer_idx'] ?>">
 
 <div class="panel">
     <div class="panel-head"><h2>기본 정보</h2></div>
@@ -154,7 +154,7 @@ $verifyOptions = ['N' => '검증대기', 'W' => '보류', 'Y' => '검증완료',
 
 <div class="form-actions">
     <button type="submit" class="primary">저장</button>
-    <a href="<?= Admin_SITE ?>/Customer/view/<?= (int) $row['customer_no'] ?>"><button type="button">취소</button></a>
+    <a href="<?= Admin_SITE ?>/Customer/view/<?= (int) $row['customer_idx'] ?>"><button type="button">취소</button></a>
 </div>
 
 </form>

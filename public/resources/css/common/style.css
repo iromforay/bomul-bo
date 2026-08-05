@@ -77,7 +77,9 @@ main {padding-top: var(--header-h);}
 .pricing-card__name {font-size:0.95rem; font-weight:700; color:var(--color-muted);}
 .pricing-card__price {margin-top:12px; font-size:1.9rem; font-weight:800; color:var(--color-ink);}
 .pricing-card__price span {font-size:0.85rem; font-weight:600; color:var(--color-muted);}
-.pricing-card__price--tbd {font-size:1.1rem; font-weight:700; color:var(--color-muted);}
+.pricing-card__price-original {margin:12px 0 0; font-size:0.9rem; font-weight:600; color:var(--color-muted); text-decoration:line-through;}
+.pricing-card__price-original + .pricing-card__price {margin-top:2px;}
+.pricing-card__price span.pricing-card__event-badge {display:inline-block; margin-left:8px; padding:2px 9px; background:#FEF2F2; color:#DC2626; font-size:0.7rem; font-weight:700; border-radius:999px; vertical-align:middle;}
 .pricing-card__desc {margin-top:8px; font-size:0.85rem; color:var(--color-muted);}
 .pricing-card__features {margin:20px 0 0; display:flex; flex-direction:column; gap:10px; font-size:0.85rem; flex:1;}
 .pricing-card .btn {margin-top:24px;}
@@ -110,6 +112,59 @@ main {padding-top: var(--header-h);}
     .feature-grid, .pricing-grid {grid-template-columns: 1fr;}
     .apply-steps {grid-template-columns: repeat(2, 1fr);}
 }
+
+/* ---------- signup ---------- */
+.signup-wrap {max-width: 640px; margin: 0 auto; padding: 72px 24px 120px;}
+.signup-card {background: #fff; border: 1px solid var(--color-line); border-radius: 16px; padding: 40px;}
+.signup-title {text-align: center; font-size: 1.5rem;}
+.signup-desc {text-align: center; color: var(--color-muted); margin: 8px 0 32px; font-size: 0.9rem;}
+
+.form-group {margin-bottom: 18px;}
+.form-group label {display: block; font-size: 0.85rem; font-weight: 700; color: var(--color-ink); margin-bottom: 6px;}
+.form-group input {width: 100%; padding: 12px 14px; border: 1px solid var(--color-line); border-radius: 8px; font-size: 0.9rem; font-family: inherit;}
+.form-group input:focus {outline: none; border-color: var(--color-primary);}
+.form-group .field-hint {margin-top: 6px; font-size: 0.78rem; color: var(--color-muted);}
+.form-row {display: grid; grid-template-columns: 1fr 1fr; gap: 16px;}
+.form-error {margin-bottom: 20px; padding: 12px 16px; background: #FEF2F2; border: 1px solid #FCA5A5; color: #DC2626; border-radius: 8px; font-size: 0.85rem;}
+
+.form-domain-preview {display: flex;}
+.form-domain-preview input {border-radius: 8px 0 0 8px;}
+.form-domain-suffix {display: flex; align-items: center; padding: 0 14px; border: 1px solid var(--color-line); border-left: none; border-radius: 0 8px 8px 0; background: var(--color-surface); font-size: 0.85rem; color: var(--color-muted); white-space: nowrap;}
+
+.signup-success {text-align: center; padding: 40px 0;}
+.signup-success__icon {font-size: 2.5rem; margin-bottom: 16px;}
+
+/* ---------- login ---------- */
+.login-wrap {max-width: 420px;}
+.login-card .btn--block {width: 100%; margin-top: 8px;}
+.login-foot {text-align: center; margin: 24px 0 0; font-size: 0.85rem; color: var(--color-muted);}
+.login-foot a {color: var(--color-primary); font-weight: 700;}
+
+/* ---------- signup wizard ---------- */
+.wizard-progress {margin-bottom: 28px;}
+.wizard-progress__bar {height: 6px; background: var(--color-line); border-radius: 999px; overflow: hidden;}
+.wizard-progress__bar span {display: block; height: 100%; width: 33.33%; background: var(--color-primary); border-radius: 999px; transition: width .25s ease;}
+.wizard-progress__label {margin: 8px 0 0; text-align: right; font-size: 0.78rem; color: var(--color-muted);}
+.wizard-step__title {font-size: 1.1rem; margin-bottom: 22px;}
+.wizard-actions {display: flex; justify-content: space-between; align-items: center; margin-top: 8px;}
+.wizard-actions .btn {min-width: 96px;}
+
+@media (max-width: 560px) {
+    .signup-card {padding: 28px 20px;}
+    .form-row {grid-template-columns: 1fr;}
+}
+
+/* ---------- drag & drop upload (공개 페이지용, admin.css의 어드민 톤과는 별도 팔레트) ---------- */
+.upload-drop {position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 24px 16px; border: 2px dashed var(--color-line); border-radius: 10px; text-align: center; cursor: pointer; background: var(--color-surface); transition: border-color .15s ease, background .15s ease;}
+.upload-drop:hover {border-color: var(--color-primary);}
+.upload-drop.is-dragover {border-color: var(--color-primary); background: #EEF2FF;}
+.upload-drop.is-uploading {opacity: .6; pointer-events: none;}
+.upload-drop.has-file {border-style: solid; border-color: #16A34A; background: #F0FDF4;}
+.upload-drop input[type="file"] {display: none;}
+.upload-drop .upload-hint {font-size: 0.8rem; color: var(--color-muted);}
+.upload-drop .upload-preview {display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 700; color: var(--color-ink); word-break: break-all;}
+.upload-drop .upload-thumb {max-width: 140px; max-height: 100px; object-fit: cover; border: 1px solid var(--color-line); border-radius: 6px;}
+.upload-drop .upload-remove {margin-top: 2px; padding: 4px 12px; font-size: 0.75rem; border: 1px solid #DC2626; color: #DC2626; background: #fff; border-radius: 6px; cursor: pointer;}
 
 /* ---------- footer ---------- */
 .footer {background: var(--color-ink); color: #CBD5E1;}
