@@ -24,6 +24,25 @@ class ServiceApplyModel extends CI_Model
         return !empty($rows);
     }
 
+    // 어드민 "서비스 신청 현황" 목록용 - 신청서 자체(회사명/대표자 등)는 service_apply 스냅샷을 그대로
+    // 쓰고, 어느 계정(로그인 아이디)이 신청했는지/상품명/최근 결제상태만 customer·product·payment를
+    // 조인해서 보여준다. payment는 1신청:N결제(월구독 갱신)라 가장 최근 1건만 서브쿼리로 붙인다.
+    public function get_list_with_details()
+    {
+        $sql = "SELECT sa.*, c.customer_id AS customer_login_id, p.product_name, p.product_code,
+                       pay.pay_status, pay.pay_method, pay.pay_amount, pay.paid_at
+                FROM `$this->table` sa
+                JOIN `customer` c ON c.customer_idx = sa.customer_idx
+                JOIN `product` p ON p.product_idx = sa.product_idx
+                LEFT JOIN `payment` pay ON pay.payment_idx = (
+                    SELECT pay2.payment_idx FROM `payment` pay2
+                    WHERE pay2.apply_idx = sa.apply_idx
+                    ORDER BY pay2.payment_idx DESC LIMIT 1
+                )
+                ORDER BY sa.apply_idx DESC";
+        return $this->getExecQuery($sql);
+    }
+
     public function sql_save(ServiceApply_Entity $entity)
     {
         $esc = function ($value) {

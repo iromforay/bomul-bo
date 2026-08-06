@@ -34,6 +34,8 @@ if ($host === 'ad.bomul.ai.kr') { //관리자
     $routes->get('Customer/modify/(:num)',      'Customer::getModify/$1');
     $routes->post('Customer/modify/(:num)',     'Customer::postModify/$1');
     $routes->post('Customer/uploadTemp',        'Customer::postUploadTemp');
+
+    $routes->get('Service',                     'Service::getIndex');
     // 기본 자동 라우터 활성화
     //$routes->setAutoRoute(true);
 

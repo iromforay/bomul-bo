@@ -21,7 +21,8 @@ class ServiceApply extends BaseController
     {
         $customer = $this->requireLogin();
         if ($customer === null) {
-            return redirect()->to('/login');
+
+            return redirect()->to(SITE.'/login?redirect_url=' . urlencode($this->currentPathWithQuery()));
         }
 
         $customerService = new CustomerService();
@@ -44,7 +45,7 @@ class ServiceApply extends BaseController
     {
         $customer = $this->requireLogin();
         if ($customer === null) {
-            return redirect()->to('/login');
+            return redirect()->to('/login?redirect_url=' . urlencode($this->currentPathWithQuery()));
         }
 
         $customerService = new CustomerService();
@@ -107,6 +108,15 @@ class ServiceApply extends BaseController
 
         $customer = (new CustomerService())->get_row($login['CUSTOMER_IDX']);
         return $customer ?: null;
+    }
+
+    // 로그인 게이트에 걸렸을 때 로그인 후 돌아올 위치 - 쿼리스트링(?product=...)까지 그대로 보존
+    private function currentPathWithQuery(): string
+    {
+        $uri = $this->request->getUri();
+        $path = '/' . ltrim($uri->getPath(), '/');
+        $query = $uri->getQuery();
+        return $path . ($query !== '' ? '?' . $query : '');
     }
 
     private function showError(array $customer, bool $profileComplete, string $msg)

@@ -36,7 +36,7 @@ $active = $active ?? '';
     <div class="grp-title">고객관리</div>
     <ul>
         <li><a href="<?= Admin_SITE ?? '' ?>/Customer"><span class="ico">▸</span>고객 목록(중개사)</a></li>
-        <li><a href="<?= Admin_SITE ?? '' ?>/Customer/apply"><span class="ico">▸</span>서비스 신청 현황</a></li>
+        <li><a href="<?= Admin_SITE ?? '' ?>/Service"><span class="ico">▸</span>서비스 신청 현황</a></li>
         <li><a href="<?= Admin_SITE ?? '' ?>/Customer/payment"><span class="ico">▸</span>결제 현황</a></li>
     </ul>
     <div class="grp-title">상담문의</div>

@@ -8,6 +8,9 @@
         <?php endif; ?>
 
         <form method="post" action="/login">
+            <?php if (!empty($redirectUrl)): ?>
+                <input type="hidden" name="redirect_url" value="<?= htmlspecialchars($redirectUrl, ENT_QUOTES) ?>">
+            <?php endif; ?>
             <div class="form-group">
                 <label for="customer_id">아이디</label>
                 <input type="text" id="customer_id" name="customer_id" autocomplete="username" required autofocus>

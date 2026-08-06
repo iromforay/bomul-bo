@@ -14,11 +14,12 @@
 
     <?php if (!$lockedProduct): ?>
 
-        <div class="signup-card signup-success">
-            <h1 class="signup-title">신청할 상품을 먼저 선택해주세요</h1>
-            <p class="signup-desc">요금 안내에서 원하는 상품의 "신청하기"를 눌러주세요</p>
-            <a href="/#pricing" class="btn btn--primary">요금 안내 보기</a>
+        <div class="signup-card">
+            <h1 class="signup-title">신청할 상품을 선택해주세요</h1>
+            <p class="signup-desc">아래에서 원하는 상품의 "신청하기"를 눌러주세요</p>
         </div>
+
+        <?= view('unit/product', ['applyBase' => '/service-apply']) ?>
 
     <?php else: ?>
 

@@ -17,6 +17,12 @@ class ServiceApplyService extends CI_Service
         $this->productModel = model('App\Models\ProductModel', true, $this->db);
     }
 
+    // 어드민 "서비스 신청 현황" 목록
+    public function get_list()
+    {
+        return $this->model->get_list_with_details();
+    }
+
     // $data['customer_idx']는 항상 서버(세션)에서 채워서 넘겨야 한다 - 폼 입력값으로 받으면 안 됨(타 계정 신청 위조 방지)
     public function apply(array $data): array
     {
