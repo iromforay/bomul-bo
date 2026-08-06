@@ -19,8 +19,9 @@
         <div class="header__actions">
             <?php $customerLogin = session('customer_login') ?? []; ?>
             <?php if (!empty($customerLogin['is_login'])): ?>
-                <span class="header__user"><?= htmlspecialchars($customerLogin['CUSTOMER_NAME'] ?? '', ENT_QUOTES) ?>님</span>
+                <span class="header__user"><?= htmlspecialchars($customerLogin['CUSTOMER_NAME'] ?: ($customerLogin['COMPANY_NAME'] ?? ''), ENT_QUOTES) ?>님</span>
                 <a href="/logout" class="btn btn--outline">로그아웃</a>
+                <a href="/service-apply" class="btn btn--primary">서비스 신청하기</a>
             <?php else: ?>
                 <a href="/login" class="btn btn--outline">로그인</a>
                 <a href="/signup" class="btn btn--primary">가입 신청하기</a>
@@ -45,6 +46,7 @@
         <li><a href="/#inquiry">상담 신청</a></li>
     </ul>
     <?php if (!empty($customerLogin['is_login'])): ?>
+        <a href="/service-apply" class="btn btn--primary btn--block">서비스 신청하기</a>
         <a href="/logout" class="btn btn--outline btn--block">로그아웃</a>
     <?php else: ?>
         <a href="/login" class="btn btn--outline btn--block">로그인</a>

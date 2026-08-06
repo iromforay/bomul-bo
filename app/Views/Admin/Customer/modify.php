@@ -24,7 +24,7 @@ $verifyOptions = ['N' => '검증대기', 'W' => '보류', 'Y' => '검증완료',
         </tr>
         <tr>
             <th>담당자명</th>
-            <td><input type="text" name="customer_name" value="<?= htmlspecialchars($row['customer_name'], ENT_QUOTES) ?>" required></td>
+            <td><input type="text" name="customer_name" value="<?= htmlspecialchars($row['customer_name'] ?? '', ENT_QUOTES) ?>" required></td>
         </tr>
         <tr>
             <th>중개사무소명</th>
@@ -36,7 +36,7 @@ $verifyOptions = ['N' => '검증대기', 'W' => '보류', 'Y' => '검증완료',
         </tr>
         <tr>
             <th>이메일</th>
-            <td><input type="text" name="email" value="<?= htmlspecialchars($row['email'], ENT_QUOTES) ?>" required></td>
+            <td><input type="text" name="email" value="<?= htmlspecialchars($row['email'] ?? '', ENT_QUOTES) ?>" required></td>
         </tr>
         </tbody>
     </table>
@@ -49,7 +49,7 @@ $verifyOptions = ['N' => '검증대기', 'W' => '보류', 'Y' => '검증완료',
         <tr>
             <th>사업자등록번호</th>
             <td>
-                <input type="text" name="biz_reg_no" value="<?= htmlspecialchars($row['biz_reg_no'], ENT_QUOTES) ?>" required>
+                <input type="text" name="biz_reg_no" value="<?= htmlspecialchars($row['biz_reg_no'] ?? '', ENT_QUOTES) ?>" required>
                 <select name="biz_reg_verified_yn" style="width:auto; margin-left:8px;">
                     <?php foreach ($verifyOptions as $val => $label): ?>
                         <option value="<?= $val ?>" <?= ($row['biz_reg_verified_yn'] ?? 'N') === $val ? 'selected' : '' ?>><?= $label ?></option>
@@ -83,7 +83,7 @@ $verifyOptions = ['N' => '검증대기', 'W' => '보류', 'Y' => '검증완료',
         <tr>
             <th>중개사무소등록번호</th>
             <td>
-                <input type="text" name="broker_reg_no" value="<?= htmlspecialchars($row['broker_reg_no'], ENT_QUOTES) ?>" required>
+                <input type="text" name="broker_reg_no" value="<?= htmlspecialchars($row['broker_reg_no'] ?? '', ENT_QUOTES) ?>" required>
                 <select name="broker_reg_verified_yn" style="width:auto; margin-left:8px;">
                     <?php foreach ($verifyOptions as $val => $label): ?>
                         <option value="<?= $val ?>" <?= ($row['broker_reg_verified_yn'] ?? 'N') === $val ? 'selected' : '' ?>><?= $label ?></option>

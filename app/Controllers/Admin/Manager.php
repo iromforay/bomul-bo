@@ -31,7 +31,7 @@ class Manager extends BaseController
         ]);
 
         session()->setFlashdata($result['SUCCESS'] === 'TRUE' ? 'msg' : 'err', $result['MSG']);
-        return redirect()->to(Admin_SITE . '/Manager');
+        return redirect()->to(SITE . '/Manager');
     }
 
     public function getModify($manager_no = null)
@@ -41,7 +41,7 @@ class Manager extends BaseController
 
         if (!$row) {
             session()->setFlashdata('err', '존재하지 않는 관리자입니다.');
-            return redirect()->to(Admin_SITE . '/Manager');
+            return redirect()->to(SITE . '/Manager');
         }
 
         $data['row'] = $row;
@@ -59,7 +59,7 @@ class Manager extends BaseController
         ]);
 
         session()->setFlashdata($result['SUCCESS'] === 'TRUE' ? 'msg' : 'err', $result['MSG']);
-        return redirect()->to(Admin_SITE . '/Manager');
+        return redirect()->to(SITE . '/Manager');
     }
 
     public function postDelete($manager_no = null)
@@ -69,6 +69,6 @@ class Manager extends BaseController
         $result = $service->delete($manager_no, $current_no);
 
         session()->setFlashdata($result['SUCCESS'] === 'TRUE' ? 'msg' : 'err', $result['MSG']);
-        return redirect()->to(Admin_SITE . '/Manager');
+        return redirect()->to(SITE . '/Manager');
     }
 }

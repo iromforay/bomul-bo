@@ -34,29 +34,29 @@ class CustomerService extends CI_Service
         return $this->model->get_list();
     }
 
+    // 회원가입 - id/pw/company_name/phone 4개만 필수. customer_name(담당자명)/biz_reg_no/broker_reg_no/
+    // email/fid는 서비스 신청 단계(completeProfile())에서 받는다. 다만 Admin이 직접 등록할 땐 한 번에
+    // 다 채워 보낼 수도 있어서, 넘어오면 그대로 저장하되 필수 조건에는 넣지 않는다.
     public function save(array $data): array
     {
         $customer_id   = trim($data['customer_id'] ?? '');
         $customer_pw   = (string) ($data['customer_pw'] ?? '');
-        $customer_name = trim($data['customer_name'] ?? '');
         $company_name  = trim($data['company_name'] ?? '');
+        $phone         = trim($data['phone'] ?? '');
+        $customer_name = trim($data['customer_name'] ?? '');
         $biz_reg_no    = trim($data['biz_reg_no'] ?? '');
         $broker_reg_no = trim($data['broker_reg_no'] ?? '');
-        $phone         = trim($data['phone'] ?? '');
         $email         = trim($data['email'] ?? '');
         $fid           = trim($data['fid'] ?? '');
 
-        if ($customer_id === '' || $customer_pw === '' || $customer_name === '' || $company_name === ''
-            || $biz_reg_no === '' || $broker_reg_no === '' || $phone === '' || $email === '') {
-            return AT_Result::toFailData("모든 항목을 입력해주세요.");
+        if ($customer_id === '' || $customer_pw === '' || $company_name === '' || $phone === '') {
+            return AT_Result::toFailData("아이디/비밀번호/중개사무소명/휴대폰번호를 입력해주세요.");
         }
 
         if ($this->model->existsByLoginId($customer_id)) {
             return AT_Result::toFailData("이미 사용중인 아이디입니다.");
         }
 
-        // fid는 선택 입력 - 공개 가입폼(회원가입+서비스신청 통합)에서는 필수로 받지만,
-        // 관리자가 직접 등록할 때는 비워둘 수 있게 유지.
         if ($fid !== '' && !preg_match('/^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/', $fid)) {
             return AT_Result::toFailData("도메인 주소는 영문 소문자/숫자/하이픈만 사용할 수 있습니다.");
         }
@@ -69,13 +69,21 @@ class CustomerService extends CI_Service
         // SHA-256(64자) 고정 - 중앙 member.user_pwd가 VARCHAR(64)라 이관 시 해시를 그대로 복사하려면
         // 같은 알고리즘이어야 한다(원문 비밀번호 없이는 재해시 불가). manager(SHA-512)와는 별개 정책.
         $entity->setCustomerPw(hash('sha256', $customer_pw));
-        $entity->setCustomerName($customer_name);
         $entity->setCompanyName($company_name);
-        $entity->setBizRegNo($biz_reg_no);
-        $entity->setBrokerRegNo($broker_reg_no);
         $entity->setPhone($phone);
-        $entity->setEmail($email);
         $entity->setUseYn('Y');
+        if ($customer_name !== '') {
+            $entity->setCustomerName($customer_name);
+        }
+        if ($biz_reg_no !== '') {
+            $entity->setBizRegNo($biz_reg_no);
+        }
+        if ($broker_reg_no !== '') {
+            $entity->setBrokerRegNo($broker_reg_no);
+        }
+        if ($email !== '') {
+            $entity->setEmail($email);
+        }
         if ($fid !== '') {
             $entity->setFid($fid);
         }
@@ -91,7 +99,60 @@ class CustomerService extends CI_Service
         $emptyRow = ['biz_reg_file_dir' => null, 'biz_reg_file_name' => null, 'broker_reg_file_dir' => null, 'broker_reg_file_name' => null];
         $this->finalizeCertificateFiles((int) $customer_idx, $emptyRow, $data);
 
-        return AT_Result::toSuccessData("고객 등록에 성공했습니다.");
+        return AT_Result::toSuccessData("고객 등록에 성공했습니다.", ['customer_idx' => (int) $customer_idx]);
+    }
+
+    // 서비스 신청 단계의 "사업자정보 및 도메인" 입력 - customer_name(담당자명)/email/biz_reg_no/
+    // broker_reg_no/fid를 채운다. verified_yn/use_yn/service_yn 등 상태값은 entity에 아예 세팅하지
+    // 않아서 sql_edit()이 건드리지 않는다 (edit()과 달리 이 메서드는 고객 본인이 호출하는 경로라
+    // 관리자 전용 상태값을 실수로라도 덮어쓰면 안 됨).
+    public function completeProfile(int $customer_idx, array $data): array
+    {
+        $customer_name = trim($data['customer_name'] ?? '');
+        $email         = trim($data['email'] ?? '');
+        $biz_reg_no    = trim($data['biz_reg_no'] ?? '');
+        $broker_reg_no = trim($data['broker_reg_no'] ?? '');
+        $fid           = trim($data['fid'] ?? '');
+
+        if ($customer_name === '' || $email === '' || $biz_reg_no === '' || $broker_reg_no === '' || $fid === '') {
+            return AT_Result::toFailData("모든 항목을 입력해주세요.");
+        }
+
+        if (!preg_match('/^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/', $fid)) {
+            return AT_Result::toFailData("도메인 주소는 영문 소문자/숫자/하이픈만 사용할 수 있습니다.");
+        }
+        if ($this->model->existsByFid($fid, $customer_idx)) {
+            return AT_Result::toFailData("이미 사용중인 도메인 주소입니다.");
+        }
+
+        $entity = new Customer_Entity();
+        $entity->setCustomerIdx($customer_idx);
+        $entity->setCustomerName($customer_name);
+        $entity->setEmail($email);
+        $entity->setBizRegNo($biz_reg_no);
+        $entity->setBrokerRegNo($broker_reg_no);
+        $entity->setFid($fid);
+
+        if (!$this->model->sql_edit($entity)) {
+            return AT_Result::toFailData("저장에 실패했습니다.");
+        }
+
+        return AT_Result::toSuccessData();
+    }
+
+    // 서비스 신청 화면에서 "사업자정보 및 도메인"을 또 물어봐야 하는지 판단하는 기준 -
+    // 이전 신청에서 이미 다 채웠으면(=completeProfile 완료) 그 화면을 건너뛰고(pass) 바로 상품 확인으로.
+    public function isProfileComplete(?array $row): bool
+    {
+        if (!$row) {
+            return false;
+        }
+
+        return trim((string) ($row['customer_name'] ?? '')) !== ''
+            && trim((string) ($row['email'] ?? '')) !== ''
+            && trim((string) ($row['biz_reg_no'] ?? '')) !== ''
+            && trim((string) ($row['broker_reg_no'] ?? '')) !== ''
+            && trim((string) ($row['fid'] ?? '')) !== '';
     }
 
     // 고객 상세 > 수정 화면 전체 저장 - 기본정보 + 각종 상태값(검증여부/계정사용여부/서비스사용여부/

@@ -7,7 +7,7 @@ use CodeIgniter\Router\RouteCollection;
 //$routes->get('/', 'Home::index');
 
 $host = $_SERVER['HTTP_HOST'] ?? '';
-if ($host === 'ad.bomul.ai.kr') {
+if ($host === 'ad.bomul.ai.kr') { //관리자
 
 
     // 🌐 관리자 전용: 모든 요청을 Web namespace로 자동 라우팅
@@ -37,7 +37,7 @@ if ($host === 'ad.bomul.ai.kr') {
     // 기본 자동 라우터 활성화
     //$routes->setAutoRoute(true);
 
-} else {
+} else { //서비스 페이지
 
     // OPTIONS(preflight)는 어떤 경로든 여기서 바로 처리 - 컨트롤러마다 optionsXxx() 안 만들어도 됨
     $routes->options('(:any)', static function () {
@@ -61,5 +61,8 @@ if ($host === 'ad.bomul.ai.kr') {
     $routes->get('login',   'Login::getindex');
     $routes->post('login',  'Login::postindex');
     $routes->get('logout',  'Login::getlogout');
+
+    $routes->get('service-apply',  'ServiceApply::getindex');
+    $routes->post('service-apply', 'ServiceApply::postindex');
 }
 

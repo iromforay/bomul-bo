@@ -152,7 +152,7 @@ abstract class BaseController extends Controller
             return $this;
         }
 
-        $this->_redirect(Admin_SITE . "/Login");
+        $this->_redirect(SITE . "/Login");
     }
 
     // Admin은 layout이 admin_default 하나뿐이라 layout 인자를 따로 받지 않는다 -

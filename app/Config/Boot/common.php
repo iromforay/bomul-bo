@@ -54,7 +54,7 @@ define('APP_PDS', ROOT_PATH.'/public/pds/');
 // Admin 백오피스는 어느 도메인(www/ad)에서 실행되든 항상 같은 고정 주소를 가리켜야 한다
 // (예: www에서 "관리자 로그인" 링크를 걸 때도 ad.bomul.ai.kr로 가야 함) - 그래서 SITE와 달리
 // 도메인 분기 없이 .env의 ad_site를 그대로 고정 사용.
-define('Admin_SITE', getenv('ad_site'));
+define('Admin_SITE', bomul_normalize_site_url(getenv('ad_site')));
 
 define('AES_KEY', getenv("AES_KEY"));
 define('LOG_DIR', getenv("LOG_DIR"));

@@ -33,12 +33,12 @@ $err = session()->getFlashdata('err');
                 <tr class="row-link" onclick="location.href='<?= Admin_SITE ?>/Customer/view/<?= (int) $row['customer_idx'] ?>'">
                     <td><?= (int) $row['customer_idx'] ?></td>
                     <td><?= htmlspecialchars($row['customer_id'], ENT_QUOTES) ?></td>
-                    <td><?= htmlspecialchars($row['customer_name'], ENT_QUOTES) ?></td>
+                    <td><?= htmlspecialchars($row['customer_name'] ?? '', ENT_QUOTES) ?></td>
                     <td><?= htmlspecialchars($row['company_name'], ENT_QUOTES) ?></td>
-                    <td><?= htmlspecialchars($row['biz_reg_no'], ENT_QUOTES) ?></td>
-                    <td><?= htmlspecialchars($row['broker_reg_no'], ENT_QUOTES) ?></td>
+                    <td><?= htmlspecialchars($row['biz_reg_no'] ?? '', ENT_QUOTES) ?></td>
+                    <td><?= htmlspecialchars($row['broker_reg_no'] ?? '', ENT_QUOTES) ?></td>
                     <td><?= htmlspecialchars($row['phone'], ENT_QUOTES) ?></td>
-                    <td><?= htmlspecialchars($row['email'], ENT_QUOTES) ?></td>
+                    <td><?= htmlspecialchars($row['email'] ?? '', ENT_QUOTES) ?></td>
                     <td><?= verify_status_badge($row['biz_reg_verified_yn'] ?? null) ?></td>
                     <td><?= verify_status_badge($row['broker_reg_verified_yn'] ?? null) ?></td>
                     <td>

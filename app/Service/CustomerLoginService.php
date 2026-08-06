@@ -33,9 +33,9 @@ class CustomerLoginService extends CI_Service
             'is_login'     => true,
             'CUSTOMER_IDX' => $row['customer_idx'],
             'CUSTOMER_ID'  => $row['customer_id'],
-            'CUSTOMER_NAME'=> $row['customer_name'],
+            'CUSTOMER_NAME'=> $row['customer_name'] ?? '',
             'COMPANY_NAME' => $row['company_name'],
-            'domain' => $row['fid'],
+            'domain' => $row['fid'] ?? '',
         ]);
 
         return AT_Result::toSuccessData();

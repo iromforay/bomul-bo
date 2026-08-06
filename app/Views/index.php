@@ -42,6 +42,8 @@
         <h2 class="section__title">요금 안내</h2>
         <p class="section__desc">필요한 만큼 이용하세요. 예시 요금이며 최종 확정 전입니다.</p>
 
+        <?php $applyBase = (session('customer_login')['is_login'] ?? false) ? '/service-apply' : '/signup'; ?>
+
         <div class="pricing-grid">
             <div class="pricing-card">
                 <p class="pricing-card__name">1개월 이용권</p>
@@ -52,6 +54,8 @@
                     <li>매물 등록 무제한</li>
                     <li>고객 상담 관리</li>
                 </ul>
+                <!-- TODO: 실제 상품(product_code=1month)은 220,000원 유료라 이 카드의 "무료" 문구와 안 맞음 -
+                     상품/문구 중 뭘 고칠지 정해지기 전까진 상품을 미리 골라 넘기지 않는다 -->
                 <a href="/signup" class="btn btn--outline">신청하기</a>
             </div>
             <div class="pricing-card">
@@ -64,7 +68,7 @@
                     <li>통계 리포트</li>
                     <li>우선 고객지원</li>
                 </ul>
-                <a href="/signup" class="btn btn--outline">신청하기</a>
+                <a href="<?= $applyBase ?>?product=2month" class="btn btn--outline">신청하기</a>
             </div>
             <div class="pricing-card pricing-card--featured">
                 <span class="pricing-card__badge">추천</span>
@@ -76,7 +80,7 @@
                     <li>자동 갱신</li>
                     <li>해지 시 남은 기간 이용 가능</li>
                 </ul>
-                <a href="/signup" class="btn btn--primary">신청하기</a>
+                <a href="<?= $applyBase ?>?product=billing" class="btn btn--primary">신청하기</a>
             </div>
         </div>
     </div>

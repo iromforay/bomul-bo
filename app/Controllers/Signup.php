@@ -5,12 +5,10 @@ namespace App\Controllers;
 use App\Libraries\AT_Result;
 use App\Service\CustomerService;
 
-// 공개 회원가입 페이지 - 결제 없이 바로 활성화되는 1/2개월 무료 티어용으로,
-// 회원가입 + 서비스신청(fid 선택)을 3단계 위저드로 처리한다.
-// 서류(사업자등록증/중개사무소등록증) 제출은 이 단계에서 뺐다 - 언제 받을지(가입 직후 별도 안내 vs
-// 검증 단계에서 별도 페이지) 아직 미정. CustomerService::uploadTemp()/postuploadtemp()는 그대로
-// 남겨뒀으니 나중에 어느 화면에 붙이든 재사용 가능.
-// (관리자 검증 완료 전까지는 서비스가 활성화되지 않음 - Admin > 고객관리에서 처리)
+// 공개 회원가입 페이지 - id/pw/company_name/phone 4개만 받는 간편가입. 사업자정보·도메인·상품선택은
+// 전부 로그인 이후 /service-apply에서 처리한다 (Signup은 계정 생성만 책임진다).
+// 가입 성공 즉시 자동로그인시켜 /service-apply로 넘긴다 - "결제 전까지는 비회원" 규칙을,
+// 신청 시점엔 이미 세션이 있는 상태로 만족시키는 절충안 - 사용자에게는 이탈 없는 단일 흐름으로 보인다.
 class Signup extends BaseController
 {
     public function __construct()
@@ -21,7 +19,14 @@ class Signup extends BaseController
 
     public function getindex()
     {
+        $product = (string) $this->request->getGet('product');
+
+        if (session('customer_login')['is_login'] ?? false) {
+            return redirect()->to('/service-apply' . ($product !== '' ? '?product=' . urlencode($product) : ''));
+        }
+
         $data = [];
+        $data['product'] = $product;
         echo $this->view("default", "signup", $data);
     }
 
@@ -29,32 +34,39 @@ class Signup extends BaseController
     {
         $service = new CustomerService();
         $result = $service->save([
-            'customer_id'          => $this->request->getPost('customer_id'),
-            'customer_pw'          => $this->request->getPost('customer_pw'),
-            'customer_name'        => $this->request->getPost('customer_name'),
-            'company_name'         => $this->request->getPost('company_name'),
-            'biz_reg_no'           => $this->request->getPost('biz_reg_no'),
-            'broker_reg_no'        => $this->request->getPost('broker_reg_no'),
-            'phone'                => $this->request->getPost('phone'),
-            'email'                => $this->request->getPost('email'),
-            'fid'                  => $this->request->getPost('fid'),
+            'customer_id'   => $this->request->getPost('customer_id'),
+            'customer_pw'   => $this->request->getPost('customer_pw'),
+            'company_name'  => $this->request->getPost('company_name'),
+            'phone'         => $this->request->getPost('phone'),
         ]);
+
+        $product = (string) $this->request->getPost('product');
 
         if ($result['SUCCESS'] !== 'TRUE') {
             $data = [];
-            $data['error'] = $result['MSG'];
-            $data['old']   = $this->request->getPost();
+            $data['error']   = $result['MSG'];
+            $data['old']     = $this->request->getPost();
+            $data['product'] = $product;
             echo $this->view("default", "signup", $data);
             return;
         }
 
-        $data = [];
-        $data['done'] = true;
-        echo $this->view("default", "signup", $data);
+        $customer_idx = (int) $result['RECORD']['customer_idx'];
+
+        // customer insert 성공 = 계정 생성 완료 - 이 시점부터 세션상 "로그인된 회원"으로 취급해서
+        // 뒤이은 /service-apply의 "비회원 신청 금지" 규칙을 그대로 지키게 한다.
+        session()->set('customer_login', [
+            'is_login'      => true,
+            'CUSTOMER_IDX'  => $customer_idx,
+            'CUSTOMER_ID'   => (string) $this->request->getPost('customer_id'),
+            'CUSTOMER_NAME' => '',
+            'COMPANY_NAME'  => (string) $this->request->getPost('company_name'),
+        ]);
+
+        return redirect()->to('/service-apply' . ($product !== '' ? '?product=' . urlencode($product) : ''));
     }
 
     // 드래그드랍 위젯이 드롭 즉시 호출 - CustomerService::uploadTemp()를 그대로 재사용
-    // (admin쪽 Admin\Customer::postUploadTemp()와 동일 서비스 메서드, 공개용 엔드포인트만 별도)
     public function postuploadtemp()
     {
         $type = (string) $this->request->getPost('type');

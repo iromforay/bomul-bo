@@ -13,7 +13,7 @@ class Login extends BaseController
     {
         // 이미 로그인된 상태면 로그인 화면을 또 볼 필요가 없으니 대시보드로
         if (session('login')['is_login'] ?? false) {
-            return redirect()->to(Admin_SITE . '/Home');
+            return redirect()->to(SITE . '/Home');
         }
 
         $error = session()->getFlashdata('login_error');
@@ -29,16 +29,16 @@ class Login extends BaseController
         $result = $service->login($mb_id, $mb_pw);
 
         if ($result['SUCCESS'] === 'TRUE') {
-            return redirect()->to(Admin_SITE . '/Home');
+            return redirect()->to(SITE . '/Home');
         }
 
         session()->setFlashdata('login_error', $result['MSG']);
-        return redirect()->to(Admin_SITE . '/Login');
+        return redirect()->to(SITE . '/Login');
     }
 
     public function getLogout()
     {
         (new LoginService())->logout();
-        return redirect()->to(Admin_SITE . '/Login');
+        return redirect()->to(SITE . '/Login');
     }
 }

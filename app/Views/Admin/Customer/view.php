@@ -13,10 +13,10 @@
         <tbody>
         <tr><th>고객번호</th><td><?= (int) $row['customer_idx'] ?></td></tr>
         <tr><th>아이디</th><td><?= htmlspecialchars($row['customer_id'], ENT_QUOTES) ?></td></tr>
-        <tr><th>담당자명</th><td><?= htmlspecialchars($row['customer_name'], ENT_QUOTES) ?></td></tr>
+        <tr><th>담당자명</th><td><?= htmlspecialchars($row['customer_name'] ?? '', ENT_QUOTES) ?: '<span style="color:#6B7A88;">미입력 - 서비스 신청 시 결정</span>' ?></td></tr>
         <tr><th>중개사무소명</th><td><?= htmlspecialchars($row['company_name'], ENT_QUOTES) ?></td></tr>
         <tr><th>휴대폰번호</th><td><?= htmlspecialchars($row['phone'], ENT_QUOTES) ?></td></tr>
-        <tr><th>이메일</th><td><?= htmlspecialchars($row['email'], ENT_QUOTES) ?></td></tr>
+        <tr><th>이메일</th><td><?= htmlspecialchars($row['email'] ?? '', ENT_QUOTES) ?: '<span style="color:#6B7A88;">미입력</span>' ?></td></tr>
         <tr>
             <th>계정 사용여부</th>
             <td>
@@ -39,14 +39,14 @@
         <tr>
             <th>사업자등록번호</th>
             <td>
-                <?= htmlspecialchars($row['biz_reg_no'], ENT_QUOTES) ?>
+                <?= htmlspecialchars($row['biz_reg_no'] ?? '', ENT_QUOTES) ?: '<span style="color:#6B7A88;">미입력</span>' ?>
                 <?= verify_status_badge($row['biz_reg_verified_yn'] ?? null) ?>
             </td>
         </tr>
         <tr>
             <th>중개사무소등록번호</th>
             <td>
-                <?= htmlspecialchars($row['broker_reg_no'], ENT_QUOTES) ?>
+                <?= htmlspecialchars($row['broker_reg_no'] ?? '', ENT_QUOTES) ?: '<span style="color:#6B7A88;">미입력</span>' ?>
                 <?= verify_status_badge($row['broker_reg_verified_yn'] ?? null) ?>
             </td>
         </tr>

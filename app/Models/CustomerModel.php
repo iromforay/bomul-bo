@@ -51,6 +51,12 @@ class CustomerModel extends CI_Model
 
     public function sql_save(Customer_Entity $entity)
     {
+        // 회원가입은 id/pw/company_name/phone 4개만 받는다 - customer_name/biz_reg_no/broker_reg_no/
+        // email/fid는 서비스 신청 단계(사업자정보 및 도메인 입력)에서 채워지므로 가입 시점엔 NULL 가능.
+        $esc = function ($value) {
+            return $value !== null && $value !== '' ? $this->db->escape($value) : 'NULL';
+        };
+
         $osql = " INSERT INTO `$this->table` SET
                         `customer_id`=%s, `customer_pw`=%s, `customer_name`=%s,
                         `company_name`=%s, `biz_reg_no`=%s, `broker_reg_no`=%s, `phone`=%s, `email`=%s, `fid`=%s,
@@ -61,13 +67,13 @@ class CustomerModel extends CI_Model
             $osql,
             $this->db->escape($entity->getCustomerId()),
             $this->db->escape($entity->getCustomerPw()),
-            $this->db->escape($entity->getCustomerName()),
+            $esc($entity->getCustomerName()),
             $this->db->escape($entity->getCompanyName()),
-            $this->db->escape($entity->getBizRegNo()),
-            $this->db->escape($entity->getBrokerRegNo()),
+            $esc($entity->getBizRegNo()),
+            $esc($entity->getBrokerRegNo()),
             $this->db->escape($entity->getPhone()),
-            $this->db->escape($entity->getEmail()),
-            $entity->getFid() !== null && $entity->getFid() !== '' ? $this->db->escape($entity->getFid()) : 'NULL',
+            $esc($entity->getEmail()),
+            $esc($entity->getFid()),
             // 가입 시점엔 항상 미검증(N)/미이관(N)으로 시작 - entity 값과 무관하게 여기서 고정.
             // service_yn도 결제 전이라 무조건 N에서 시작.
             $this->db->escape('N'),

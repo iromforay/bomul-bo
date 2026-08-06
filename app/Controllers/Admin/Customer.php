@@ -27,7 +27,7 @@ class Customer extends BaseController
 
         if (!$row) {
             session()->setFlashdata('err', '존재하지 않는 고객입니다.');
-            return redirect()->to(Admin_SITE . '/Customer');
+            return redirect()->to(SITE . '/Customer');
         }
 
         $data['row'] = $row;
@@ -41,7 +41,7 @@ class Customer extends BaseController
 
         if (!$row) {
             session()->setFlashdata('err', '존재하지 않는 고객입니다.');
-            return redirect()->to(Admin_SITE . '/Customer');
+            return redirect()->to(SITE . '/Customer');
         }
 
         $data['row'] = $row;
@@ -66,7 +66,7 @@ class Customer extends BaseController
         ]);
 
         session()->setFlashdata($result['SUCCESS'] === 'TRUE' ? 'msg' : 'err', $result['MSG']);
-        return redirect()->to(Admin_SITE . '/Customer');
+        return redirect()->to(SITE . '/Customer');
     }
 
     public function postModify($customer_idx = null)
@@ -95,7 +95,7 @@ class Customer extends BaseController
         ]);
 
         session()->setFlashdata($result['SUCCESS'] === 'TRUE' ? 'msg' : 'err', $result['MSG']);
-        return redirect()->to(Admin_SITE . '/Customer/view/' . (int) $customer_idx);
+        return redirect()->to(SITE . '/Customer/view/' . (int) $customer_idx);
     }
 
     // 드래그드랍 위젯이 드롭 즉시 호출 - customer/temp/에만 올려두고, 실제 저장은 안 건드린다.
