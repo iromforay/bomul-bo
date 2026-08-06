@@ -51,13 +51,13 @@ class Signup extends BaseController
             return;
         }
 
-        $customer_idx = (int) $result['RECORD']['customer_idx'];
+        $customer_no = (int) $result['RECORD']['customer_no'];
 
         // customer insert 성공 = 계정 생성 완료 - 이 시점부터 세션상 "로그인된 회원"으로 취급해서
         // 뒤이은 /service-apply의 "비회원 신청 금지" 규칙을 그대로 지키게 한다.
         session()->set('customer_login', [
             'is_login'      => true,
-            'CUSTOMER_IDX'  => $customer_idx,
+            'CUSTOMER_NO'  => $customer_no,
             'CUSTOMER_ID'   => (string) $this->request->getPost('customer_id'),
             'CUSTOMER_NAME' => '',
             'COMPANY_NAME'  => (string) $this->request->getPost('company_name'),

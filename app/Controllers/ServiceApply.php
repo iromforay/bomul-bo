@@ -30,7 +30,7 @@ class ServiceApply extends BaseController
 
         // Signup에서 신청 실패로 넘어온 경우 - 골랐던 상품/입력값을 그대로 이어받는다
         $old = session()->getFlashdata('apply_old') ?? [];
-        $productParam = $old['product_idx'] ?? (string) $this->request->getGet('product');
+        $productParam = $old['product_no'] ?? (string) $this->request->getGet('product');
 
         $data = [];
         $data['customer'] = $customer;
@@ -55,7 +55,7 @@ class ServiceApply extends BaseController
         // 이번에 처음 입력하는 경우에만 "사업자정보 및 도메인"을 저장 - fid 중복체크는
         // CustomerService::completeProfile() 안에서 반드시 거친다.
         if (!$profileComplete) {
-            $profileResult = $customerService->completeProfile((int) $customer['customer_idx'], [
+            $profileResult = $customerService->completeProfile((int) $customer['customer_no'], [
                 'customer_name' => $this->request->getPost('customer_name'),
                 'email'         => $this->request->getPost('email'),
                 'biz_reg_no'    => $this->request->getPost('biz_reg_no'),
@@ -68,14 +68,14 @@ class ServiceApply extends BaseController
             }
 
             // fid 등 방금 저장한 값을 그대로 이어서 써야 하니 재조회
-            $customer = $customerService->get_row($customer['customer_idx']);
+            $customer = $customerService->get_row($customer['customer_no']);
             $profileComplete = true;
         }
 
         $applyService = new ServiceApplyService();
         $applyResult = $applyService->apply([
-            'customer_idx'   => $customer['customer_idx'],
-            'product_idx'    => $this->request->getPost('product_idx'),
+            'customer_no'   => $customer['customer_no'],
+            'product_no'    => $this->request->getPost('product_no'),
             'company_name'   => $customer['company_name'],
             'ceo_name'       => $this->request->getPost('ceo_name'),
             'license_no'     => $customer['broker_reg_no'],
@@ -106,7 +106,7 @@ class ServiceApply extends BaseController
             return null;
         }
 
-        $customer = (new CustomerService())->get_row($login['CUSTOMER_IDX']);
+        $customer = (new CustomerService())->get_row($login['CUSTOMER_NO']);
         return $customer ?: null;
     }
 
@@ -129,7 +129,7 @@ class ServiceApply extends BaseController
         $data['old'] = $old;
         $data['customer'] = $customer;
         $data['profileComplete'] = $profileComplete;
-        $data['lockedProduct'] = !empty($old['product_idx']) ? $productService->get_row($old['product_idx']) : null;
+        $data['lockedProduct'] = !empty($old['product_no']) ? $productService->get_row($old['product_no']) : null;
         echo $this->view("default", "service_apply", $data);
     }
 }

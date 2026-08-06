@@ -6,13 +6,16 @@ namespace App\Entity;
 // 운영서버 목록. installable_yn으로 신규 배정 가능 여부를, status로 서버 자체의 가동 여부를 관리한다.
 class ServerList_Entity
 {
-    private $server_idx;
+    private $server_no;
 
     private $server_code;
     private $server_name;
 
     private $db_host;
     private $db_port;
+
+    private $receiver_url;
+    private $api_key;
 
     private $tenant_count;
 
@@ -27,17 +30,17 @@ class ServerList_Entity
     /**
      * @return mixed
      */
-    public function getServerIdx()
+    public function getServerNo()
     {
-        return $this->server_idx;
+        return $this->server_no;
     }
 
     /**
-     * @param mixed $server_idx
+     * @param mixed $server_no
      */
-    public function setServerIdx($server_idx): void
+    public function setServerNo($server_no): void
     {
-        $this->server_idx = $server_idx;
+        $this->server_no = $server_no;
     }
 
     /**
@@ -102,6 +105,40 @@ class ServerList_Entity
     public function setDbPort($db_port): void
     {
         $this->db_port = $db_port;
+    }
+
+    // push 보낼 운영서버 receiver 엔드포인트 (예: https://demo1.bomul.ai.kr/receiver)
+    /**
+     * @return mixed
+     */
+    public function getReceiverUrl()
+    {
+        return $this->receiver_url;
+    }
+
+    /**
+     * @param mixed $receiver_url
+     */
+    public function setReceiverUrl($receiver_url): void
+    {
+        $this->receiver_url = $receiver_url;
+    }
+
+    // 이 서버로 push할 때 쓰는 인증 토큰(Bearer)
+    /**
+     * @return mixed
+     */
+    public function getApiKey()
+    {
+        return $this->api_key;
+    }
+
+    /**
+     * @param mixed $api_key
+     */
+    public function setApiKey($api_key): void
+    {
+        $this->api_key = $api_key;
     }
 
     // 현재 배정된 테넌트 수 - 신규 배정시 least-loaded 판단용

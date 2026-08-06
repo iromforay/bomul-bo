@@ -7,7 +7,7 @@ namespace App\Entity;
 // bo.bomul.ai.kr(중개사 로그인)이 쓰는 중앙 DB 테이블이라 여기서 직접 건드리지 않는다.
 class Customer_Entity
 {
-    private $customer_idx;
+    private $customer_no;
     private $customer_id;
     private $customer_pw;
     private $customer_name;
@@ -34,17 +34,17 @@ class Customer_Entity
     /**
      * @return mixed
      */
-    public function getCustomerIdx()
+    public function getCustomerNo()
     {
-        return $this->customer_idx;
+        return $this->customer_no;
     }
 
     /**
-     * @param mixed $customer_idx
+     * @param mixed $customer_no
      */
-    public function setCustomerIdx($customer_idx): void
+    public function setCustomerNo($customer_no): void
     {
-        $this->customer_idx = $customer_idx;
+        $this->customer_no = $customer_no;
     }
 
     /**

@@ -23,9 +23,9 @@ class CustomerService extends CI_Service
         $this->model = model('App\Models\CustomerModel', true, $this->db);
     }
 
-    public function get_row($customer_idx)
+    public function get_row($customer_no)
     {
-        $rows = $this->model->findbyid((int) $customer_idx);
+        $rows = $this->model->findbyid((int) $customer_no);
         return $rows[0] ?? null;
     }
 
@@ -90,23 +90,23 @@ class CustomerService extends CI_Service
         // biz_reg_verified_yn / broker_reg_verified_yn / migrated_yn은 CustomerModel::sql_save()가
         // 항상 'N'으로 고정 저장 - 가입 시점엔 미검증/미이관 상태로 시작해야 하므로 여기서 넣어도 무시됨.
 
-        $customer_idx = $this->model->sql_save($entity);
-        if (!$customer_idx) {
+        $customer_no = $this->model->sql_save($entity);
+        if (!$customer_no) {
             return AT_Result::toFailData("가입에 실패했습니다.");
         }
 
         // 방금 만든 계정이라 기존 파일은 없음 - 드롭존에서 temp로 올려둔 파일이 있으면 이 시점에 이동
         $emptyRow = ['biz_reg_file_dir' => null, 'biz_reg_file_name' => null, 'broker_reg_file_dir' => null, 'broker_reg_file_name' => null];
-        $this->finalizeCertificateFiles((int) $customer_idx, $emptyRow, $data);
+        $this->finalizeCertificateFiles((int) $customer_no, $emptyRow, $data);
 
-        return AT_Result::toSuccessData("고객 등록에 성공했습니다.", ['customer_idx' => (int) $customer_idx]);
+        return AT_Result::toSuccessData("고객 등록에 성공했습니다.", ['customer_no' => (int) $customer_no]);
     }
 
     // 서비스 신청 단계의 "사업자정보 및 도메인" 입력 - customer_name(담당자명)/email/biz_reg_no/
     // broker_reg_no/fid를 채운다. verified_yn/use_yn/service_yn 등 상태값은 entity에 아예 세팅하지
     // 않아서 sql_edit()이 건드리지 않는다 (edit()과 달리 이 메서드는 고객 본인이 호출하는 경로라
     // 관리자 전용 상태값을 실수로라도 덮어쓰면 안 됨).
-    public function completeProfile(int $customer_idx, array $data): array
+    public function completeProfile(int $customer_no, array $data): array
     {
         $customer_name = trim($data['customer_name'] ?? '');
         $email         = trim($data['email'] ?? '');
@@ -121,12 +121,12 @@ class CustomerService extends CI_Service
         if (!preg_match('/^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/', $fid)) {
             return AT_Result::toFailData("도메인 주소는 영문 소문자/숫자/하이픈만 사용할 수 있습니다.");
         }
-        if ($this->model->existsByFid($fid, $customer_idx)) {
+        if ($this->model->existsByFid($fid, $customer_no)) {
             return AT_Result::toFailData("이미 사용중인 도메인 주소입니다.");
         }
 
         $entity = new Customer_Entity();
-        $entity->setCustomerIdx($customer_idx);
+        $entity->setCustomerNo($customer_no);
         $entity->setCustomerName($customer_name);
         $entity->setEmail($email);
         $entity->setBizRegNo($biz_reg_no);
@@ -157,9 +157,9 @@ class CustomerService extends CI_Service
 
     // 고객 상세 > 수정 화면 전체 저장 - 기본정보 + 각종 상태값(검증여부/계정사용여부/서비스사용여부/
     // 서비스만료일/fid)까지 전부 여기서 처리. 등록(write) 화면엔 없는, 수정 화면 전용 항목들이다.
-    public function edit($customer_idx, array $data): array
+    public function edit($customer_no, array $data): array
     {
-        $customer_idx   = (int) $customer_idx;
+        $customer_no   = (int) $customer_no;
         $customer_id   = trim($data['customer_id'] ?? '');
         $customer_name = trim($data['customer_name'] ?? '');
         $company_name  = trim($data['company_name'] ?? '');
@@ -174,21 +174,21 @@ class CustomerService extends CI_Service
             return AT_Result::toFailData("모든 항목을 입력해주세요.");
         }
 
-        $row = $this->get_row($customer_idx);
+        $row = $this->get_row($customer_no);
         if (!$row) {
             return AT_Result::toFailData("존재하지 않는 고객입니다.");
         }
 
-        if ($this->model->existsByLoginId($customer_id, $customer_idx)) {
+        if ($this->model->existsByLoginId($customer_id, $customer_no)) {
             return AT_Result::toFailData("이미 사용중인 아이디입니다.");
         }
 
-        if ($fid !== '' && $this->model->existsByFid($fid, $customer_idx)) {
+        if ($fid !== '' && $this->model->existsByFid($fid, $customer_no)) {
             return AT_Result::toFailData("이미 사용중인 fid입니다.");
         }
 
         $entity = new Customer_Entity();
-        $entity->setCustomerIdx($customer_idx);
+        $entity->setCustomerNo($customer_no);
         $entity->setCustomerId($customer_id);
         $entity->setCustomerName($customer_name);
         $entity->setCompanyName($company_name);
@@ -219,14 +219,14 @@ class CustomerService extends CI_Service
         }
 
         // del_img=biz|broker로 넘어온 항목은 실삭제, 새 temp 파일이 넘어온 항목은 실경로로 이동
-        $this->finalizeCertificateFiles($customer_idx, $row, $data);
+        $this->finalizeCertificateFiles($customer_no, $row, $data);
 
         return AT_Result::toSuccessData("고객 정보를 수정했습니다.");
     }
 
-    // 드래그드랍 위젯이 드롭 즉시 호출 - customer/temp/에만 올려두고, 실제 소유자(customer_idx)가
+    // 드래그드랍 위젯이 드롭 즉시 호출 - customer/temp/에만 올려두고, 실제 소유자(customer_no)가
     // 정해지는 저장(save/edit) 시점에 finalizeCertificateFiles()가 최종 경로로 옮긴다.
-    // customer_idx를 몰라도 되는 구조라 등록 화면(신규 가입)에서도, 나중에 만들 사용자 페이지에서도
+    // customer_no를 몰라도 되는 구조라 등록 화면(신규 가입)에서도, 나중에 만들 사용자 페이지에서도
     // 그대로 재사용 가능하다.
     public function uploadTemp(string $type, array $file): array
     {
@@ -250,11 +250,11 @@ class CustomerService extends CI_Service
     // save()/edit() 공통 - del_img[]로 넘어온 타입은 실삭제 후 DB 값 비움,
     // {type}_reg_file_name으로 새 temp 파일명이 넘어온 타입은 temp -> customer/{no}/{type}_reg/ 로 이동.
     // 둘 다 아니면 기존 파일 그대로 유지(entity에 아무것도 세팅 안 해서 sql_edit이 자동 스킵).
-    private function finalizeCertificateFiles(int $customer_idx, array $row, array $data): void
+    private function finalizeCertificateFiles(int $customer_no, array $row, array $data): void
     {
         $delList = (array) ($data['del_img'] ?? []);
         $entity = new Customer_Entity();
-        $entity->setCustomerIdx($customer_idx);
+        $entity->setCustomerNo($customer_no);
         $touched = false;
 
         foreach (self::CERT_TYPES as $type) {
@@ -290,7 +290,7 @@ class CustomerService extends CI_Service
             return false;
         }
 
-        $toDir = "customer/{$entity->getCustomerIdx()}/{$type}_reg/";
+        $toDir = "customer/{$entity->getCustomerNo()}/{$type}_reg/";
         if (!$uploader->move(self::TEMP_DIR, $tempName, $toDir)) {
             return false; // temp 파일이 이미 없어졌거나 하는 경우 - 조용히 스킵
         }
@@ -313,9 +313,9 @@ class CustomerService extends CI_Service
     }
 
     // 사업자등록번호/중개사무소등록번호 둘 다 검증완료(Y)여야 서비스 신청 가능
-    public function isVerified($customer_idx): bool
+    public function isVerified($customer_no): bool
     {
-        $row = $this->get_row($customer_idx);
+        $row = $this->get_row($customer_no);
         if (!$row) {
             return false;
         }
@@ -326,9 +326,9 @@ class CustomerService extends CI_Service
 
     // 서비스 신청 처리 컨트롤러가 실제 신청 로직을 타기 전에 제일 먼저 호출해야 하는 게이트.
     // 검증이 안 끝났으면 신청 자체를 막는다.
-    public function guardServiceApply($customer_idx): array
+    public function guardServiceApply($customer_no): array
     {
-        if (!$this->isVerified($customer_idx)) {
+        if (!$this->isVerified($customer_no)) {
             return AT_Result::toFailData("사업자등록번호/중개사무소등록번호 검증이 완료된 후 서비스 신청이 가능합니다.");
         }
 
@@ -337,10 +337,10 @@ class CustomerService extends CI_Service
 
     // ad 백오피스에서 관리자가 서류 확인 후 검증 처리만 빠르게 할 때 사용 (edit() 없이 단독 호출 가능)
     // $bizStatus/$brokerStatus: N=대기, Y=검증완료, W=보류, F=검증실패
-    public function verify($customer_idx, string $bizStatus, string $brokerStatus): array
+    public function verify($customer_no, string $bizStatus, string $brokerStatus): array
     {
         $entity = new Customer_Entity();
-        $entity->setCustomerIdx((int) $customer_idx);
+        $entity->setCustomerNo((int) $customer_no);
         $entity->setBizRegVerifiedYn($this->normalizeVerifyStatus($bizStatus));
         $entity->setBrokerRegVerifiedYn($this->normalizeVerifyStatus($brokerStatus));
 
@@ -365,7 +365,7 @@ class CustomerService extends CI_Service
      *      중앙 member엔 중개사무소등록번호 컬럼이 없어서 테넌트 basic 쪽으로 감)
      *   3. customer.member_no/migrated_yn/migrated_date 갱신
      */
-    public function migrateToMember($customer_idx): array
+    public function migrateToMember($customer_no): array
     {
         return AT_Result::toFailData("이관 로직은 아직 구현되지 않았습니다. 결제 기능과 함께 설계 필요.");
     }

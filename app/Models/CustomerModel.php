@@ -8,7 +8,7 @@ class CustomerModel extends CI_Model
 {
     public function __construct($db)
     {
-        parent::__construct($db, "customer", "customer_idx");
+        parent::__construct($db, "customer", "customer_no");
         return $this;
     }
 
@@ -26,9 +26,9 @@ class CustomerModel extends CI_Model
     // 아이디 중복체크 - use_yn 상관없이 전체에서 확인 (customer_id는 UNIQUE)
     public function existsByLoginId($customer_id, $exclude_no = null)
     {
-        $sql = "SELECT `customer_idx` FROM `$this->table` WHERE `customer_id` = " . $this->db->escape($customer_id);
+        $sql = "SELECT `customer_no` FROM `$this->table` WHERE `customer_id` = " . $this->db->escape($customer_id);
         if ($exclude_no !== null) {
-            $sql .= " AND `customer_idx` != " . $this->db->escape($exclude_no);
+            $sql .= " AND `customer_no` != " . $this->db->escape($exclude_no);
         }
         $sql .= " LIMIT 1";
         $rows = $this->getExecQuery($sql);
@@ -40,9 +40,9 @@ class CustomerModel extends CI_Model
     // 이 체크와 별도로 중앙 member 쪽 중복도 반드시 확인해야 한다 (아직 미구현).
     public function existsByFid($fid, $exclude_no = null)
     {
-        $sql = "SELECT `customer_idx` FROM `$this->table` WHERE `fid` = " . $this->db->escape($fid);
+        $sql = "SELECT `customer_no` FROM `$this->table` WHERE `fid` = " . $this->db->escape($fid);
         if ($exclude_no !== null) {
-            $sql .= " AND `customer_idx` != " . $this->db->escape($exclude_no);
+            $sql .= " AND `customer_no` != " . $this->db->escape($exclude_no);
         }
         $sql .= " LIMIT 1";
         $rows = $this->getExecQuery($sql);
@@ -116,14 +116,14 @@ class CustomerModel extends CI_Model
         }
 
         $sql = "UPDATE `$this->table` SET " . implode(",", $set) .
-               " WHERE `$this->primaryKey` = " . $this->db->escape($entity->getCustomerIdx());
+               " WHERE `$this->primaryKey` = " . $this->db->escape($entity->getCustomerNo());
 
         return $this->safeExecQuery($sql);
     }
 
-    public function sql_delete($customer_idx)
+    public function sql_delete($customer_no)
     {
-        $sql = "DELETE FROM `$this->table` WHERE `$this->primaryKey` = " . $this->db->escape($customer_idx);
+        $sql = "DELETE FROM `$this->table` WHERE `$this->primaryKey` = " . $this->db->escape($customer_no);
         return $this->safeExecQuery($sql);
     }
 }

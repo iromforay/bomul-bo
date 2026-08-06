@@ -6,9 +6,9 @@ namespace App\Entity;
 // 상품(product)을 선택해 넣는 서비스 신청서. 결제 연동 전까지는 status로만 진행 상태를 관리한다.
 class ServiceApply_Entity
 {
-    private $apply_idx;
-    private $customer_idx;
-    private $product_idx;
+    private $apply_no;
+    private $customer_no;
+    private $product_no;
 
     private $company_name;
     private $ceo_name;
@@ -45,49 +45,49 @@ class ServiceApply_Entity
     /**
      * @return mixed
      */
-    public function getApplyIdx()
+    public function getApplyNo()
     {
-        return $this->apply_idx;
+        return $this->apply_no;
     }
 
     /**
-     * @param mixed $apply_idx
+     * @param mixed $apply_no
      */
-    public function setApplyIdx($apply_idx): void
+    public function setApplyNo($apply_no): void
     {
-        $this->apply_idx = $apply_idx;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getCustomerIdx()
-    {
-        return $this->customer_idx;
-    }
-
-    /**
-     * @param mixed $customer_idx
-     */
-    public function setCustomerIdx($customer_idx): void
-    {
-        $this->customer_idx = $customer_idx;
+        $this->apply_no = $apply_no;
     }
 
     /**
      * @return mixed
      */
-    public function getProductIdx()
+    public function getCustomerNo()
     {
-        return $this->product_idx;
+        return $this->customer_no;
     }
 
     /**
-     * @param mixed $product_idx
+     * @param mixed $customer_no
      */
-    public function setProductIdx($product_idx): void
+    public function setCustomerNo($customer_no): void
     {
-        $this->product_idx = $product_idx;
+        $this->customer_no = $customer_no;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getProductNo()
+    {
+        return $this->product_no;
+    }
+
+    /**
+     * @param mixed $product_no
+     */
+    public function setProductNo($product_no): void
+    {
+        $this->product_no = $product_no;
     }
 
     /**

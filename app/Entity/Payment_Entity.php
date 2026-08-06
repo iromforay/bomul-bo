@@ -7,8 +7,8 @@ namespace App\Entity;
 // "결제(신청) 이력이 있다"는 판단 기준을 하나로 통일한다.
 class Payment_Entity
 {
-    private $payment_idx;
-    private $apply_idx;
+    private $payment_no;
+    private $apply_no;
 
     private $pay_method;
     private $pg_provider;
@@ -27,33 +27,33 @@ class Payment_Entity
     /**
      * @return mixed
      */
-    public function getPaymentIdx()
+    public function getPaymentNo()
     {
-        return $this->payment_idx;
+        return $this->payment_no;
     }
 
     /**
-     * @param mixed $payment_idx
+     * @param mixed $payment_no
      */
-    public function setPaymentIdx($payment_idx): void
+    public function setPaymentNo($payment_no): void
     {
-        $this->payment_idx = $payment_idx;
+        $this->payment_no = $payment_no;
     }
 
     /**
      * @return mixed
      */
-    public function getApplyIdx()
+    public function getApplyNo()
     {
-        return $this->apply_idx;
+        return $this->apply_no;
     }
 
     /**
-     * @param mixed $apply_idx
+     * @param mixed $apply_no
      */
-    public function setApplyIdx($apply_idx): void
+    public function setApplyNo($apply_no): void
     {
-        $this->apply_idx = $apply_idx;
+        $this->apply_no = $apply_no;
     }
 
     // CARD / VBANK / TRANSFER / NONE(무료-이벤트)

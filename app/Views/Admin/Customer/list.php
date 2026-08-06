@@ -30,8 +30,8 @@ $err = session()->getFlashdata('err');
             <tr><td colspan="12" style="text-align:center; color:#6B7A88;">등록된 고객이 없습니다.</td></tr>
         <?php else: ?>
             <?php foreach ($list as $row): ?>
-                <tr class="row-link" onclick="location.href='<?= Admin_SITE ?>/Customer/view/<?= (int) $row['customer_idx'] ?>'">
-                    <td><?= (int) $row['customer_idx'] ?></td>
+                <tr class="row-link" onclick="location.href='<?= Admin_SITE ?>/Customer/view/<?= (int) $row['customer_no'] ?>'">
+                    <td><?= (int) $row['customer_no'] ?></td>
                     <td><?= htmlspecialchars($row['customer_id'], ENT_QUOTES) ?></td>
                     <td><?= htmlspecialchars($row['customer_name'] ?? '', ENT_QUOTES) ?></td>
                     <td><?= htmlspecialchars($row['company_name'], ENT_QUOTES) ?></td>

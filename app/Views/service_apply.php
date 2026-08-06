@@ -35,7 +35,7 @@
         <?php $profileComplete = $profileComplete ?? false; ?>
 
         <form method="post" action="/service-apply">
-            <input type="hidden" name="product_idx" value="<?= (int) $lockedProduct['product_idx'] ?>">
+            <input type="hidden" name="product_no" value="<?= (int) $lockedProduct['product_no'] ?>">
 
             <?php if (!$profileComplete): ?>
                 <!-- 담당자·사무소 정보 및 사업자 정보 및 도메인 - 이미 완료된 회원은 이 블록 자체가 안 나온다 -->

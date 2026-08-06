@@ -20,10 +20,10 @@ class Customer extends BaseController
         echo $this->view("Customer/write", []);
     }
 
-    public function getView($customer_idx = null)
+    public function getView($customer_no = null)
     {
         $service = new CustomerService();
-        $row = $service->get_row($customer_idx);
+        $row = $service->get_row($customer_no);
 
         if (!$row) {
             session()->setFlashdata('err', '존재하지 않는 고객입니다.');
@@ -34,10 +34,10 @@ class Customer extends BaseController
         echo $this->view("Customer/view", $data);
     }
 
-    public function getModify($customer_idx = null)
+    public function getModify($customer_no = null)
     {
         $service = new CustomerService();
-        $row = $service->get_row($customer_idx);
+        $row = $service->get_row($customer_no);
 
         if (!$row) {
             session()->setFlashdata('err', '존재하지 않는 고객입니다.');
@@ -69,10 +69,10 @@ class Customer extends BaseController
         return redirect()->to(SITE . '/Customer');
     }
 
-    public function postModify($customer_idx = null)
+    public function postModify($customer_no = null)
     {
         $service = new CustomerService();
-        $result = $service->edit($customer_idx, [
+        $result = $service->edit($customer_no, [
             'customer_id'            => $this->request->getPost('customer_id'),
             'customer_pw'            => $this->request->getPost('customer_pw'),
             'customer_name'          => $this->request->getPost('customer_name'),
@@ -95,11 +95,11 @@ class Customer extends BaseController
         ]);
 
         session()->setFlashdata($result['SUCCESS'] === 'TRUE' ? 'msg' : 'err', $result['MSG']);
-        return redirect()->to(SITE . '/Customer/view/' . (int) $customer_idx);
+        return redirect()->to(SITE . '/Customer/view/' . (int) $customer_no);
     }
 
     // 드래그드랍 위젯이 드롭 즉시 호출 - customer/temp/에만 올려두고, 실제 저장은 안 건드린다.
-    // customer_idx를 몰라도 되는 구조라 등록(신규 가입) 화면에서도 그대로 재사용 가능.
+    // customer_no를 몰라도 되는 구조라 등록(신규 가입) 화면에서도 그대로 재사용 가능.
     public function postUploadTemp()
     {
         $type = (string) $this->request->getPost('type');

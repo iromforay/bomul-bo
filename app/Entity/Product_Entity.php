@@ -5,7 +5,7 @@ namespace App\Entity;
 // app/sql/2026_08_05_product_table.sql 의 product 테이블 매핑 - 서비스 신청 시 선택하는 결제 상품(구독형/1회성/이벤트).
 class Product_Entity
 {
-    private $product_idx;
+    private $product_no;
     private $product_code;
     private $product_name;
     private $price;
@@ -21,17 +21,17 @@ class Product_Entity
     /**
      * @return mixed
      */
-    public function getProductIdx()
+    public function getProductNo()
     {
-        return $this->product_idx;
+        return $this->product_no;
     }
 
     /**
-     * @param mixed $product_idx
+     * @param mixed $product_no
      */
-    public function setProductIdx($product_idx): void
+    public function setProductNo($product_no): void
     {
-        $this->product_idx = $product_idx;
+        $this->product_no = $product_no;
     }
 
     /**

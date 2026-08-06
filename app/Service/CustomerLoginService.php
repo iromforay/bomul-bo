@@ -31,7 +31,7 @@ class CustomerLoginService extends CI_Service
 
         session()->set('customer_login', [
             'is_login'     => true,
-            'CUSTOMER_IDX' => $row['customer_idx'],
+            'CUSTOMER_NO' => $row['customer_no'],
             'CUSTOMER_ID'  => $row['customer_id'],
             'CUSTOMER_NAME'=> $row['customer_name'] ?? '',
             'COMPANY_NAME' => $row['company_name'],

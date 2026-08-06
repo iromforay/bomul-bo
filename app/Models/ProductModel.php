@@ -6,20 +6,20 @@ class ProductModel extends CI_Model
 {
     public function __construct($db)
     {
-        parent::__construct($db, "product", "product_idx");
+        parent::__construct($db, "product", "product_no");
         return $this;
     }
 
     // 신청 폼 상품선택 스텝에 노출할 목록 - 중지(STOP)된 상품은 제외, 정렬순
     public function get_usable_list()
     {
-        $sql = "SELECT * FROM `$this->table` WHERE `status` = 'USE' ORDER BY `sort` ASC, `product_idx` ASC";
+        $sql = "SELECT * FROM `$this->table` WHERE `status` = 'USE' ORDER BY `sort` ASC, `product_no` ASC";
         return $this->getExecQuery($sql);
     }
 
-    public function findByIdx($product_idx)
+    public function findByIdx($product_no)
     {
-        $rows = $this->findbyid((int) $product_idx);
+        $rows = $this->findbyid((int) $product_no);
         return $rows[0] ?? null;
     }
 

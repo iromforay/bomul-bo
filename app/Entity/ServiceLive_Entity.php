@@ -7,11 +7,11 @@ namespace App\Entity;
 // 여기는 결제정보 없이 현재값(만료일/서비스여부/설치서버)만 담는다.
 class ServiceLive_Entity
 {
-    private $live_idx;
+    private $live_no;
 
-    private $customer_idx;
-    private $apply_idx;
-    private $server_idx;
+    private $customer_no;
+    private $apply_no;
+    private $server_no;
 
     private $fid;
     private $license_key;
@@ -32,65 +32,65 @@ class ServiceLive_Entity
     /**
      * @return mixed
      */
-    public function getLiveIdx()
+    public function getLiveNo()
     {
-        return $this->live_idx;
+        return $this->live_no;
     }
 
     /**
-     * @param mixed $live_idx
+     * @param mixed $live_no
      */
-    public function setLiveIdx($live_idx): void
+    public function setLiveNo($live_no): void
     {
-        $this->live_idx = $live_idx;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getCustomerIdx()
-    {
-        return $this->customer_idx;
-    }
-
-    /**
-     * @param mixed $customer_idx
-     */
-    public function setCustomerIdx($customer_idx): void
-    {
-        $this->customer_idx = $customer_idx;
+        $this->live_no = $live_no;
     }
 
     /**
      * @return mixed
      */
-    public function getApplyIdx()
+    public function getCustomerNo()
     {
-        return $this->apply_idx;
+        return $this->customer_no;
     }
 
     /**
-     * @param mixed $apply_idx
+     * @param mixed $customer_no
      */
-    public function setApplyIdx($apply_idx): void
+    public function setCustomerNo($customer_no): void
     {
-        $this->apply_idx = $apply_idx;
+        $this->customer_no = $customer_no;
     }
 
     /**
      * @return mixed
      */
-    public function getServerIdx()
+    public function getApplyNo()
     {
-        return $this->server_idx;
+        return $this->apply_no;
     }
 
     /**
-     * @param mixed $server_idx
+     * @param mixed $apply_no
      */
-    public function setServerIdx($server_idx): void
+    public function setApplyNo($apply_no): void
     {
-        $this->server_idx = $server_idx;
+        $this->apply_no = $apply_no;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getServerNo()
+    {
+        return $this->server_no;
+    }
+
+    /**
+     * @param mixed $server_no
+     */
+    public function setServerNo($server_no): void
+    {
+        $this->server_no = $server_no;
     }
 
     /**

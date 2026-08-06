@@ -15,4 +15,23 @@ class Service extends BaseController
 
         echo $this->view("Service/list", $data);
     }
+
+    // 승인 - 서버배정 + service_live 생성 + queue 적재까지 ServiceApplyService::approve()가 전부 처리
+    public function postApprove($apply_no = null)
+    {
+        $service = new ServiceApplyService();
+        $result = $service->approve($apply_no);
+
+        session()->setFlashdata($result['SUCCESS'] === 'TRUE' ? 'msg' : 'err', $result['MSG']);
+        return redirect()->to(SITE . '/Service');
+    }
+
+    public function postReject($apply_no = null)
+    {
+        $service = new ServiceApplyService();
+        $result = $service->reject($apply_no, (string) $this->request->getPost('reject_reason'));
+
+        session()->setFlashdata($result['SUCCESS'] === 'TRUE' ? 'msg' : 'err', $result['MSG']);
+        return redirect()->to(SITE . '/Service');
+    }
 }
