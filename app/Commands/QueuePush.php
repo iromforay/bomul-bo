@@ -22,6 +22,7 @@ class QueuePush extends BaseCommand
 
         $rows = $queueModel->get_pending_with_server(20);
         if (empty($rows)) {
+            CLI::write('queue push 데이터 없음. 종료 ', 'red' );
             return;
         }
 
