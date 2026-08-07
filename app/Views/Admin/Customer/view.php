@@ -89,7 +89,6 @@
             </td>
         </tr>
         <tr><th>서비스 만료일</th><td><?= !empty($row['service_expire_date']) ? htmlspecialchars((string) $row['service_expire_date'], ENT_QUOTES) : '<span style="color:#6B7A88;">-</span>' ?></td></tr>
-        <tr><th>fid(2차도메인)</th><td><?= !empty($row['fid']) ? htmlspecialchars($row['fid'], ENT_QUOTES) : '<span style="color:#6B7A88;">미배정 - 서비스 신청 시 결정</span>' ?></td></tr>
         <tr>
             <th>중앙회원 이관</th>
             <td>

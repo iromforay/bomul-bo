@@ -35,31 +35,17 @@ class CustomerModel extends CI_Model
         return !empty($rows);
     }
 
-    // 서비스 신청 단계에서 fid(2차도메인) 입력받을 때 중복체크용 - customer 안에서만 확인.
-    // 실제 발급 가능 여부는 이미 활성화된 중앙 member.fid까지 같이 봐야 하니, 신청 처리 로직에서
-    // 이 체크와 별도로 중앙 member 쪽 중복도 반드시 확인해야 한다 (아직 미구현).
-    public function existsByFid($fid, $exclude_no = null)
-    {
-        $sql = "SELECT `customer_no` FROM `$this->table` WHERE `fid` = " . $this->db->escape($fid);
-        if ($exclude_no !== null) {
-            $sql .= " AND `customer_no` != " . $this->db->escape($exclude_no);
-        }
-        $sql .= " LIMIT 1";
-        $rows = $this->getExecQuery($sql);
-        return !empty($rows);
-    }
-
     public function sql_save(Customer_Entity $entity)
     {
         // 회원가입은 id/pw/company_name/phone 4개만 받는다 - customer_name/biz_reg_no/broker_reg_no/
-        // email/fid는 서비스 신청 단계(사업자정보 및 도메인 입력)에서 채워지므로 가입 시점엔 NULL 가능.
+        // email은 서비스 신청 단계(사업자정보 입력)에서 채워지므로 가입 시점엔 NULL 가능.
         $esc = function ($value) {
             return $value !== null && $value !== '' ? $this->db->escape($value) : 'NULL';
         };
 
         $osql = " INSERT INTO `$this->table` SET
                         `customer_id`=%s, `customer_pw`=%s, `customer_name`=%s,
-                        `company_name`=%s, `biz_reg_no`=%s, `broker_reg_no`=%s, `phone`=%s, `email`=%s, `fid`=%s,
+                        `company_name`=%s, `biz_reg_no`=%s, `broker_reg_no`=%s, `phone`=%s, `email`=%s,
                         `biz_reg_verified_yn`=%s, `broker_reg_verified_yn`=%s,
                         `use_yn`=%s, `service_yn`=%s, `migrated_yn`=%s, `reg_date`=now()
                 ";
@@ -73,7 +59,6 @@ class CustomerModel extends CI_Model
             $esc($entity->getBrokerRegNo()),
             $this->db->escape($entity->getPhone()),
             $esc($entity->getEmail()),
-            $esc($entity->getFid()),
             // 가입 시점엔 항상 미검증(N)/미이관(N)으로 시작 - entity 값과 무관하게 여기서 고정.
             // service_yn도 결제 전이라 무조건 N에서 시작.
             $this->db->escape('N'),
@@ -106,7 +91,6 @@ class CustomerModel extends CI_Model
         !is_null($entity->getBizRegFileName())      ? $set[] = "`biz_reg_file_name`=".      $this->db->escape($entity->getBizRegFileName())      : "";
         !is_null($entity->getBrokerRegFileDir())    ? $set[] = "`broker_reg_file_dir`=".    $this->db->escape($entity->getBrokerRegFileDir())    : "";
         !is_null($entity->getBrokerRegFileName())   ? $set[] = "`broker_reg_file_name`=".   $this->db->escape($entity->getBrokerRegFileName())   : "";
-        !is_null($entity->getFid())                 ? $set[] = "`fid`=".                    $this->db->escape($entity->getFid())                 : "";
         !is_null($entity->getMemberNo())            ? $set[] = "`member_no`=".              $this->db->escape($entity->getMemberNo())            : "";
         !is_null($entity->getMigratedYn())          ? $set[] = "`migrated_yn`=".            $this->db->escape($entity->getMigratedYn())          : "";
         !is_null($entity->getMigratedDate())        ? $set[] = "`migrated_date`=".          $this->db->escape($entity->getMigratedDate())        : "";

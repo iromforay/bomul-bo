@@ -35,7 +35,6 @@ class CustomerLoginService extends CI_Service
             'CUSTOMER_ID'  => $row['customer_id'],
             'CUSTOMER_NAME'=> $row['customer_name'] ?? '',
             'COMPANY_NAME' => $row['company_name'],
-            'domain' => $row['fid'] ?? '',
         ]);
 
         return AT_Result::toSuccessData();

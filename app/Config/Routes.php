@@ -36,7 +36,11 @@ if ($host === 'ad.bomul.ai.kr') { //관리자
     $routes->post('Customer/uploadTemp',        'Customer::postUploadTemp');
 
     $routes->get('Service',                     'Service::getIndex');
+    $routes->get('Service/view/(:num)',         'Service::getView/$1');
+    $routes->get('Service/modify/(:num)',       'Service::getModify/$1');
+    $routes->post('Service/modify/(:num)',      'Service::postModify/$1');
     $routes->post('Service/approve/(:num)',     'Service::postApprove/$1');
+    $routes->post('Service/requeue/(:num)',     'Service::postRequeue/$1');
     $routes->post('Service/reject/(:num)',      'Service::postReject/$1');
 
     $routes->post('Callback/complete',          'Callback::postComplete');

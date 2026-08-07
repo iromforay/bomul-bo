@@ -86,7 +86,6 @@ class Customer extends BaseController
             'use_yn'                 => $this->request->getPost('use_yn'),
             'service_yn'             => $this->request->getPost('service_yn'),
             'service_expire_date'    => $this->request->getPost('service_expire_date'),
-            'fid'                    => $this->request->getPost('fid'),
             // 드래그드랍 위젯이 채워 넣은 temp 파일 경유 필드 (customer/temp/에 이미 올라가 있는 파일명)
             'biz_reg_file_name'      => $this->request->getPost('biz_reg_file_name'),
             'broker_reg_file_name'   => $this->request->getPost('broker_reg_file_name'),

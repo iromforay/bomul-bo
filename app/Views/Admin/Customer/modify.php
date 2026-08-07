@@ -144,10 +144,6 @@ $verifyOptions = ['N' => '검증대기', 'W' => '보류', 'Y' => '검증완료',
             <th>서비스 만료일</th>
             <td><input type="date" name="service_expire_date" value="<?= htmlspecialchars((string) ($row['service_expire_date'] ?? ''), ENT_QUOTES) ?>"></td>
         </tr>
-        <tr>
-            <th>fid(2차도메인)</th>
-            <td><input type="text" name="fid" value="<?= htmlspecialchars((string) ($row['fid'] ?? ''), ENT_QUOTES) ?>" placeholder="예: happy2025"></td>
-        </tr>
         </tbody>
     </table>
 </div>

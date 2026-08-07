@@ -24,29 +24,97 @@ class ServiceApplyModel extends CI_Model
         return !empty($rows);
     }
 
-    // 어드민 "서비스 신청 현황" 목록용 - 신청서 자체(회사명/대표자 등)는 service_apply 스냅샷을 그대로
-    // 쓰고, 어느 계정(로그인 아이디)이 신청했는지/상품명/최근 결제상태만 customer·product·payment를
-    // 조인해서 보여준다. payment는 1신청:N결제(월구독 갱신)라 가장 최근 1건만 서브쿼리로 붙인다.
+    // 어드민 "서비스 신청 현황" 목록용 - 순수하게 service_apply에 등록된 신청 목록만 보여준다.
+    // 고객정보/결제정보처럼 복잡한 조인은 상세(get_detail_by_apply_no)에서만 붙인다.
+    // product_name만 예외 - 신청 당시 어떤 상품을 신청했는지는 목록에서도 필요한 신청서 자체 정보.
     public function get_list_with_details()
     {
-        $sql = "SELECT sa.*, c.customer_id AS customer_login_id, p.product_name, p.product_code,
-                       pay.pay_status, pay.pay_method, pay.pay_amount, pay.paid_at
+        $sql = "SELECT sa.*, p.product_name, p.product_code
                 FROM `$this->table` sa
-                JOIN `customer` c ON c.customer_no = sa.customer_no
-                JOIN `product` p ON p.product_no = sa.product_no
-                LEFT JOIN `payment` pay ON pay.payment_no = (
-                    SELECT pay2.payment_no FROM `payment` pay2
-                    WHERE pay2.apply_no = sa.apply_no
-                    ORDER BY pay2.payment_no DESC LIMIT 1
-                )
+                LEFT JOIN `product` p ON p.product_no = sa.product_no
                 ORDER BY sa.apply_no DESC";
+
         return $this->getExecQuery($sql);
+    }
+
+    // sub_domain(희망 도메인) 유일성 체크 - 세팅 전 상태(REQUEST/REVIEW/APPROVED)만 점유로 본다.
+    // REJECTED/CANCEL은 세팅 전에 끝난 것이므로 그 도메인은 다시 신청 가능해야 한다.
+    public function existsBySubDomain($sub_domain, $exclude_apply_no = null): bool
+    {
+        $sql = "SELECT `apply_no` FROM `$this->table`
+                WHERE `sub_domain` = " . $this->db->escape($sub_domain) . "
+                  AND `status` IN ('REQUEST','REVIEW','APPROVED')";
+        if ($exclude_apply_no !== null) {
+            $sql .= " AND `apply_no` != " . $this->db->escape((int) $exclude_apply_no);
+        }
+        $sql .= " LIMIT 1";
+        $rows = $this->getExecQuery($sql);
+        return !empty($rows);
     }
 
     public function findByIdx($apply_no)
     {
         $rows = $this->findbyid((int) $apply_no);
         return $rows[0] ?? null;
+    }
+
+    // 어드민 "서비스 신청 상세" 단건 조회 - get_list_with_details()와 동일한 조인을 apply_no로 한정
+    public function get_detail_by_apply_no($apply_no)
+    {
+        $sql = "SELECT sa.*, c.customer_id AS customer_login_id, p.product_name, p.product_code,
+                       pay.pay_status, pay.pay_method, pay.pay_amount, pay.paid_at
+                FROM `$this->table` sa
+                LEFT JOIN `customer` c ON c.customer_no = sa.customer_no
+                LEFT JOIN `product` p ON p.product_no = sa.product_no
+                LEFT JOIN `payment` pay ON pay.payment_no = (
+                    SELECT pay2.payment_no FROM `payment` pay2
+                    WHERE pay2.apply_no = sa.apply_no
+                    ORDER BY pay2.payment_no DESC LIMIT 1
+                )
+                WHERE sa.apply_no = " . $this->db->escape((int) $apply_no) . "
+                LIMIT 1";
+        $rows = $this->getExecQuery($sql);
+        return $rows[0] ?? null;
+    }
+
+    // 어드민 수정 화면 - 신청서 스냅샷 항목만 갱신 (status/승인 관련 값은 approve()/reject()에서만 처리)
+    public function sql_edit(ServiceApply_Entity $entity)
+    {
+        $esc = function ($value) {
+            return $value !== null && $value !== '' ? $this->db->escape($value) : 'NULL';
+        };
+
+        $osql = " UPDATE `$this->table` SET
+                        `company_name`=%s, `ceo_name`=%s,
+                        `license_no`=%s, `biz_no`=%s,
+                        `manager_name`=%s, `manager_phone`=%s, `manager_email`=%s,
+                        `tel`=%s, `fax`=%s,
+                        `zipcode`=%s, `addr1`=%s, `addr2`=%s,
+                        `homepage_name`=%s, `sub_domain`=%s, `custom_domain`=%s,
+                        `memo`=%s
+                  WHERE `apply_no` = %s
+                ";
+        $sql = sprintf(
+            $osql,
+            $this->db->escape($entity->getCompanyName()),
+            $this->db->escape($entity->getCeoName()),
+            $esc($entity->getLicenseNo()),
+            $esc($entity->getBizNo()),
+            $esc($entity->getManagerName()),
+            $this->db->escape($entity->getManagerPhone()),
+            $this->db->escape($entity->getManagerEmail()),
+            $esc($entity->getTel()),
+            $esc($entity->getFax()),
+            $esc($entity->getZipcode()),
+            $esc($entity->getAddr1()),
+            $esc($entity->getAddr2()),
+            $esc($entity->getHomepageName()),
+            $esc($entity->getSubDomain()),
+            $esc($entity->getCustomDomain()),
+            $esc($entity->getMemo()),
+            $this->db->escape((int) $entity->getApplyNo())
+        );
+        return $this->safeExecQuery($sql);
     }
 
     // 승인/거절 처리 - approve()는 approve_date도 같이 찍고, reject()는 reject_reason을 같이 받는다

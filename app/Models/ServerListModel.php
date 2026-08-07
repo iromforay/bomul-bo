@@ -26,4 +26,10 @@ class ServerListModel extends CI_Model
         $sql = "UPDATE `$this->table` SET `tenant_count` = `tenant_count` + 1 WHERE `server_no` = " . $this->db->escape((int) $server_no);
         return $this->safeExecQuery($sql);
     }
+
+    public function findByIdx($server_no)
+    {
+        $rows = $this->findbyid((int) $server_no);
+        return $rows[0] ?? null;
+    }
 }

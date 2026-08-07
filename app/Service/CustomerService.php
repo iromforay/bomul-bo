@@ -35,7 +35,7 @@ class CustomerService extends CI_Service
     }
 
     // 회원가입 - id/pw/company_name/phone 4개만 필수. customer_name(담당자명)/biz_reg_no/broker_reg_no/
-    // email/fid는 서비스 신청 단계(completeProfile())에서 받는다. 다만 Admin이 직접 등록할 땐 한 번에
+    // email은 서비스 신청 단계(completeProfile())에서 받는다. 다만 Admin이 직접 등록할 땐 한 번에
     // 다 채워 보낼 수도 있어서, 넘어오면 그대로 저장하되 필수 조건에는 넣지 않는다.
     public function save(array $data): array
     {
@@ -47,7 +47,6 @@ class CustomerService extends CI_Service
         $biz_reg_no    = trim($data['biz_reg_no'] ?? '');
         $broker_reg_no = trim($data['broker_reg_no'] ?? '');
         $email         = trim($data['email'] ?? '');
-        $fid           = trim($data['fid'] ?? '');
 
         if ($customer_id === '' || $customer_pw === '' || $company_name === '' || $phone === '') {
             return AT_Result::toFailData("아이디/비밀번호/중개사무소명/휴대폰번호를 입력해주세요.");
@@ -55,13 +54,6 @@ class CustomerService extends CI_Service
 
         if ($this->model->existsByLoginId($customer_id)) {
             return AT_Result::toFailData("이미 사용중인 아이디입니다.");
-        }
-
-        if ($fid !== '' && !preg_match('/^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/', $fid)) {
-            return AT_Result::toFailData("도메인 주소는 영문 소문자/숫자/하이픈만 사용할 수 있습니다.");
-        }
-        if ($fid !== '' && $this->model->existsByFid($fid)) {
-            return AT_Result::toFailData("이미 사용중인 도메인 주소입니다.");
         }
 
         $entity = new Customer_Entity();
@@ -84,9 +76,6 @@ class CustomerService extends CI_Service
         if ($email !== '') {
             $entity->setEmail($email);
         }
-        if ($fid !== '') {
-            $entity->setFid($fid);
-        }
         // biz_reg_verified_yn / broker_reg_verified_yn / migrated_yn은 CustomerModel::sql_save()가
         // 항상 'N'으로 고정 저장 - 가입 시점엔 미검증/미이관 상태로 시작해야 하므로 여기서 넣어도 무시됨.
 
@@ -102,27 +91,20 @@ class CustomerService extends CI_Service
         return AT_Result::toSuccessData("고객 등록에 성공했습니다.", ['customer_no' => (int) $customer_no]);
     }
 
-    // 서비스 신청 단계의 "사업자정보 및 도메인" 입력 - customer_name(담당자명)/email/biz_reg_no/
-    // broker_reg_no/fid를 채운다. verified_yn/use_yn/service_yn 등 상태값은 entity에 아예 세팅하지
-    // 않아서 sql_edit()이 건드리지 않는다 (edit()과 달리 이 메서드는 고객 본인이 호출하는 경로라
-    // 관리자 전용 상태값을 실수로라도 덮어쓰면 안 됨).
+    // 서비스 신청 단계의 "사업자정보" 입력 - customer_name(담당자명)/email/biz_reg_no/broker_reg_no를
+    // 채운다. verified_yn/use_yn/service_yn 등 상태값은 entity에 아예 세팅하지 않아서 sql_edit()이
+    // 건드리지 않는다 (edit()과 달리 이 메서드는 고객 본인이 호출하는 경로라 관리자 전용 상태값을
+    // 실수로라도 덮어쓰면 안 됨). 희망 도메인(sub_domain)은 여기서 다루지 않는다 - 서비스 신청
+    // 1건마다 다를 수 있어 service_apply 쪽에서 신청서별로 받는다.
     public function completeProfile(int $customer_no, array $data): array
     {
         $customer_name = trim($data['customer_name'] ?? '');
         $email         = trim($data['email'] ?? '');
         $biz_reg_no    = trim($data['biz_reg_no'] ?? '');
         $broker_reg_no = trim($data['broker_reg_no'] ?? '');
-        $fid           = trim($data['fid'] ?? '');
 
-        if ($customer_name === '' || $email === '' || $biz_reg_no === '' || $broker_reg_no === '' || $fid === '') {
+        if ($customer_name === '' || $email === '' || $biz_reg_no === '' || $broker_reg_no === '') {
             return AT_Result::toFailData("모든 항목을 입력해주세요.");
-        }
-
-        if (!preg_match('/^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/', $fid)) {
-            return AT_Result::toFailData("도메인 주소는 영문 소문자/숫자/하이픈만 사용할 수 있습니다.");
-        }
-        if ($this->model->existsByFid($fid, $customer_no)) {
-            return AT_Result::toFailData("이미 사용중인 도메인 주소입니다.");
         }
 
         $entity = new Customer_Entity();
@@ -131,7 +113,6 @@ class CustomerService extends CI_Service
         $entity->setEmail($email);
         $entity->setBizRegNo($biz_reg_no);
         $entity->setBrokerRegNo($broker_reg_no);
-        $entity->setFid($fid);
 
         if (!$this->model->sql_edit($entity)) {
             return AT_Result::toFailData("저장에 실패했습니다.");
@@ -151,8 +132,7 @@ class CustomerService extends CI_Service
         return trim((string) ($row['customer_name'] ?? '')) !== ''
             && trim((string) ($row['email'] ?? '')) !== ''
             && trim((string) ($row['biz_reg_no'] ?? '')) !== ''
-            && trim((string) ($row['broker_reg_no'] ?? '')) !== ''
-            && trim((string) ($row['fid'] ?? '')) !== '';
+            && trim((string) ($row['broker_reg_no'] ?? '')) !== '';
     }
 
     // 고객 상세 > 수정 화면 전체 저장 - 기본정보 + 각종 상태값(검증여부/계정사용여부/서비스사용여부/
@@ -167,7 +147,6 @@ class CustomerService extends CI_Service
         $broker_reg_no = trim($data['broker_reg_no'] ?? '');
         $phone         = trim($data['phone'] ?? '');
         $email         = trim($data['email'] ?? '');
-        $fid           = trim($data['fid'] ?? '');
 
         if ($customer_id === '' || $customer_name === '' || $company_name === ''
             || $biz_reg_no === '' || $broker_reg_no === '' || $phone === '' || $email === '') {
@@ -181,10 +160,6 @@ class CustomerService extends CI_Service
 
         if ($this->model->existsByLoginId($customer_id, $customer_no)) {
             return AT_Result::toFailData("이미 사용중인 아이디입니다.");
-        }
-
-        if ($fid !== '' && $this->model->existsByFid($fid, $customer_no)) {
-            return AT_Result::toFailData("이미 사용중인 fid입니다.");
         }
 
         $entity = new Customer_Entity();
@@ -209,9 +184,6 @@ class CustomerService extends CI_Service
 
         if (!empty($data['service_expire_date'])) {
             $entity->setServiceExpireDate($data['service_expire_date']);
-        }
-        if ($fid !== '') {
-            $entity->setFid($fid);
         }
 
         if (!$this->model->sql_edit($entity)) {
@@ -353,17 +325,17 @@ class CustomerService extends CI_Service
 
     /*
      * TODO: 결제 완료 후 실사용자 전환(이관) 로직 - 아직 미구현.
-     * fid는 서비스 신청 단계에서 고객이 이미 입력/선택해 customer.fid에 저장돼 있다고 가정
-     * (CustomerModel::existsByFid()로 신청 시점에 customer 내 중복은 체크하지만, 최종 발급 가능
-     * 여부는 이미 활성화된 중앙 member.fid까지 같이 확인해야 함 - 신청 처리 로직에서 필요).
+     * fid(도메인)는 customer가 아니라 서비스 신청 1건(service_apply.sub_domain → 승인되면
+     * service_live.fid)에 속한 값이다 - 한 고객이 여러 서비스를 신청할 수 있으므로 이관은
+     * customer_no 단위가 아니라 승인된 service_live 1건 단위로 이뤄져야 한다.
      * 결제 기능/테넌트 DB 프로비저닝 방식이 정해지면 아래를 구현:
      *   1. 중앙 member insert: user_id=customer_id, user_pwd=customer_pw(그대로 복사, 둘 다 SHA-256),
-     *      fid=customer.fid, service='Y', fname=company_name, regist_num=biz_reg_no,
+     *      fid=service_live.fid, service='Y', fname=company_name, regist_num=biz_reg_no,
      *      mb_name=customer_name, mb_id=customer_id, mb_hp=phone, mb_email=email
      *      (ftel/faddress1/faddress2는 중앙 member엔 있으나 customer엔 아직 없음 - 필요시 추가 수집)
      *   2. {fid} 테넌트 DB 생성 후 basic 테이블에 broker_reg_no 등 시딩 (Basic_Entity 참고 -
      *      중앙 member엔 중개사무소등록번호 컬럼이 없어서 테넌트 basic 쪽으로 감)
-     *   3. customer.member_no/migrated_yn/migrated_date 갱신
+     *   3. customer.member_no/migrated_yn/migrated_date 갱신 (해당 service_live 건에 한해)
      */
     public function migrateToMember($customer_no): array
     {

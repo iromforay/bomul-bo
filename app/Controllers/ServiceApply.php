@@ -6,9 +6,11 @@ use App\Service\CustomerService;
 use App\Service\ProductService;
 use App\Service\ServiceApplyService;
 
-// 로그인 회원 전용 서비스 신청 - 담당자·사무소 정보/사업자정보/도메인을 여기서 받는다.
-// customer 프로필(customer_name/email/biz_reg_no/broker_reg_no/fid)이 이미 채워져 있으면
+// 로그인 회원 전용 서비스 신청 - 담당자·사무소 정보/사업자정보를 여기서 받는다.
+// customer 프로필(customer_name/email/biz_reg_no/broker_reg_no)이 이미 채워져 있으면
 // (직전 신청에서 완료해둔 경우) 그 입력 단계를 건너뛰고 바로 상품 확인만 받는다.
+// 희망 도메인(sub_domain)은 프로필과 별개 - 신청서 1건마다 항상 새로 입력받는다
+// (한 고객이 서비스를 여러 개 신청할 수 있고, 그때마다 도메인이 달라야 하므로).
 class ServiceApply extends BaseController
 {
     public function __construct()
@@ -52,26 +54,24 @@ class ServiceApply extends BaseController
         $productService = new ProductService();
         $profileComplete = $customerService->isProfileComplete($customer);
 
-        // 이번에 처음 입력하는 경우에만 "사업자정보 및 도메인"을 저장 - fid 중복체크는
-        // CustomerService::completeProfile() 안에서 반드시 거친다.
+        // 이번에 처음 입력하는 경우에만 "사업자정보"를 저장
         if (!$profileComplete) {
             $profileResult = $customerService->completeProfile((int) $customer['customer_no'], [
                 'customer_name' => $this->request->getPost('customer_name'),
                 'email'         => $this->request->getPost('email'),
                 'biz_reg_no'    => $this->request->getPost('biz_reg_no'),
                 'broker_reg_no' => $this->request->getPost('broker_reg_no'),
-                'fid'           => $this->request->getPost('fid'),
             ]);
 
             if ($profileResult['SUCCESS'] !== 'TRUE') {
                 return $this->showError($customer, false, $profileResult['MSG']);
             }
 
-            // fid 등 방금 저장한 값을 그대로 이어서 써야 하니 재조회
             $customer = $customerService->get_row($customer['customer_no']);
             $profileComplete = true;
         }
 
+        // 희망 도메인은 신청서마다 새로 입력받는다 - 유일성 체크는 ServiceApplyService::apply() 안에서.
         $applyService = new ServiceApplyService();
         $applyResult = $applyService->apply([
             'customer_no'   => $customer['customer_no'],
@@ -83,7 +83,7 @@ class ServiceApply extends BaseController
             'manager_name'   => $customer['customer_name'],
             'manager_phone'  => $customer['phone'],
             'manager_email'  => $customer['email'],
-            'sub_domain'     => $customer['fid'],
+            'sub_domain'     => $this->request->getPost('sub_domain'),
             'tel'            => $this->request->getPost('tel'),
             'homepage_name'  => $this->request->getPost('homepage_name'),
             'memo'           => $this->request->getPost('memo'),

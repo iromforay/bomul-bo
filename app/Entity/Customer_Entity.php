@@ -25,7 +25,6 @@ class Customer_Entity
     private $biz_reg_file_name;
     private $broker_reg_file_dir;
     private $broker_reg_file_name;
-    private $fid;
     private $member_no;
     private $migrated_yn;
     private $migrated_date;
@@ -319,23 +318,6 @@ class Customer_Entity
     public function setBrokerRegFileName($broker_reg_file_name): void
     {
         $this->broker_reg_file_name = $broker_reg_file_name;
-    }
-
-    // 2차도메인 - 가입 시점엔 null, 서비스 신청 단계에서 고객이 입력/선택
-    /**
-     * @return mixed
-     */
-    public function getFid()
-    {
-        return $this->fid;
-    }
-
-    /**
-     * @param mixed $fid
-     */
-    public function setFid($fid): void
-    {
-        $this->fid = $fid;
     }
 
     // 결제 완료로 이관됐을 때 채워지는 중앙 member 테이블의 PK (이관 전엔 null)

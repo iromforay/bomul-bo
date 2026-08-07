@@ -38,8 +38,8 @@
             <input type="hidden" name="product_no" value="<?= (int) $lockedProduct['product_no'] ?>">
 
             <?php if (!$profileComplete): ?>
-                <!-- 담당자·사무소 정보 및 사업자 정보 및 도메인 - 이미 완료된 회원은 이 블록 자체가 안 나온다 -->
-                <h2 class="wizard-step__title" style="font-size:1rem; margin-bottom:14px;">담당자·사업자 정보 및 도메인</h2>
+                <!-- 담당자·사무소 정보 및 사업자 정보 - 이미 완료된 회원은 이 블록 자체가 안 나온다 -->
+                <h2 class="wizard-step__title" style="font-size:1rem; margin-bottom:14px;">담당자·사업자 정보</h2>
 
                 <div class="form-group">
                     <label for="customer_name">담당자명</label>
@@ -59,20 +59,23 @@
                         <input type="text" id="broker_reg_no" name="broker_reg_no" value="<?= htmlspecialchars($old['broker_reg_no'] ?? '', ENT_QUOTES) ?>" required>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="fid">희망 도메인 주소</label>
-                    <div class="form-domain-preview">
-                        <input type="text" id="fid" name="fid" value="<?= htmlspecialchars($old['fid'] ?? '', ENT_QUOTES) ?>" placeholder="영문 소문자/숫자" required>
-                        <span class="form-domain-suffix">.bomul.ai.kr</span>
-                    </div>
-                    <p class="field-hint">사무소 홈페이지 주소로 사용됩니다 (예: happy2025.bomul.ai.kr) - 다른 사무소가 이미 쓰는 주소는 선택할 수 없습니다</p>
-                </div>
             <?php else: ?>
                 <div class="form-group">
                     <label>담당자 / 사무소</label>
-                    <p class="field-hint"><?= htmlspecialchars($customer['customer_name'] ?? '', ENT_QUOTES) ?> · <?= htmlspecialchars($customer['email'] ?? '', ENT_QUOTES) ?> · <?= htmlspecialchars($customer['fid'] ?? '', ENT_QUOTES) ?>.bomul.ai.kr</p>
+                    <p class="field-hint"><?= htmlspecialchars($customer['customer_name'] ?? '', ENT_QUOTES) ?> · <?= htmlspecialchars($customer['email'] ?? '', ENT_QUOTES) ?></p>
                 </div>
             <?php endif; ?>
+
+            <!-- 희망 도메인 - 프로필과 별개로 신청서 1건마다 매번 새로 입력받는다 (한 고객이 여러 서비스를
+                 신청할 수 있고, 그때마다 도메인이 달라야 하므로 - service_apply.sub_domain이 유일 키) -->
+            <div class="form-group">
+                <label for="sub_domain">희망 도메인 주소</label>
+                <div class="form-domain-preview">
+                    <input type="text" id="sub_domain" name="sub_domain" value="<?= htmlspecialchars($old['sub_domain'] ?? '', ENT_QUOTES) ?>" placeholder="영문 소문자/숫자" required>
+                    <span class="form-domain-suffix">.bomul.ai.kr</span>
+                </div>
+                <p class="field-hint">사무소 홈페이지 주소로 사용됩니다 (예: happy2025.bomul.ai.kr) - 다른 사무소가 이미 쓰는 주소는 선택할 수 없습니다</p>
+            </div>
 
             <div class="form-group">
                 <label for="ceo_name">대표자명</label>

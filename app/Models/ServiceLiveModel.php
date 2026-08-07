@@ -58,4 +58,12 @@ class ServiceLiveModel extends CI_Model
         $rows = $this->findbyid((int) $live_no);
         return $rows[0] ?? null;
     }
+
+    // apply_no 1건당 service_live는 최대 1건 - 승인 시 딱 1번만 생성됨
+    public function findByApplyNo($apply_no)
+    {
+        $sql = "SELECT * FROM `$this->table` WHERE `apply_no` = " . $this->db->escape((int) $apply_no) . " LIMIT 1";
+        $rows = $this->getExecQuery($sql);
+        return $rows[0] ?? null;
+    }
 }
