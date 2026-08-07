@@ -3,7 +3,8 @@
 <header id="header" class="header <?= $active ?? '' ?>">
     <div class="header__inner">
         <a href="/" class="header__logo" title="보이는 매물 홈으로">
-            <span class="header__logo-mark">보이는</span><span>매물</span>
+            <!-- span class="header__logo-mark">보이는</span><span>매물</span -->
+            <span class="header__logo-img"><img src="<?=RS_IMG?>/header/logo.png"></span>
         </a>
 
         <nav class="header__nav" aria-label="주요 메뉴">
