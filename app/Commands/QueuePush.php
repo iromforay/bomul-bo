@@ -17,6 +17,7 @@ class QueuePush extends BaseCommand
 
     public function run(array $params)
     {
+        date_default_timezone_set("Asia/Seoul");
         $db = db_connect('default');
         $queueModel = model('App\Models\QueueModel', true, $db);
 
@@ -40,7 +41,7 @@ class QueuePush extends BaseCommand
     {
         $payload = array_merge(
             json_decode($row['payload'], true) ?? [],
-            ['queue_no' => (int) $row['queue_no']]
+            ['queue_no' => (int) $row['queue_no'], 'action' => $row['action'] ?? 'new']
         );
         $jsonBody = json_encode($payload, JSON_UNESCAPED_UNICODE);
         $authHeader = 'Authorization: Bearer ' . $row['api_key'];

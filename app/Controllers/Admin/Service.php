@@ -90,6 +90,26 @@ class Service extends BaseController
         return redirect()->to(SITE . '/Service');
     }
 
+    // 이미 설치 완료된 서비스를 정지 - member.service='N' push (action='update')
+    public function postSuspend($apply_no = null)
+    {
+        $service = new ServiceApplyService();
+        $result = $service->pushMemberStatus($apply_no, 'N');
+
+        session()->setFlashdata($result['SUCCESS'] === 'TRUE' ? 'msg' : 'err', $result['MSG']);
+        return redirect()->to(SITE . '/Service');
+    }
+
+    // 정지된 서비스를 재개 - member.service='Y' push (action='update')
+    public function postResume($apply_no = null)
+    {
+        $service = new ServiceApplyService();
+        $result = $service->pushMemberStatus($apply_no, 'Y');
+
+        session()->setFlashdata($result['SUCCESS'] === 'TRUE' ? 'msg' : 'err', $result['MSG']);
+        return redirect()->to(SITE . '/Service');
+    }
+
     public function postReject($apply_no = null)
     {
         $service = new ServiceApplyService();

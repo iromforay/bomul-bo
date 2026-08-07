@@ -41,12 +41,24 @@ class Callback extends BaseController
             return;
         }
 
+        // action='new'(신규 세팅)는 install_status를, action='update'(member.service 변경)는
+        // service_live.status(ACTIVE/SUSPENDED)를 건드린다 - 서로 다른 상태값이라 분기 필요.
+        $action = $queue['action'] ?? 'new';
+
         if ($status === 'DONE') {
             $queueModel->markDone($queue_no);
-            $serviceLiveModel->updateInstallStatus($queue['live_no'], 'DONE');
+            if ($action === 'update') {
+                $payload = json_decode($queue['payload'], true) ?? [];
+                $newStatus = (($payload['status'] ?? '') === 'Y') ? 'ACTIVE' : 'SUSPENDED';
+                $serviceLiveModel->updateStatus($queue['live_no'], $newStatus);
+            } else {
+                $serviceLiveModel->updateInstallStatus($queue['live_no'], 'DONE');
+            }
         } else {
             $queueModel->markFailed($queue_no, $errorMsg);
-            $serviceLiveModel->updateInstallStatus($queue['live_no'], 'FAILED', $errorMsg);
+            if ($action !== 'update') {
+                $serviceLiveModel->updateInstallStatus($queue['live_no'], 'FAILED', $errorMsg);
+            }
         }
 
         echo AT_Result::toJson(AT_Result::toSuccessData());

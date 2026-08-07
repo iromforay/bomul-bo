@@ -23,6 +23,12 @@ class CustomerModel extends CI_Model
         return $rows[0] ?? null;
     }
 
+    public function findByIdx($customer_no)
+    {
+        $rows = $this->findbyid((int) $customer_no);
+        return $rows[0] ?? null;
+    }
+
     // 아이디 중복체크 - use_yn 상관없이 전체에서 확인 (customer_id는 UNIQUE)
     public function existsByLoginId($customer_id, $exclude_no = null)
     {

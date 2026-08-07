@@ -10,12 +10,15 @@ class QueueModel extends CI_Model
         return $this;
     }
 
-    public function sql_save($live_no, $server_no, $fid, array $payload)
+    // action: 'new'(신규 세팅) | 'update'(member.service 같은 상태 변경) - 운영서버가 이걸 보고
+    // TenantProvisioner::provision() vs updateMemberStatus() 중 뭘 실행할지 분기한다.
+    public function sql_save($live_no, $server_no, $fid, array $payload, string $action = 'new')
     {
         $sql = "INSERT INTO `$this->table` SET
                     `live_no`   = " . $this->db->escape((int) $live_no) . ",
                     `server_no` = " . $this->db->escape((int) $server_no) . ",
                     `fid`       = " . $this->db->escape($fid) . ",
+                    `action`    = " . $this->db->escape($action) . ",
                     `payload`   = " . $this->db->escape(json_encode($payload, JSON_UNESCAPED_UNICODE)) . ",
                     `status`    = 'PENDING'";
         return $this->safeExecQuery($sql);

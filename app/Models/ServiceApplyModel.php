@@ -27,11 +27,14 @@ class ServiceApplyModel extends CI_Model
     // 어드민 "서비스 신청 현황" 목록용 - 순수하게 service_apply에 등록된 신청 목록만 보여준다.
     // 고객정보/결제정보처럼 복잡한 조인은 상세(get_detail_by_apply_no)에서만 붙인다.
     // product_name만 예외 - 신청 당시 어떤 상품을 신청했는지는 목록에서도 필요한 신청서 자체 정보.
+    // sl.status/install_status는 정지/재개 버튼을 어떤 걸 보여줄지 판단하는 데 씀
     public function get_list_with_details()
     {
-        $sql = "SELECT sa.*, p.product_name, p.product_code
+        $sql = "SELECT sa.*, p.product_name, p.product_code,
+                       sl.status AS live_status, sl.install_status
                 FROM `$this->table` sa
                 LEFT JOIN `product` p ON p.product_no = sa.product_no
+                LEFT JOIN `service_live` sl ON sl.apply_no = sa.apply_no
                 ORDER BY sa.apply_no DESC";
 
         return $this->getExecQuery($sql);

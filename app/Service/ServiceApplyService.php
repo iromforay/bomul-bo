@@ -13,6 +13,7 @@ class ServiceApplyService extends CI_Service
     private $serverListModel;
     private $serviceLiveModel;
     private $queueModel;
+    private $customerModel;
 
     public function __construct()
     {
@@ -22,6 +23,7 @@ class ServiceApplyService extends CI_Service
         $this->serverListModel = model('App\Models\ServerListModel', true, $this->db);
         $this->serviceLiveModel = model('App\Models\ServiceLiveModel', true, $this->db);
         $this->queueModel = model('App\Models\QueueModel', true, $this->db);
+        $this->customerModel = model('App\Models\CustomerModel', true, $this->db);
     }
 
     // 어드민 "서비스 신청 현황" 목록
@@ -227,8 +229,14 @@ class ServiceApplyService extends CI_Service
         return ['live_no' => $live_no, 'license_key' => $liveEntity->getLicenseKey()];
     }
 
+    // 운영서버가 이 payload로 (1) 테넌트 DB 세팅 (2) 중앙 bomul.member에 로그인 계정 등록까지
+    // 한 번에 처리한다 - 그래서 customer_id/customer_pw(이미 SHA-256 해시됨, 평문 아님)도 같이
+    // 실어보낸다. bomul.member.user_pwd도 SHA-256 고정이라 해시를 그대로 복사하면 된다
+    // (CustomerModel::sql_save()와 동일 정책 - CustomerService.php의 이관 관련 주석 참고).
     private function enqueue(array $apply, $live_no, array $server, array $product, ?string $licenseKey = null): bool
     {
+        $customer = $this->customerModel->findByIdx($apply['customer_no']);
+
         $payload = [
             'fid'          => $apply['sub_domain'],
             'license_key'  => $licenseKey,
@@ -237,9 +245,43 @@ class ServiceApplyService extends CI_Service
             'ceo_name'     => $apply['ceo_name'],
             'biz_no'       => $apply['biz_no'],
             'license_no'   => $apply['license_no'],
+            'customer_id'  => $customer['customer_id'] ?? null,
+            'customer_pw'  => $customer['customer_pw'] ?? null,
         ];
-        $result = $this->queueModel->sql_save($live_no, $server['server_no'], $apply['sub_domain'], $payload);
+        $result = $this->queueModel->sql_save($live_no, $server['server_no'], $apply['sub_domain'], $payload, 'new');
         return (bool) $result;
+    }
+
+    // 이미 설치 완료된 서비스의 member.service(Y/N)만 바꾸는 가벼운 push - 신규 세팅(enqueue())과
+    // 달리 DB 재생성/customer_id·pw 없이 fid+status만 실어보낸다. 관리자가 정지/재개 버튼을 누르거나,
+    // 나중에 만료 배치가 자동으로 호출하는 지점이 될 수 있음.
+    public function pushMemberStatus($apply_no, string $status): array
+    {
+        $status = strtoupper($status);
+        if (!in_array($status, ['Y', 'N'], true)) {
+            return AT_Result::toFailData("잘못된 상태값입니다.");
+        }
+
+        $live = $this->serviceLiveModel->findByApplyNo($apply_no);
+        if (!$live) {
+            return AT_Result::toFailData("설치된 서비스가 없습니다.");
+        }
+        if ($live['install_status'] !== 'DONE') {
+            return AT_Result::toFailData("아직 설치가 완료되지 않은 서비스입니다.");
+        }
+
+        $server = $this->serverListModel->findByIdx($live['server_no']);
+        if (!$server) {
+            return AT_Result::toFailData("배정된 운영서버 정보를 찾을 수 없습니다.");
+        }
+
+        $payload = ['fid' => $live['fid'], 'status' => $status];
+        $ok = $this->queueModel->sql_save($live['live_no'], $server['server_no'], $live['fid'], $payload, 'update');
+        if (!$ok) {
+            return AT_Result::toFailData("큐 적재에 실패했습니다." . $this->dbErrorSuffix($this->queueModel));
+        }
+
+        return AT_Result::toSuccessData($status === 'Y' ? "재개 요청이 큐에 적재되었습니다." : "정지 요청이 큐에 적재되었습니다.");
     }
 
     // 원인 파악용 - CI_Model::getDbError()에 남아있는 직전 쿼리의 실제 DB 에러를 실패 메시지에 붙인다.

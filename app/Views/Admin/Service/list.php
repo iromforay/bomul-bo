@@ -56,10 +56,18 @@ $statusLabels = [
                             <form method="post" action="<?= Admin_SITE ?>/Service/reject/<?= (int) $row['apply_no'] ?>" style="display:inline;" onsubmit="return confirm('거절하시겠습니까?');">
                                 <button type="submit" style="padding:4px 10px; font-size:12px;">거절</button>
                             </form>
-                        <?php elseif ($row['status'] === 'APPROVED'): ?>
+                        <?php elseif ($row['status'] === 'APPROVED' && ($row['install_status'] ?? null) !== 'DONE'): ?>
                             <!-- 승인은 됐는데 service_live/queue가 안 만들어진 건을 뒤늦게 큐에 적재할 때 사용 -->
                             <form method="post" action="<?= Admin_SITE ?>/Service/requeue/<?= (int) $row['apply_no'] ?>" style="display:inline;" onsubmit="return confirm('큐에 적재하시겠습니까?');">
                                 <button type="submit" style="padding:4px 10px; font-size:12px;">큐 적재</button>
+                            </form>
+                        <?php elseif ($row['status'] === 'APPROVED' && ($row['live_status'] ?? null) === 'SUSPENDED'): ?>
+                            <form method="post" action="<?= Admin_SITE ?>/Service/resume/<?= (int) $row['apply_no'] ?>" style="display:inline;" onsubmit="return confirm('서비스를 재개하시겠습니까?');">
+                                <button type="submit" class="primary" style="padding:4px 10px; font-size:12px;">재개</button>
+                            </form>
+                        <?php elseif ($row['status'] === 'APPROVED'): ?>
+                            <form method="post" action="<?= Admin_SITE ?>/Service/suspend/<?= (int) $row['apply_no'] ?>" style="display:inline;" onsubmit="return confirm('서비스를 정지하시겠습니까?');">
+                                <button type="submit" style="padding:4px 10px; font-size:12px;">정지</button>
                             </form>
                         <?php else: ?>
                             <span style="color:#6B7A88;">-</span>

@@ -53,6 +53,13 @@ class ServiceLiveModel extends CI_Model
         return $this->safeExecQuery($sql);
     }
 
+    // action='update' 콜백 완료 시 사용 - ACTIVE/SUSPENDED(member.service Y/N에 대응)
+    public function updateStatus($live_no, string $status)
+    {
+        $sql = "UPDATE `$this->table` SET `status` = " . $this->db->escape($status) . " WHERE `live_no` = " . $this->db->escape((int) $live_no);
+        return $this->safeExecQuery($sql);
+    }
+
     public function findByIdx($live_no)
     {
         $rows = $this->findbyid((int) $live_no);
