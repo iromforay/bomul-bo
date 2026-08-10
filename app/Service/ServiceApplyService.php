@@ -284,6 +284,184 @@ class ServiceApplyService extends CI_Service
         return AT_Result::toSuccessData($status === 'Y' ? "재개 요청이 큐에 적재되었습니다." : "정지 요청이 큐에 적재되었습니다.");
     }
 
+    // 어드민 "서비스 라이브 현황" 목록
+    public function get_live_list()
+    {
+        return $this->serviceLiveModel->get_list_with_details();
+    }
+
+    // 어드민 "서비스 라이브 상세"
+    public function get_live_row($apply_no)
+    {
+        return $this->serviceLiveModel->get_detail_by_apply_no($apply_no);
+    }
+
+    // 상세화면의 "30일/60일 연장" 빠른 버튼 - days만큼 연장한다(항상 양수).
+    // 기준일: 아직 안 끝난 서비스(오늘<만료일)는 만료일에서, 이미 끝난 서비스(오늘>=만료일)는
+    // 오늘부터 더한다 - 이미 만료된 걸 만료일 기준으로 연장하면 연장한 기간만큼 공짜로 날아가버리므로.
+    public function extendByDays($apply_no, int $days): array
+    {
+        if ($days <= 0) {
+            return AT_Result::toFailData("연장할 일수를 입력해주세요.");
+        }
+
+        $live = $this->getExtendableLive($apply_no);
+        if (is_array($live) && isset($live['SUCCESS'])) {
+            return $live; // 실패 결과 그대로 반환
+        }
+
+        $today = date('Y-m-d');
+        $base = ($today < $live['expire_date']) ? $live['expire_date'] : $today;
+        $newExpireDate = date('Y-m-d', strtotime($base . " +{$days} days"));
+
+        return $this->applyExpireDate($live, $newExpireDate, "{$days}일 연장되었습니다.");
+    }
+
+    // 상세화면의 달력 직접 지정 - 계산 없이 관리자가 고른 날짜를 그대로 만료일로 반영.
+    public function setExpireDate($apply_no, string $newExpireDate): array
+    {
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $newExpireDate)) {
+            return AT_Result::toFailData("만료일을 선택해주세요.");
+        }
+
+        $live = $this->getExtendableLive($apply_no);
+        if (is_array($live) && isset($live['SUCCESS'])) {
+            return $live;
+        }
+
+        if ($newExpireDate < $live['start_date']) {
+            return AT_Result::toFailData("시작일({$live['start_date']}) 이전으로는 지정할 수 없습니다.");
+        }
+
+        return $this->applyExpireDate($live, $newExpireDate, "만료일이 변경되었습니다.");
+    }
+
+    // 연장/만료일 지정 공통 사전조건 - 설치완료된 service_live 1건을 반환하거나 실패결과를 반환
+    private function getExtendableLive($apply_no)
+    {
+        $live = $this->serviceLiveModel->findByApplyNo($apply_no);
+        if (!$live) {
+            return AT_Result::toFailData("설치된 서비스가 없습니다.");
+        }
+        if ($live['install_status'] !== 'DONE') {
+            return AT_Result::toFailData("아직 설치가 완료되지 않은 서비스입니다.");
+        }
+        return $live;
+    }
+
+    // 큐 적재 즉시 service_live.expire_date를 반영(낙관적 갱신)하고, action='extend'로 운영서버에도
+    // 통보한다 - fire-and-forget push라 운영서버 반영이 실패해도 BO 표시값은 이미 바뀐 채로 남는다.
+    // 만료일이 바뀌면 status(정상/종료)도 새 만료일 기준으로 같이 갱신한다 - 오늘<=새 만료일이면 정상(유지),
+    // 그 전이면 종료. queue payload에도 status를 실어 운영서버 bomul.member.status까지 맞춰준다.
+    private function applyExpireDate(array $live, string $newExpireDate, string $successMsg): array
+    {
+        $server = $this->serverListModel->findByIdx($live['server_no']);
+        if (!$server) {
+            return AT_Result::toFailData("배정된 운영서버 정보를 찾을 수 없습니다.");
+        }
+
+        $newStatus = ($newExpireDate >= date('Y-m-d')) ? 'ACTIVE' : 'TERMINATED';
+
+        if (!$this->serviceLiveModel->updateExpireDate($live['live_no'], $newExpireDate)) {
+            return AT_Result::toFailData("만료일 변경에 실패했습니다." . $this->dbErrorSuffix($this->serviceLiveModel));
+        }
+        $this->serviceLiveModel->updateStatus($live['live_no'], $newStatus);
+
+        $payload = ['fid' => $live['fid'], 'expire_date' => $newExpireDate, 'status' => $this->remoteStatus($newStatus)];
+        $queued = $this->queueModel->sql_save($live['live_no'], $server['server_no'], $live['fid'], $payload, 'extend');
+
+        $msg = "{$successMsg} (변경된 만료일: {$newExpireDate}, 상태: " . $this->statusLabel($newStatus) . ")";
+        if (!$queued) {
+            // BO 표시값(expire_date/status)은 이미 바뀌었지만 운영서버에 통보할 큐가 안 만들어졌다 -
+            // 이대로 두면 운영서버 bomul.member.status가 어긋난 채로 남으므로 관리자에게 반드시 알려야 한다.
+            $msg .= " 단, 큐 적재에 실패해 운영서버에는 아직 반영되지 않았습니다." . $this->dbErrorSuffix($this->queueModel);
+        }
+
+        return AT_Result::toSuccessData($msg);
+    }
+
+    // 상세화면의 "서비스 상태" 직접 변경 - 요청(REQUEST)은 로컬 상태만 바꾸고 큐를 적재하지 않는다
+    // (다음 service:collect-request 크론 실행 때 그 건이 픽업되어 큐에 적재된다).
+    // 정상/유예/종료는 이미 설치완료된 건만 대상으로, 즉시 반영 + action='status'로 운영서버에 통보한다.
+    public function changeStatus($apply_no, string $status): array
+    {
+        $status = strtoupper($status);
+        if (!in_array($status, ['REQUEST', 'ACTIVE', 'SUSPENDED', 'TERMINATED'], true)) {
+            return AT_Result::toFailData("잘못된 상태값입니다.");
+        }
+
+        $live = $this->serviceLiveModel->findByApplyNo($apply_no);
+        if (!$live) {
+            return AT_Result::toFailData("설치된 서비스가 없습니다.");
+        }
+
+        if ($status === 'REQUEST') {
+            if (!$this->serviceLiveModel->updateStatus($live['live_no'], 'REQUEST')) {
+                return AT_Result::toFailData("상태 변경에 실패했습니다." . $this->dbErrorSuffix($this->serviceLiveModel));
+            }
+            return AT_Result::toSuccessData("요청 상태로 변경되었습니다. 다음 세팅 수집 배치 때 큐에 적재됩니다.");
+        }
+
+        if ($live['install_status'] !== 'DONE') {
+            return AT_Result::toFailData("아직 설치가 완료되지 않은 서비스입니다.");
+        }
+
+        $server = $this->serverListModel->findByIdx($live['server_no']);
+        if (!$server) {
+            return AT_Result::toFailData("배정된 운영서버 정보를 찾을 수 없습니다.");
+        }
+
+        if (!$this->serviceLiveModel->updateStatus($live['live_no'], $status)) {
+            return AT_Result::toFailData("상태 변경에 실패했습니다." . $this->dbErrorSuffix($this->serviceLiveModel));
+        }
+
+        $payload = ['fid' => $live['fid'], 'status' => $this->remoteStatus($status)];
+        $queued = $this->queueModel->sql_save($live['live_no'], $server['server_no'], $live['fid'], $payload, 'status');
+
+        $msg = "상태가 '" . $this->statusLabel($status) . "'(으)로 변경되었습니다.";
+        if (!$queued) {
+            $msg .= " 단, 큐 적재에 실패해 운영서버에는 아직 반영되지 않았습니다." . $this->dbErrorSuffix($this->queueModel);
+        }
+
+        return AT_Result::toSuccessData($msg);
+    }
+
+    // 상세화면의 "설치진행상태" 직접 변경 - 운영서버 콜백을 기다리지 않고 관리자가 수동 보정할 때 사용
+    // (예: 콜백이 유실됐거나 운영서버 쪽 상태와 어긋난 경우).
+    public function changeInstallStatus($apply_no, string $installStatus): array
+    {
+        $installStatus = strtoupper($installStatus);
+        if (!in_array($installStatus, ['PENDING', 'INSTALLING', 'DONE', 'FAILED'], true)) {
+            return AT_Result::toFailData("잘못된 설치상태값입니다.");
+        }
+
+        $live = $this->serviceLiveModel->findByApplyNo($apply_no);
+        if (!$live) {
+            return AT_Result::toFailData("설치된 서비스가 없습니다.");
+        }
+
+        if (!$this->serviceLiveModel->updateInstallStatus($live['live_no'], $installStatus)) {
+            return AT_Result::toFailData("설치상태 변경에 실패했습니다." . $this->dbErrorSuffix($this->serviceLiveModel));
+        }
+
+        return AT_Result::toSuccessData("설치진행상태가 변경되었습니다.");
+    }
+
+    private function statusLabel(string $status): string
+    {
+        $labels = ['REQUEST' => '요청', 'ACTIVE' => '정상', 'SUSPENDED' => '유예', 'TERMINATED' => '종료'];
+        return $labels[$status] ?? $status;
+    }
+
+    // 로컬 service_live.status(4단계: 요청/정상/유예/종료) → 운영서버로 보내는 화면차단 3단계.
+    // 정상=운영(전부 접근 가능), 유예=사용자종료(중개사 관리자는 로그인해서 결제/갱신 가능, 방문객 화면만 차단),
+    // 종료=전체종료(관리자·사용자 둘 다 차단). REQUEST는 큐를 안 태우므로 매핑 대상이 아니다.
+    private function remoteStatus(string $status): string
+    {
+        $map = ['ACTIVE' => 'OPERATING', 'SUSPENDED' => 'USER_CLOSED', 'TERMINATED' => 'ALL_CLOSED'];
+        return $map[$status] ?? $status;
+    }
+
     // 원인 파악용 - CI_Model::getDbError()에 남아있는 직전 쿼리의 실제 DB 에러를 실패 메시지에 붙인다.
     // service_apply/service_live/queue는 이 저장소에 CREATE TABLE이 없어 스키마를 코드로 확인할 수
     // 없으므로, 어디서 왜 막히는지는 이 에러 메시지로 진단해야 한다.

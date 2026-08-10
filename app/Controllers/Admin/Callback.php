@@ -41,9 +41,13 @@ class Callback extends BaseController
             return;
         }
 
-        // action='new'(신규 세팅)는 install_status를, action='update'(member.service 변경)는
+        // action='new'(신규 세팅)는 install_status를, action='update'(구 정지/재개 Y·N)는
         // service_live.status(ACTIVE/SUSPENDED)를 건드린다 - 서로 다른 상태값이라 분기 필요.
+        // action='extend'(기간 연장/만료일 지정)와 action='status'(상세화면 상태 직접변경)는 BO에서
+        // 큐 적재 시점에 이미 expire_date/status를 반영(낙관적 갱신)해뒀으므로 여기서는 별도로
+        // 건드릴 게 없다 - 완료/실패 여부는 queue.status에만 남는다.
         $action = $queue['action'] ?? 'new';
+        $optimisticActions = ['extend', 'status'];
 
         if ($status === 'DONE') {
             $queueModel->markDone($queue_no);
@@ -51,12 +55,12 @@ class Callback extends BaseController
                 $payload = json_decode($queue['payload'], true) ?? [];
                 $newStatus = (($payload['status'] ?? '') === 'Y') ? 'ACTIVE' : 'SUSPENDED';
                 $serviceLiveModel->updateStatus($queue['live_no'], $newStatus);
-            } else {
+            } elseif (!in_array($action, $optimisticActions, true)) {
                 $serviceLiveModel->updateInstallStatus($queue['live_no'], 'DONE');
             }
         } else {
             $queueModel->markFailed($queue_no, $errorMsg);
-            if ($action !== 'update') {
+            if ($action !== 'update' && !in_array($action, $optimisticActions, true)) {
                 $serviceLiveModel->updateInstallStatus($queue['live_no'], 'FAILED', $errorMsg);
             }
         }

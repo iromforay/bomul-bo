@@ -73,4 +73,54 @@ class ServiceLiveModel extends CI_Model
         $rows = $this->getExecQuery($sql);
         return $rows[0] ?? null;
     }
+
+    // 어드민 "서비스 라이브 현황" 목록 - 만료 임박한 건을 먼저 보도록 expire_date 오름차순.
+    public function get_list_with_details()
+    {
+        $sql = "SELECT sl.*, sa.company_name, sa.ceo_name, sa.manager_name, sa.manager_phone, sa.sub_domain,
+                       s.server_code, s.server_name
+                FROM `$this->table` sl
+                LEFT JOIN `service_apply` sa ON sa.apply_no = sl.apply_no
+                LEFT JOIN `server_list` s ON s.server_no = sl.server_no
+                ORDER BY sl.expire_date ASC";
+        return $this->getExecQuery($sql);
+    }
+
+    // 어드민 "서비스 라이브 상세" - get_list_with_details()와 동일한 조인을 apply_no로 한정.
+    // receiver_url까지 같이 가져와서 상세화면에 "세팅된 서버 정보"(host)로 보여준다.
+    public function get_detail_by_apply_no($apply_no)
+    {
+        $sql = "SELECT sl.*, sa.company_name, sa.ceo_name, sa.manager_name, sa.manager_phone,
+                       sa.manager_email, sa.sub_domain,
+                       s.server_code, s.server_name, s.receiver_url
+                FROM `$this->table` sl
+                LEFT JOIN `service_apply` sa ON sa.apply_no = sl.apply_no
+                LEFT JOIN `server_list` s ON s.server_no = sl.server_no
+                WHERE sl.apply_no = " . $this->db->escape((int) $apply_no) . "
+                LIMIT 1";
+        $rows = $this->getExecQuery($sql);
+        return $rows[0] ?? null;
+    }
+
+    // 기간 연장/축소 - 관리자가 큐 적재와 함께 즉시 반영(낙관적 갱신)할 때 사용
+    public function updateExpireDate($live_no, string $newExpireDate)
+    {
+        $sql = "UPDATE `$this->table` SET `expire_date` = " . $this->db->escape($newExpireDate) . "
+                WHERE `live_no` = " . $this->db->escape((int) $live_no);
+        return $this->safeExecQuery($sql);
+    }
+
+    // service:collect-request 크론이 픽업할 대상 - status='REQUEST'인 건은 아직 실제 세팅(큐 적재)이
+    // 안 됐거나 관리자가 재세팅을 요청한 건이다. enqueue에 필요한 신청서/상품/고객 정보까지 한 번에 조인.
+    public function get_request_pending()
+    {
+        $sql = "SELECT sl.*, sa.company_name, sa.ceo_name, sa.biz_no, sa.license_no,
+                       p.product_code, c.customer_id, c.customer_pw
+                FROM `$this->table` sl
+                LEFT JOIN `service_apply` sa ON sa.apply_no = sl.apply_no
+                LEFT JOIN `product` p ON p.product_no = sa.product_no
+                LEFT JOIN `customer` c ON c.customer_no = sl.customer_no
+                WHERE sl.status = 'REQUEST'";
+        return $this->getExecQuery($sql);
+    }
 }

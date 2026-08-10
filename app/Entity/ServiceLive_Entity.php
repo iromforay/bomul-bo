@@ -125,7 +125,8 @@ class ServiceLive_Entity
         $this->license_key = $license_key;
     }
 
-    // ACTIVE / SUSPENDED(만료유예) / TERMINATED
+    // REQUEST(요청 - service:collect-request 크론이 픽업해 큐에 세팅 적재) / ACTIVE(정상) /
+    // SUSPENDED(유예) / TERMINATED(종료)
     /**
      * @return mixed
      */
