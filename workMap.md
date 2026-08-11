@@ -33,7 +33,7 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
 - [x] 16. 축약형 마이페이지 .
 - [x] 17. 서비스 연장/정기결제 신청. — 연장(마이페이지 0원 신청)만 완료, 정기결제는 미착수(#11 대기)
 - [x] 18. 상담문의   — #24 통합 게시판으로 구조 완료(board_type=INQUIRY)
-- [x] 19. QNA   — #24 통합 게시판으로 구조 완료(board_type=QNA)
+- [x] 19. QNA   — #24 Admin CRUD + #25 www 목록/상세/글쓰기까지 완료(board_type=QNA)
    ```
   https://www.cafe24.com/commerce/start/founder.html
   -> 홈페이지를 만들어주는곳 가격비교와 기능비교
@@ -51,10 +51,43 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
 - [x] 22. 0원 신청도 결제 이력(payment)에 기록되도록
 - [x] 23. Admin 서비스 신청 상세에 신청 상품 정보(가격/기간/정가) 표시
 - [x] 24. 통합 게시판(상담문의/QNA/공지사항) Admin CRUD 구조 신설 — www 작성 화면은 미포함(다음 단계)
+- [x] 25. www QNA 게시판(목록/상세/글쓰기) — 통합 게시판(#24) board_type=QNA 그대로 사용
+- [x] 26. www 상담문의(홈 리드폼 실연동) + 공지사항(목록/상세) — 통합 게시판(#24) board_type=INQUIRY/NOTICE
 
 ---
 
 ## 처리내용
+
+### #26 (2026-08-11) — www 상담문의(홈 리드폼 실연동) + 공지사항(목록/상세)
+
+**상담문의(INQUIRY) — 해피콜 모델로 결정**: 비회원이 이름+연락처만 남기는 리드폼이라 로그인 개념이 없음. "나중에 본인이 남긴 글을 다시 볼 방법"을 고민했는데, 글번호+비밀번호 조회 기능을 새로 만드는 대신 **관리자가 남긴 연락처로 직접 회신하는 해피콜 방식으로 확정**(작성자 확인 요청, 승인) — 그래서 자기글조회 기능은 없음, 필요해지면 비밀번호 컬럼+조회화면을 별도로 추가해야 함.
+
+- [2026_08_11_board_writer_phone.sql](app/sql/2026_08_11_board_writer_phone.sql) 신규 — `board.writer_phone VARCHAR(20)` 추가(콜백 연락처). **운영 DB에 수동 반영 필요**
+- [Board_Entity.php](app/Entity/Board_Entity.php)/[BoardModel.php](app/Models/BoardModel.php)/[BoardService.php](app/Service/BoardService.php) — `writer_phone` 필드 배관(save/edit 양쪽)
+- [Controllers/Home.php](app/Controllers/Home.php) — `postInquiry()` 신규. 원래 `action="#"`로 아무 데도 안 가던 홈 "상담 신청" 섹션(`#inquiry`) 폼을 `board_type='INQUIRY'`로 실제 저장하게 연결. 제목은 "{이름}님의 상담 신청"으로 자동 생성(원래 폼에 제목 입력란이 없어서)
+- [Views/index.php](app/Views/index.php) — 폼 action을 `/inquiry`로 변경, 접수/에러 안내 문구 표시 추가
+- [Admin/Board/write.php](app/Views/Admin/Board/write.php)/[modify.php](app/Views/Admin/Board/modify.php)/[list.php](app/Views/Admin/Board/list.php) — "작성자 연락처" 입력란/목록 표시 추가, [Controllers/Admin/Board.php](app/Controllers/Admin/Board.php) 저장 시 같이 넘기도록 반영
+
+**공지사항(NOTICE) — 읽기 전용**: 관리자만 작성(`/Board/notice`), www는 목록/상세만.
+
+- [Controllers/Notice.php](app/Controllers/Notice.php), [Views/notice_list.php](app/Views/notice_list.php)/[notice_view.php](app/Views/notice_view.php) 신규 — QNA와 동일하게 `BoardService::get_public_list/get_public_row` 재사용(숨김글 제외, 조회수 증가)
+
+**공통**
+- [Routes.php](app/Config/Routes.php) — `POST inquiry`, `notice`, `notice/view/(:num)` 라우트 추가
+- [header_menu.php](app/Views/common/header_menu.php) — 데스크톱/모바일 메뉴에 "공지사항" 링크 추가(QNA 옆)
+- 이번 범위 밖: 상담문의 자기글조회(위 결정으로 보류), 공지사항 상단고정/게시기간, 답변 알림
+
+### #25 (2026-08-11) — www QNA 게시판(목록/상세/글쓰기)
+
+통합 게시판(#24)의 `board_type='QNA'`를 그대로 써서 www 공개 화면을 붙임. 목록/상세는 비로그인도 열람 가능, 글쓰기만 로그인 고객으로 제한(마이페이지 `requireLogin()`과 동일 패턴).
+
+- [BoardModel.php](app/Models/BoardModel.php) — `get_list_by_type()`에 `$onlyVisible` 파라미터 추가(www 목록은 `use_yn='Y'`만), `incrementViewCount()` 신규
+- [BoardService.php](app/Service/BoardService.php) — `get_public_list()`/`get_public_row()`(숨김글 URL 직접접근 차단 + 조회수 증가) 신규, `save()`가 `customer_no`도 저장하도록 보강(지금까지는 Admin 작성만 있어서 항상 NULL이었음)
+- [Controllers/Qna.php](app/Controllers/Qna.php) 신규 — `getIndex`(목록)/`getView`(상세, 조회수 증가)/`getWrite`+`postWrite`(로그인 필요, 작성자명은 회사명/아이디로 자동 채움)
+- [Views/qna_list.php](app/Views/qna_list.php)/[qna_view.php](app/Views/qna_view.php)/[qna_write.php](app/Views/qna_write.php) 신규 — mypage 화면과 동일한 `.signup-wrap/.signup-card` 마크업 재사용
+- [Routes.php](app/Config/Routes.php) — `qna`, `qna/write`, `qna/view/(:num)` 라우트 추가
+- [header_menu.php](app/Views/common/header_menu.php) — 데스크톱/모바일 상단 메뉴에 "QNA" 링크 추가
+- 이번 범위 밖: 내가 쓴 문의만 보기(마이페이지 연동), 답변 알림(이메일/문자), 페이징(현재 전체 목록을 한 번에 다 보여줌 — 글이 많아지면 `calPaging()`을 붙여야 함, 이 프로젝트에서 아직 어디서도 실사용된 적 없는 헬퍼)
 
 ### #24 (2026-08-11) — 통합 게시판(상담문의/QNA/공지사항) Admin CRUD 신설
 

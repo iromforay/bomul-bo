@@ -95,6 +95,7 @@ if ($host === 'ad.bomul.ai.kr') { //관리자
     $routes->setDefaultNamespace('App\Controllers');
     $routes->get('/',     'Home::getindex');
     $routes->get('Home',  'Home::getindex');
+    $routes->post('inquiry', 'Home::postInquiry');
 
     $routes->get('signup',            'Signup::getindex');
     $routes->post('signup',           'Signup::postindex');
@@ -114,5 +115,13 @@ if ($host === 'ad.bomul.ai.kr') { //관리자
     $routes->get('mypage/subscribe',   'MyPage::getSubscribe');
     $routes->post('mypage/documents',  'MyPage::postDocuments');
     $routes->post('mypage/uploadTemp', 'MyPage::postUploadTemp');
+
+    $routes->get('qna',                'Qna::getIndex');
+    $routes->get('qna/write',          'Qna::getWrite');
+    $routes->post('qna/write',         'Qna::postWrite');
+    $routes->get('qna/view/(:num)',    'Qna::getView/$1');
+
+    $routes->get('notice',             'Notice::getIndex');
+    $routes->get('notice/view/(:num)', 'Notice::getView/$1');
 }
 

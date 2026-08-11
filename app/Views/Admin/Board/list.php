@@ -34,7 +34,12 @@ $statusLabels = ['WAIT' => ['답변대기', 'wait'], 'DONE' => ['답변완료', 
                 <tr>
                     <td><?= (int) $row['board_no'] ?></td>
                     <td><a href="<?= Admin_SITE ?>/Board/<?= $type ?>/modify/<?= (int) $row['board_no'] ?>"><?= htmlspecialchars($row['title'], ENT_QUOTES) ?></a></td>
-                    <td><?= !empty($row['writer_name']) ? htmlspecialchars($row['writer_name'], ENT_QUOTES) : '<span style="color:#6B7A88;">관리자</span>' ?></td>
+                    <td>
+                        <?= !empty($row['writer_name']) ? htmlspecialchars($row['writer_name'], ENT_QUOTES) : '<span style="color:#6B7A88;">관리자</span>' ?>
+                        <?php if (!empty($row['writer_phone'])): ?>
+                            <span style="color:#6B7A88; font-size:12px;"><?= htmlspecialchars($row['writer_phone'], ENT_QUOTES) ?></span>
+                        <?php endif; ?>
+                    </td>
                     <td><span class="badge <?= $statusInfo[1] ?>"><?= htmlspecialchars($statusInfo[0], ENT_QUOTES) ?></span></td>
                     <td>
                         <?php if (($row['use_yn'] ?? 'Y') === 'Y'): ?>

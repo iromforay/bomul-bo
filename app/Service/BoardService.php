@@ -46,6 +46,12 @@ class BoardService extends CI_Service
         return $this->model->get_list_by_type($board_type);
     }
 
+    // www 공개 목록 - 숨김(use_yn='N') 처리된 글은 제외
+    public function get_public_list($board_type)
+    {
+        return $this->model->get_list_by_type($board_type, true);
+    }
+
     public function get_row($board_type, $board_no)
     {
         $row = $this->model->findbyid((int) $board_no);
@@ -55,6 +61,20 @@ class BoardService extends CI_Service
         if (!$row || $row['board_type'] !== $board_type) {
             return null;
         }
+
+        return $row;
+    }
+
+    // www 상세보기 - 숨김글은 URL로 직접 접근해도 못 보게 막고, 조회수 증가
+    public function get_public_row($board_type, $board_no)
+    {
+        $row = $this->get_row($board_type, $board_no);
+        if (!$row || ($row['use_yn'] ?? 'Y') !== 'Y') {
+            return null;
+        }
+
+        $this->model->incrementViewCount($row['board_no']);
+        $row['view_count'] = (int) $row['view_count'] + 1;
 
         return $row;
     }
@@ -73,6 +93,8 @@ class BoardService extends CI_Service
         $entity->setTitle($title);
         $entity->setContent($content);
         $entity->setWriterName(trim($data['writer_name'] ?? '') ?: null);
+        $entity->setWriterPhone(trim($data['writer_phone'] ?? '') ?: null);
+        $entity->setCustomerNo(!empty($data['customer_no']) ? (int) $data['customer_no'] : null);
         $entity->setStatus(($data['status'] ?? 'WAIT') === 'DONE' ? 'DONE' : 'WAIT');
         $entity->setUseYn(($data['use_yn'] ?? 'Y') === 'N' ? 'N' : 'Y');
 
@@ -109,6 +131,7 @@ class BoardService extends CI_Service
         $entity->setTitle($title);
         $entity->setContent($content);
         $entity->setWriterName(trim($data['writer_name'] ?? '') ?: null);
+        $entity->setWriterPhone(trim($data['writer_phone'] ?? '') ?: null);
         $entity->setStatus(($data['status'] ?? 'WAIT') === 'DONE' ? 'DONE' : 'WAIT');
         $entity->setUseYn(($data['use_yn'] ?? 'Y') === 'N' ? 'N' : 'Y');
 

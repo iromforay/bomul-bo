@@ -22,6 +22,10 @@
                 <td><input type="text" name="writer_name" value="<?= htmlspecialchars($row['writer_name'] ?? '', ENT_QUOTES) ?>" placeholder="비워두면 '관리자'로 표시"></td>
             </tr>
             <tr>
+                <th>작성자 연락처</th>
+                <td><input type="text" name="writer_phone" value="<?= htmlspecialchars($row['writer_phone'] ?? '', ENT_QUOTES) ?>" placeholder="비회원 상담문의 등 콜백 연락처"></td>
+            </tr>
+            <tr>
                 <th>처리상태</th>
                 <td>
                     <select name="status">

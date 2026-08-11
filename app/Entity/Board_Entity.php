@@ -11,6 +11,7 @@ class Board_Entity
     private $title;
     private $content;
     private $writer_name;
+    private $writer_phone;
     private $customer_no;
     private $status;
     private $reply_content;
@@ -99,6 +100,22 @@ class Board_Entity
     public function setWriterName($writer_name): void
     {
         $this->writer_name = $writer_name;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getWriterPhone()
+    {
+        return $this->writer_phone;
+    }
+
+    /**
+     * @param mixed $writer_phone
+     */
+    public function setWriterPhone($writer_phone): void
+    {
+        $this->writer_phone = $writer_phone;
     }
 
     /**
