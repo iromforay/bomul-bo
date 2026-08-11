@@ -31,9 +31,9 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
 - [ ] 14. 약관, 개인정보 처리방침
 - [ ] 15. 웹페이지 변경.
 - [x] 16. 축약형 마이페이지 .
-- [ ] 17. 서비스 연장/정기결제 신청. 
-- [ ] 18. 상담문의   
-- [ ] 19. QNA   
+- [x] 17. 서비스 연장/정기결제 신청. — 연장(마이페이지 0원 신청)만 완료, 정기결제는 미착수(#11 대기)
+- [x] 18. 상담문의   — #24 통합 게시판으로 구조 완료(board_type=INQUIRY)
+- [x] 19. QNA   — #24 통합 게시판으로 구조 완료(board_type=QNA)
    ```
   https://www.cafe24.com/commerce/start/founder.html
   -> 홈페이지를 만들어주는곳 가격비교와 기능비교
@@ -50,10 +50,34 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
 - [x] 21. 마이페이지 서비스 연장 신청 화면(www) — 상품선택 + 0원/유료 결제 분기점
 - [x] 22. 0원 신청도 결제 이력(payment)에 기록되도록
 - [x] 23. Admin 서비스 신청 상세에 신청 상품 정보(가격/기간/정가) 표시
+- [x] 24. 통합 게시판(상담문의/QNA/공지사항) Admin CRUD 구조 신설 — www 작성 화면은 미포함(다음 단계)
 
 ---
 
 ## 처리내용
+
+### #24 (2026-08-11) — 통합 게시판(상담문의/QNA/공지사항) Admin CRUD 신설
+
+세 게시판을 각각 따로 만들지 않고 테이블 하나(`board`)를 `board_type`(INQUIRY/QNA/NOTICE)으로 나눠 쓰는 구조. Manager/Product CRUD와 동일한 패턴(raw SQL Model + Service + Admin Controller)을 그대로 따름. **CRUD 구조만 우선 구현** — www(고객)쪽 작성/조회 화면은 이번 범위 밖.
+
+- [2026_08_11_board_table.sql](app/sql/2026_08_11_board_table.sql) 신규. **운영 DB에 수동 반영 필요**. 컬럼: `board_type`, `title`, `content`, `writer_name`(비회원/관리자 작성 시 표시용), `customer_no`(로그인 작성자, 현재 미사용 — 향후 www 연동 시 채움), `status`(WAIT/DONE, 공지사항은 의미없음), `reply_content`/`replied_at`, `view_count`(현재 증가 로직 없음 — www 상세화면 붙일 때 추가 필요), `use_yn`(노출/숨김)
+- [Board_Entity.php](app/Entity/Board_Entity.php), [BoardModel.php](app/Models/BoardModel.php)(`get_list_by_type`/`sql_save`/`sql_edit`/`sql_delete`), [BoardService.php](app/Service/BoardService.php) 신규
+  - `BoardService::TYPES`(URL세그먼트→DB코드: inquiry→INQUIRY, qna→QNA, notice→NOTICE)/`TYPE_LABELS`로 타입 매핑 일원화. 정의 안 된 타입 접근 시 컨트롤러가 `/Home`으로 돌려보냄
+  - `get_row()`는 `board_type`도 같이 검증해서 다른 게시판 글 번호로 직접 접근하는 것 방지
+- [Controllers/Admin/Board.php](app/Controllers/Admin/Board.php) 신규 — 컨트롤러 하나가 `{type}` 세그먼트로 세 게시판 전부 처리 (list/write/modify/delete)
+- [Views/Admin/Board/list.php](app/Views/Admin/Board/list.php)/[write.php](app/Views/Admin/Board/write.php)/[modify.php](app/Views/Admin/Board/modify.php) 신규 — Manager 목록/폼 마크업 그대로 재사용
+- [Routes.php](app/Config/Routes.php) — `Board/(:any)`로 타입별 CRUD 라우트 등록
+- [admin_menu.php](app/Views/common/admin_menu.php) — 기존에 라우트 없이 링크만 있던 "상담문의"(`/Inquiry`)·"공지사항"(`/Notice`)을 `/Board/inquiry`·`/Board/notice`로 교체 연결, "QNA 게시판"(`/Board/qna`) 링크 신규 추가. `/Faq`는 이번 범위 밖이라 그대로 둠(아직 미구현)
+- 다음 단계로 필요할 것: www(고객) 작성/목록 화면, 상세 조회+조회수 증가, 상담문의 비밀글(작성자 본인+관리자만 열람) 여부 결정, 공지사항 노출기간(게시시작/종료일) 필요 여부
+
+### #22 후속 (2026-08-11) — 0원 결제이력 누락 버그 진단/수정 + 배포 동기화 이슈 발견
+
+마이페이지에서 0원 서비스 연장 신청 시 `service_apply`는 생성되는데 `payment`엔 행이 안 남는다는 제보 → 코드 추적.
+
+- **코드 자체는 정상**이었음(로컬 기준) — 원인은 **운영 서버가 이 저장소의 최신 커밋을 실행하고 있지 않았던 것**(배포 동기화 누락). 파일을 하나씩 개별 업로드하다 보니 `ServiceApplyService.php`/`PaymentModel.php`/`Payment_Entity.php`가 서로 다른 시점 버전으로 섞여 있었고, 그 결과 `Call to undefined method PaymentModel::sql_save()` 에러까지 발생 — 관련 파일 재업로드로 해소
+- **재발 방지용 코드 보강**([ServiceApplyService.php](app/Service/ServiceApplyService.php)):
+  - `apply()`/`applyRenew()` — `service_apply` INSERT와 `recordFreePayment()`(payment INSERT)를 `db->transStart()/transComplete()`로 묶어서, 향후 payment INSERT만 실패하는 경우에도 신청서만 반쪽으로 남는 상태 방지
+  - `recordFreePayment()` — `paymentModel->sql_save()` 실패 시 조용히 넘어가지 않고 `log_message('error', ...)`로 apply_no/DB에러/실행 SQL을 `writable/logs`에 남기도록 변경
 
 ### #21~23 (2026-08-11) — 마이페이지 연장 신청 화면 + 0원 결제이력 + Admin 상품정보 표시
 

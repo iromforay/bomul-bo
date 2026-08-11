@@ -67,6 +67,14 @@ if ($host === 'ad.bomul.ai.kr') { //관리자
     $routes->post('ServerList/modify/(:num)',  'ServerList::postModify/$1');
     $routes->post('ServerList/delete/(:num)',  'ServerList::postDelete/$1');
 
+    // 통합 게시판(상담문의/QNA/공지사항) - (:any) 자리는 inquiry/qna/notice, BoardService::TYPES 참고
+    $routes->get('Board/(:any)',                  'Board::getIndex/$1');
+    $routes->get('Board/(:any)/write',             'Board::getWrite/$1');
+    $routes->post('Board/(:any)/write',            'Board::postWrite/$1');
+    $routes->get('Board/(:any)/modify/(:num)',     'Board::getModify/$1/$2');
+    $routes->post('Board/(:any)/modify/(:num)',    'Board::postModify/$1/$2');
+    $routes->post('Board/(:any)/delete/(:num)',    'Board::postDelete/$1/$2');
+
     $routes->post('Callback/complete',          'Callback::postComplete');
     // 기본 자동 라우터 활성화
     //$routes->setAutoRoute(true);

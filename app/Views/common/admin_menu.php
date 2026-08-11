@@ -20,7 +20,7 @@ $active = $active ?? '';
     <ul>
         <li class="<?= $active === 'dashboard' ? 'active' : '' ?>"><a href="<?= Admin_SITE ?? '' ?>/Home">대시보드</a></li>
         <li class="<?= $active === 'customer' ? 'active' : '' ?>"><a href="<?= Admin_SITE ?? '' ?>/Customer">고객관리</a></li>
-        <li class="<?= $active === 'inquiry' ? 'active' : '' ?>"><a href="<?= Admin_SITE ?? '' ?>/Inquiry">상담문의</a></li>
+        <li class="<?= $active === 'inquiry' ? 'active' : '' ?>"><a href="<?= Admin_SITE ?? '' ?>/Board/inquiry">상담문의</a></li>
         <li class="<?= $active === 'setup' ? 'active' : '' ?>"><a href="<?= Admin_SITE ?? '' ?>/Setup">사이트설정</a></li>
         <li class="<?= $active === 'manager' ? 'active' : '' ?>"><a href="<?= Admin_SITE ?? '' ?>/Manager">관리자</a></li>
         <li class="<?= $active === 'stat' ? 'active' : '' ?>"><a href="<?= Admin_SITE ?? '' ?>/Stat">통계</a></li>
@@ -52,13 +52,14 @@ $active = $active ?? '';
     </ul>
     <div class="grp-title">상담문의</div>
     <ul>
-        <li><a href="<?= Admin_SITE ?? '' ?>/Inquiry"><span class="ico">▸</span>상담 문의 내역</a></li>
+        <li><a href="<?= Admin_SITE ?? '' ?>/Board/inquiry"><span class="ico">▸</span>상담 문의 내역</a></li>
+        <li><a href="<?= Admin_SITE ?? '' ?>/Board/qna"><span class="ico">▸</span>QNA 게시판</a></li>
     </ul>
     <div class="grp-title">사이트설정</div>
     <ul>
         <li><a href="<?= Admin_SITE ?? '' ?>/Setup"><span class="ico">▸</span>기본정보/로고</a></li>
         <li><a href="<?= Admin_SITE ?? '' ?>/Banner"><span class="ico">▸</span>배너/팝업</a></li>
-        <li><a href="<?= Admin_SITE ?? '' ?>/Notice"><span class="ico">▸</span>공지사항</a></li>
+        <li><a href="<?= Admin_SITE ?? '' ?>/Board/notice"><span class="ico">▸</span>공지사항</a></li>
         <li><a href="<?= Admin_SITE ?? '' ?>/Faq"><span class="ico">▸</span>FAQ</a></li>
     </ul>
     <div class="grp-title">관리자</div>
