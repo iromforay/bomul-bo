@@ -32,6 +32,8 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
 - [ ] 15. 웹페이지 변경.
 - [x] 16. 축약형 마이페이지 .
 - [ ] 17. 서비스 연장/정기결제 신청. 
+- [ ] 18. 상담문의   
+- [ ] 19. QNA   
    ```
   https://www.cafe24.com/commerce/start/founder.html
   -> 홈페이지를 만들어주는곳 가격비교와 기능비교
@@ -43,10 +45,32 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
 - [x] 16. 서비스 신청 상세 - 승인완료 시 세팅 진행 현황(대기/세팅중/완료·실패) 표시
 - [x] 17. 서비스 신청 현황 리스트에도 신청상태 옆 "세팅현황" 컬럼 추가
 - [x] 18. 상품 entity 재구성 — product_name에서 기간 분리, product_type(기본상품/부가서비스) 신설
+- [x] 19. 상품에 정가(원가) 추가 — 할인 강조 표시
+- [x] 20. service_apply 신규/연장 신청 구분 — 승인 시 queue action 분기(new/extend)
 
 ---
 
 ## 처리내용
+
+### #20 (2026-08-11) — service_apply 신규/연장 신청 구분, 승인 시 queue action 분기
+
+`service_apply`에 `apply_type`(NEW/RENEW)과 `renew_live_no`(연장 대상 service_live.live_no, RENEW일 때만) 컬럼 신설. 연장 신청이 어떤 기존 서비스를 연장하는지는 명시적 FK로 물고 감(고객당 서비스가 여러 개로 늘어나도 안전).
+
+- [2026_08_11_service_apply_renew.sql](app/sql/2026_08_11_service_apply_renew.sql) 신규. **운영 DB에 수동 반영 필요**
+- [ServiceApply_Entity.php](app/Entity/ServiceApply_Entity.php), [ServiceApplyModel::sql_save()](app/Models/ServiceApplyModel.php) — 두 필드 추가(기본값 apply_type='NEW')
+- [ServiceApplyService::approve()](app/Service/ServiceApplyService.php) — `apply_type`으로 분기:
+  - NEW: 기존 그대로(서버배정 + service_live 생성 + `queue.action='new'`)
+  - RENEW: 새 서버/새 service_live 없이 `renew_live_no`가 가리키는 기존 service_live 1건의 만료일만 연장 — **#8/#3에서 만든 `applyExpireDate()`를 그대로 재사용**해서 날짜기준 계산·3단계 상태 자동판정(정상/유예/종료)·`queue.action='extend'` 적재까지 상세화면의 "빠른 연장"과 정책이 항상 일치하도록 함(신규 `approveRenew()` 메서드)
+- **버그 예방**: RENEW로 승인된 건은 `service_live.apply_no`가 이 apply_no를 가리키지 않아(원래 신청 건의 apply_no를 그대로 유지) `requeue()`/목록의 "큐 적재"·"정지"·"재개" 버튼이 그대로 걸리면 엉뚱하게 새 서버를 배정해버리는 사고가 날 수 있었음 → `requeue()`에 RENEW 조기 차단 추가, [Service/list.php](app/Views/Admin/Service/list.php) 액션 버튼도 신규(NEW) 건에만 노출되도록 가드 + "유형" 배지(신규/연장) 컬럼 추가
+- 참고: 연장 신청을 실제로 "제출"하는 화면(마이페이지 `/mypage/extend`)은 아직 준비중 placeholder 그대로임(#11 실결제 연동 대기) — 이번엔 승인 처리 로직/스키마만 준비됨. 나중에 신청 폼을 만들 때 `apply_type='RENEW'`+`renew_live_no`를 채워서 `apply()`처럼 저장하는 새 서비스 메서드가 필요함
+
+### #19 (2026-08-11) — 상품에 정가(list_price) 추가, 할인 강조 표시
+
+- [2026_08_11_product_list_price.sql](app/sql/2026_08_11_product_list_price.sql) 신규 — `product.list_price INT UNSIGNED NULL`(할인 없으면 NULL). **운영 DB에 수동 반영 필요**
+- [Product_Entity.php](app/Entity/Product_Entity.php), [ProductModel.php](app/Models/ProductModel.php), [ProductService.php](app/Service/ProductService.php) — `list_price` 필드 추가, "정가는 판매가보다 낮을 수 없다" 검증 추가
+- Admin 상품 등록/수정화면 — "정가(원)" 입력란 추가(비워두면 할인 미표시), 목록에 취소선 정가+판매가 표시
+- www 요금카드([unit/product.php](app/Views/unit/product.php)) — `list_price > price`면 취소선 정가 + 강조(featured) 스타일로 표시(과거 하드코딩 카드에 있던 `pricing-card__price-original` 클래스 재사용)
+- 참고: 상세 신청 확인화면(`service_apply.php`의 `product-locked` 영역)은 이번 범위에서 정가 표시 안 붙임 — 필요하면 추가 요청
 
 ### #18 (2026-08-11) — 상품 entity 재구성: product_name에서 기간 분리 + product_type 신설
 

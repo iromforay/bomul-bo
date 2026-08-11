@@ -111,6 +111,8 @@ class ProductService extends CI_Service
         $product_type = $data['product_type'] ?? 'BASE';
         $product_name = trim($data['product_name'] ?? '');
         $price        = (int) ($data['price'] ?? 0);
+        $listPriceRaw = trim((string) ($data['list_price'] ?? ''));
+        $list_price   = $listPriceRaw !== '' ? (int) $listPriceRaw : null;
         $billing_type = $data['billing_type'] ?? '';
         $period_day   = (int) ($data['period_day'] ?? 0);
         $status       = $data['status'] ?? 'USE';
@@ -135,6 +137,9 @@ class ProductService extends CI_Service
         if ($price < 0) {
             return [null, AT_Result::toFailData("가격은 0원 이상이어야 합니다.")];
         }
+        if ($list_price !== null && $list_price < $price) {
+            return [null, AT_Result::toFailData("정가는 판매가보다 낮을 수 없습니다.")];
+        }
 
         if ($this->model->existsByCode($product_code, $product_no)) {
             return [null, AT_Result::toFailData("이미 사용중인 상품코드입니다.")];
@@ -148,6 +153,7 @@ class ProductService extends CI_Service
         $entity->setProductType($product_type);
         $entity->setProductName($product_name);
         $entity->setPrice($price);
+        $entity->setListPrice($list_price);
         $entity->setBillingType($billing_type);
         $entity->setPeriodDay($period_day);
         $entity->setDescription($data['description'] ?? null);

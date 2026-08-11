@@ -168,7 +168,7 @@ class ServiceApplyModel extends CI_Model
         };
 
         $osql = " INSERT INTO `$this->table` SET
-                        `customer_no`=%s, `product_no`=%s,
+                        `customer_no`=%s, `product_no`=%s, `apply_type`=%s, `renew_live_no`=%s,
                         `company_name`=%s, `ceo_name`=%s,
                         `license_no`=%s, `biz_no`=%s,
                         `manager_name`=%s, `manager_phone`=%s, `manager_email`=%s,
@@ -182,6 +182,8 @@ class ServiceApplyModel extends CI_Model
             $osql,
             $this->db->escape($entity->getCustomerNo()),
             $this->db->escape($entity->getProductNo()),
+            $this->db->escape($entity->getApplyType() ?? 'NEW'),
+            $esc($entity->getRenewLiveNo()),
             $this->db->escape($entity->getCompanyName()),
             $this->db->escape($entity->getCeoName()),
             $esc($entity->getLicenseNo()),

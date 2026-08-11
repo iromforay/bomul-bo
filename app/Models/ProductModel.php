@@ -67,7 +67,7 @@ class ProductModel extends CI_Model
         };
 
         $osql = " INSERT INTO `$this->table` SET
-                        `product_code`=%s, `product_type`=%s, `product_name`=%s, `price`=%s,
+                        `product_code`=%s, `product_type`=%s, `product_name`=%s, `price`=%s, `list_price`=%s,
                         `billing_type`=%s, `period_day`=%s, `description`=%s,
                         `status`=%s, `is_event`=%s, `sort`=%s
                 ";
@@ -77,6 +77,7 @@ class ProductModel extends CI_Model
             $this->db->escape($entity->getProductType() ?? 'BASE'),
             $this->db->escape($entity->getProductName()),
             $this->db->escape((int) $entity->getPrice()),
+            $esc($entity->getListPrice()),
             $this->db->escape($entity->getBillingType()),
             $this->db->escape((int) $entity->getPeriodDay()),
             $esc($entity->getDescription()),
@@ -94,7 +95,7 @@ class ProductModel extends CI_Model
         };
 
         $osql = " UPDATE `$this->table` SET
-                        `product_code`=%s, `product_type`=%s, `product_name`=%s, `price`=%s,
+                        `product_code`=%s, `product_type`=%s, `product_name`=%s, `price`=%s, `list_price`=%s,
                         `billing_type`=%s, `period_day`=%s, `description`=%s,
                         `status`=%s, `is_event`=%s, `sort`=%s
                   WHERE `product_no` = %s
@@ -105,6 +106,7 @@ class ProductModel extends CI_Model
             $this->db->escape($entity->getProductType() ?? 'BASE'),
             $this->db->escape($entity->getProductName()),
             $this->db->escape((int) $entity->getPrice()),
+            $esc($entity->getListPrice()),
             $this->db->escape($entity->getBillingType()),
             $this->db->escape((int) $entity->getPeriodDay()),
             $esc($entity->getDescription()),

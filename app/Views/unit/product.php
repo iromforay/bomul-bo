@@ -17,15 +17,24 @@ $products = $products ?? [];
         <?php
         $isEvent = ((string) ($product['is_event'] ?? '0')) === '1';
         $price = (int) ($product['price'] ?? 0);
+        $listPrice = (int) ($product['list_price'] ?? 0);
+        $hasDiscount = $listPrice > $price;
+        $discountRate = $hasDiscount ? (int) round((1 - $price / $listPrice) * 100) : 0;
         $priceLabel = $price > 0
             ? number_format($price) . '원' . ($product['billing_type'] === 'MONTHLY' ? ' / 월' : '')
             : '무료';
         ?>
-        <div class="pricing-card<?= $isEvent ? ' pricing-card--featured' : '' ?>">
+        <div class="pricing-card<?= ($isEvent || $hasDiscount) ? ' pricing-card--featured' : '' ?>">
             <?php if ($isEvent): ?>
                 <span class="pricing-card__badge">이벤트</span>
             <?php endif; ?>
             <p class="pricing-card__name"><?= htmlspecialchars($product['product_name'], ENT_QUOTES) ?> <span class="pricing-card__period"><?= htmlspecialchars(product_period_label($product['billing_type'], $product['period_day']), ENT_QUOTES) ?></span></p>
+            <?php if ($hasDiscount): ?>
+                <p class="pricing-card__price-original">
+                    <?= number_format($listPrice) ?>원
+                </p>
+                <span style="color:#E11D48; font-weight:700;font-size: 23px;"><?= $discountRate ?>% 할인</span>
+            <?php endif; ?>
             <p class="pricing-card__price"><?= $priceLabel ?></p>
             <?php if (!empty($product['description'])): ?>
                 <p class="pricing-card__desc"><?= htmlspecialchars($product['description'], ENT_QUOTES) ?></p>

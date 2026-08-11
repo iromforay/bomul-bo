@@ -27,7 +27,7 @@ if ( ! function_exists('product_period_label'))
         }
 
         $days = (int) $periodDay;
-        $presets = [30 => '1개월', 180 => '6개월', 365 => '12개월'];
+        $presets = [30 => '1개월', 60 => '2개월', 90 => '3개월', 180 => '6개월', 365 => '12개월'];
 
         return $presets[$days] ?? "{$days}일";
     }

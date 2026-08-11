@@ -30,8 +30,15 @@
                 </td>
             </tr>
             <tr>
-                <th>가격(원)</th>
+                <th>판매가(원)</th>
                 <td><input type="number" name="price" min="0" value="0" required></td>
+            </tr>
+            <tr>
+                <th>정가(원)</th>
+                <td>
+                    <input type="number" name="list_price" min="0" placeholder="할인 강조용, 비워두면 미표시">
+                    <p style="color:#6B7A88; font-size:12px; margin-top:4px;">판매가보다 크게 입력하면 화면에 취소선 정가+판매가로 표시됩니다. 할인이 없으면 비워두세요.</p>
+                </td>
             </tr>
             <tr>
                 <th>결제방식</th>

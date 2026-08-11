@@ -9,6 +9,8 @@ class ServiceApply_Entity
     private $apply_no;
     private $customer_no;
     private $product_no;
+    private $apply_type;
+    private $renew_live_no;
 
     private $company_name;
     private $ceo_name;
@@ -88,6 +90,40 @@ class ServiceApply_Entity
     public function setProductNo($product_no): void
     {
         $this->product_no = $product_no;
+    }
+
+    // NEW(신규) / RENEW(연장) - approve() 시 이 값으로 큐 action을 분기한다(new vs extend).
+    /**
+     * @return mixed
+     */
+    public function getApplyType()
+    {
+        return $this->apply_type;
+    }
+
+    /**
+     * @param mixed $apply_type
+     */
+    public function setApplyType($apply_type): void
+    {
+        $this->apply_type = $apply_type;
+    }
+
+    // apply_type=RENEW일 때만 사용 - 연장 대상 service_live.live_no
+    /**
+     * @return mixed
+     */
+    public function getRenewLiveNo()
+    {
+        return $this->renew_live_no;
+    }
+
+    /**
+     * @param mixed $renew_live_no
+     */
+    public function setRenewLiveNo($renew_live_no): void
+    {
+        $this->renew_live_no = $renew_live_no;
     }
 
     /**

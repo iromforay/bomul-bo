@@ -95,11 +95,10 @@ class ServiceApplyService extends CI_Service
         return AT_Result::toSuccessData("서비스 신청 정보를 수정했습니다.");
     }
 
-    // 어드민 승인 처리 - service_apply 상태변경 + 서버배정 + service_live 생성 + queue 적재까지 한 번에.
-    // (1) 서비스 신청서(service_apply) → APPROVED
-    // (2) server_list에서 least-loaded 서버 배정
-    // (3) service_live 생성 (install_status=PENDING)
-    // (4) queue에 push 대상 1건 적재 - QueuePush 커맨드가 이걸 보고 운영서버로 실제 push한다
+    // 어드민 승인 처리 - apply_type으로 분기한다.
+    // NEW(신규): service_apply 상태변경 + 서버배정 + service_live 생성 + queue(action='new') 적재.
+    // RENEW(연장): 새 서버/새 service_live 없이, renew_live_no가 가리키는 기존 service_live의
+    // 만료일만 연장하고 queue(action='extend')로 통보 - approveRenew() 참고.
     public function approve($apply_no): array
     {
         $apply = $this->model->findByIdx($apply_no);
@@ -108,6 +107,10 @@ class ServiceApplyService extends CI_Service
         }
         if ($apply['status'] !== 'REQUEST' && $apply['status'] !== 'REVIEW') {
             return AT_Result::toFailData("이미 처리된 신청입니다.");
+        }
+
+        if (($apply['apply_type'] ?? 'NEW') === 'RENEW') {
+            return $this->approveRenew($apply, $apply_no);
         }
 
         // 신청~승인 사이 다른 신청서가 같은 도메인을 먼저 승인받았을 수 있다 - 승인 직전 재확인.
@@ -147,6 +150,37 @@ class ServiceApplyService extends CI_Service
         return AT_Result::toSuccessData("승인 처리되었습니다. (배정서버: {$server['server_code']})");
     }
 
+    // 연장 신청 승인 - 새 서버 배정/service_live 생성 없이 renew_live_no가 가리키는 기존
+    // service_live 1건의 만료일만 연장한다. 날짜 기준 계산과 3단계 상태 자동판정(정상/유예/종료),
+    // queue(action='extend') 적재는 applyExpireDate()(ServiceLive 상세화면의 "빠른 연장"과 동일 로직)를
+    // 그대로 재사용해서 두 경로의 정책이 항상 일치하도록 한다.
+    private function approveRenew(array $apply, $apply_no): array
+    {
+        $live = $this->serviceLiveModel->findByIdx($apply['renew_live_no'] ?? 0);
+        if (!$live || (int) $live['customer_no'] !== (int) $apply['customer_no']) {
+            return AT_Result::toFailData("연장 대상 서비스를 찾을 수 없습니다.");
+        }
+        if ($live['install_status'] !== 'DONE') {
+            return AT_Result::toFailData("아직 설치가 완료되지 않은 서비스는 연장할 수 없습니다.");
+        }
+
+        $product = $this->productModel->findByIdx($apply['product_no']);
+        if (!$product) {
+            return AT_Result::toFailData("상품 정보를 찾을 수 없습니다.");
+        }
+
+        if (!$this->model->updateStatus($apply_no, 'APPROVED')) {
+            return AT_Result::toFailData("승인 처리에 실패했습니다.");
+        }
+
+        // 연장 기준일: 오늘이 만료일 이전이면 만료일에, 이미 만료됐으면 오늘부터 상품 이용기간만큼 추가.
+        $today = date('Y-m-d');
+        $base = ($today < $live['expire_date']) ? $live['expire_date'] : $today;
+        $newExpireDate = date('Y-m-d', strtotime($base . ' +' . (int) $product['period_day'] . ' days'));
+
+        return $this->applyExpireDate($live, $newExpireDate, "연장 승인 처리되었습니다.");
+    }
+
     // APPROVED인데 service_live/queue가 안 만들어진 신청서를 뒤늦게 큐에 적재한다.
     // (예: approve()를 거치지 않고 status만 직접 APPROVED로 바뀐 데이터를 바로잡을 때)
     // - service_live가 이미 있고 install_status=DONE이면 재적재하지 않는다(이미 세팅 완료된 건).
@@ -160,6 +194,13 @@ class ServiceApplyService extends CI_Service
         }
         if ($apply['status'] !== 'APPROVED') {
             return AT_Result::toFailData("승인완료 상태의 신청만 큐에 적재할 수 있습니다.");
+        }
+        // 연장(RENEW) 신청은 이 apply_no로 새 service_live를 찾지 않는다(연장 대상은 renew_live_no가
+        // 가리키는 기존 건) - 그대로 두면 findByApplyNo()가 null을 반환해 아래 로직이 신규 설치처럼
+        // 서버를 새로 배정해버리는 사고가 나므로 여기서 막는다. 재시도가 필요하면 서비스 라이브
+        // 상세화면에서 만료일/상태를 다시 조정해주세요.
+        if (($apply['apply_type'] ?? 'NEW') === 'RENEW') {
+            return AT_Result::toFailData("연장 신청은 이 방식으로 재처리할 수 없습니다. 서비스 라이브 상세에서 처리해주세요.");
         }
 
         $product = $this->productModel->findByIdx($apply['product_no']);

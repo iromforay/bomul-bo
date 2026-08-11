@@ -2,7 +2,8 @@
 
 namespace App\Entity;
 
-// app/sql/2026_08_05_product_table.sql + app/sql/2026_08_11_product_type.sql 의 product 테이블 매핑 -
+// app/sql/2026_08_05_product_table.sql + app/sql/2026_08_11_product_type.sql
+// + app/sql/2026_08_11_product_list_price.sql 의 product 테이블 매핑 -
 // 서비스 신청 시 선택하는 결제 상품(구독형/1회성/이벤트). product_name은 순수하게 "무엇인지"만
 // 담고(예: "중개사 사이트 개설"), 기간(1개월/6개월/구독형 등)은 billing_type+period_day로 별도
 // 계산해서 배지로 보여준다 - render_helper.php의 product_period_label() 참고.
@@ -13,6 +14,7 @@ class Product_Entity
     private $product_type;
     private $product_name;
     private $price;
+    private $list_price;
     private $billing_type;
     private $period_day;
     private $description;
@@ -101,6 +103,24 @@ class Product_Entity
     public function setPrice($price): void
     {
         $this->price = $price;
+    }
+
+    // 할인 강조용 정가(원가) - price보다 크게 넣으면 화면에서 취소선 정가+판매가로 보여준다.
+    // NULL이면 할인 표시 없이 price만 노출(app/sql/2026_08_11_product_list_price.sql).
+    /**
+     * @return mixed
+     */
+    public function getListPrice()
+    {
+        return $this->list_price;
+    }
+
+    /**
+     * @param mixed $list_price
+     */
+    public function setListPrice($list_price): void
+    {
+        $this->list_price = $list_price;
     }
 
     // MONTHLY(월구독) / ONCE(1회결제) / NONE(미결제-이벤트/무통장)

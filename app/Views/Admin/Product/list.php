@@ -38,7 +38,12 @@ $typeLabels = ['BASE' => '기본상품', 'ADDON' => '부가서비스'];
                     <td><?= htmlspecialchars($row['product_code'], ENT_QUOTES) ?></td>
                     <td><?= htmlspecialchars($row['product_name'], ENT_QUOTES) ?></td>
                     <td><span class="badge wait"><?= htmlspecialchars(product_period_label($row['billing_type'], $row['period_day']), ENT_QUOTES) ?></span></td>
-                    <td><?= number_format((int) $row['price']) ?>원</td>
+                    <td>
+                        <?php if (!empty($row['list_price']) && (int) $row['list_price'] > (int) $row['price']): ?>
+                            <span style="text-decoration:line-through; color:#6B7A88;"><?= number_format((int) $row['list_price']) ?>원</span><br>
+                        <?php endif; ?>
+                        <?= number_format((int) $row['price']) ?>원
+                    </td>
                     <td><?= htmlspecialchars($billingLabels[$row['billing_type']] ?? $row['billing_type'], ENT_QUOTES) ?></td>
                     <td><?= ((string) $row['is_event']) === '1' ? '<span class="badge wait">이벤트</span>' : '-' ?></td>
                     <td>
