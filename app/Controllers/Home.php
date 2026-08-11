@@ -2,6 +2,8 @@
 
 namespace App\Controllers;
 
+use App\Service\ProductService;
+
 class Home extends BaseController
 {
     private  $vdir;
@@ -16,6 +18,7 @@ class Home extends BaseController
     {
 
         $data=array();
+        $data['products'] = (new ProductService())->get_usable_list();
         echo $this->view("default","index",$data);
     }
 }

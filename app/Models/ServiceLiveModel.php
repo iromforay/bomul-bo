@@ -68,6 +68,15 @@ class ServiceLiveModel extends CI_Model
         return $this->safeExecQuery($sql);
     }
 
+    // 서버 삭제 전 안전장치 - 이미 이 서버에 배정된 service_live가 있으면(설치 완료 여부 무관)
+    // 삭제 시 고아 참조(server_no)가 남으므로, 어드민 "서버 관리"에서 삭제 시 이걸로 막는다.
+    public function existsByServerNo($server_no): bool
+    {
+        $sql = "SELECT `live_no` FROM `$this->table` WHERE `server_no` = " . $this->db->escape((int) $server_no) . " LIMIT 1";
+        $rows = $this->getExecQuery($sql);
+        return !empty($rows);
+    }
+
     public function findByIdx($live_no)
     {
         $rows = $this->findbyid((int) $live_no);

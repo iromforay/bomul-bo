@@ -19,7 +19,7 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
 - [ ] 2. bomul-api 수신 핸들러 — `action='extend'`/`action='status'` (별도 저장소, bomul-api 작업)
 - [x] 3. cron 사이트운영 상태 갱신 — 만료일 지난 건 자동 종료 배치 (현재는 관리자 수동 변경 시에만 반영)
 - [ ] 4. 자동 로그인 — 회원/라이브서비스 리스트에서 `bo.bomul.ai.kr`로 토큰 기반 자동 로그인
-- [ ] 5. 서버 리스트 관리 — `server_list` 추가/변경/삭제 CRUD (Admin)
+- [x] 5. 서버 리스트 관리 — `server_list` 추가/변경/삭제 CRUD (Admin)
 - [ ] 6. 결제상황 리스트 — 결제 모듈 연동 이후 진행
 - [ ] 7. crontab을 `app/batch/batch.php` 한 줄로 교체 (인프라 작업, 기존 spark 크론 대체)
 - [x] 8. 서비스 라이브(service_live) 리스트 / 상세 / 기간 연장·축소 / 상태 변경
@@ -27,7 +27,7 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
 - [x] 10. 운영 DB에 `service_live.suspended_at` 컬럼 반영 
 - [ ] 11. 실결제 연동.
 - [x] 12. 서비스 리스트(상품) 관리 
-- [ ] 13. 웹 서비스 하드코딩을 ad 서비스 정보로 코딩.
+- [x] 13. 웹 서비스 하드코딩을 ad 서비스 정보로 코딩.
 - [ ] 14. 약관, 개인정보 처리방침
 - [ ] 15. 웹페이지 변경.
    ```
@@ -42,6 +42,24 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
 ---
 
 ## 처리내용
+
+### #5 (2026-08-10) — 서버 리스트(server_list) 관리 CRUD 신설
+
+- Admin 사이드메뉴 "서버관리" 그룹 신설(`/ServerList`) — `Product`/`Manager`와 동일한 단순 CRUD 패턴
+- 목록/등록/수정/삭제, 필드: 서버코드/서버명/receiver URL/API 키(비워두면 자동 발급)/DB host·port/설치가능여부(Y·N)/상태(정상·중지)/메모. `tenant_count`는 승인 시 자동 증가하는 값이라 수정화면에서 읽기전용으로만 표시
+- 서버코드 중복 체크(`ServerListModel::existsByCode()`), 이미 배정된 service_live가 있는 서버는 삭제 대신 '설치가능=N'으로 유도(고아 참조 방지 — [ServiceLiveModel::existsByServerNo()](app/Models/ServiceLiveModel.php) 신규)
+- `ServerListModel`에 없던 `sql_save`/`sql_edit`/`sql_delete`/`get_list`/`existsByCode` 신규 추가(기존엔 배정용 조회 전용이었음)
+- 신규/변경 파일: [ServerListModel.php](app/Models/ServerListModel.php), [ServerListService.php](app/Service/ServerListService.php), [Controllers/Admin/ServerList.php](app/Controllers/Admin/ServerList.php), [Views/Admin/ServerList/list.php](app/Views/Admin/ServerList/list.php), [Views/Admin/ServerList/write.php](app/Views/Admin/ServerList/write.php), [Views/Admin/ServerList/modify.php](app/Views/Admin/ServerList/modify.php), [Routes.php](app/Config/Routes.php), [admin_menu.php](app/Views/common/admin_menu.php)
+- 참고: `server_list` 테이블도 product처럼 CREATE 문이 이 저장소에 없어(`ServerList_Entity` 주석은 `2026_08_05_server_list_table.sql`을 언급하나 실제 파일은 부재) Entity 필드를 근거로 구현함 — product 때처럼 실제 DDL을 확인해주시면 타입 불일치 여부 검증 가능
+
+### #13 (2026-08-10) — www 요금카드를 product 테이블 DB 연동으로 교체
+
+- [unit/product.php](app/Views/unit/product.php) — 하드코딩된 카드 3장(1개월/2개월/정기구독) 제거, `$products`를 `foreach`로 순회하며 렌더링. 가격 0원→'무료', `billing_type='MONTHLY'`면 '원 / 월' 접미사, `is_event=1`이면 '이벤트' 뱃지+featured 스타일. 카드 링크는 `product_code` 기준(`?product={code}`)
+- [ProductService.php](app/Service/ProductService.php) — `get_usable_list()`(www 노출용, STOP 제외) 신규, `resolve($productParam)` 신규(숫자면 product_no, 문자면 product_code로 통합 조회) — **[ServiceApply.php](app/Controllers/ServiceApply.php)의 `getindex()`가 이미 `resolve()`를 호출하고 있었는데 정의가 없어 `?product=1month`류 접근 시 Fatal error가 나던 버그를 같이 수정함**
+- [Controllers/Home.php](app/Controllers/Home.php) — `getindex()`에서 `$data['products']` 전달(index.php 요금안내 섹션용)
+- [Controllers/ServiceApply.php](app/Controllers/ServiceApply.php) — `getindex()`/`showError()` 둘 다 `$data['products']` 전달(상품 미지정 시 카드 그리드 렌더링용)
+- [index.php](app/Views/index.php), [service_apply.php](app/Views/service_apply.php) — `unit/product` 호출 시 `products` 파라미터 추가 전달
+- 참고: `description` 컬럼이 varchar(255) 단일 텍스트라 기존 카드의 기능 불릿 목록(`<ul><li>...`)은 재현 못 함 — 상품 설명 한 줄로 대체. 여러 줄 소개가 필요하면 상품관리(#12) 쪽에 별도 필드 추가 검토
 
 ### #12 (2026-08-10) — 상품(서비스) 관리 CRUD 신설
 

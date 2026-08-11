@@ -38,6 +38,7 @@ class ServiceApply extends BaseController
         $data['customer'] = $customer;
         $data['profileComplete'] = $customerService->isProfileComplete($customer);
         $data['lockedProduct'] = $productParam !== '' ? $productService->resolve($productParam) : null;
+        $data['products'] = $productService->get_usable_list();
         $data['old'] = $old;
         $data['error'] = session()->getFlashdata('apply_error');
         echo $this->view("default", "service_apply", $data);
@@ -130,6 +131,7 @@ class ServiceApply extends BaseController
         $data['customer'] = $customer;
         $data['profileComplete'] = $profileComplete;
         $data['lockedProduct'] = !empty($old['product_no']) ? $productService->get_row($old['product_no']) : null;
+        $data['products'] = $productService->get_usable_list();
         echo $this->view("default", "service_apply", $data);
     }
 }

@@ -29,6 +29,32 @@ class ProductService extends CI_Service
         return $this->model->findByIdx($product_no);
     }
 
+    // www 요금 안내/신청 화면에 노출할 목록 - 중지(STOP)된 상품 제외, 정렬순
+    public function get_usable_list()
+    {
+        return $this->model->get_usable_list();
+    }
+
+    // ?product=... 쿼리파라미터 하나로 PK든 product_code든 다 받아주는 통합 조회.
+    // 숫자(예: "3")면 product_no로, 문자열(예: "1month")이면 product_code로 찾는다 -
+    // unit/product.php 카드의 링크가 product_code를 쓰고, 재신청/에러복구 흐름(ServiceApply)은
+    // product_no(hidden input)를 그대로 되돌려보내기 때문에 둘 다 지원해야 한다.
+    // 중지된 상품이거나 존재하지 않으면 null - 호출부가 "상품 미지정" 취급하도록.
+    public function resolve($productParam)
+    {
+        $productParam = trim((string) $productParam);
+        if ($productParam === '') {
+            return null;
+        }
+
+        if (ctype_digit($productParam)) {
+            $row = $this->model->findByIdx((int) $productParam);
+            return ($row && $row['status'] === 'USE') ? $row : null;
+        }
+
+        return $this->model->findByCode($productParam);
+    }
+
     public function save(array $data): array
     {
         [$entity, $error] = $this->buildEntity(null, $data);

@@ -19,7 +19,7 @@
             <p class="signup-desc">아래에서 원하는 상품의 "신청하기"를 눌러주세요</p>
         </div>
 
-        <?= view('unit/product', ['applyBase' => '/service-apply']) ?>
+        <?= view('unit/product', ['applyBase' => '/service-apply', 'products' => $products ?? []]) ?>
 
     <?php else: ?>
 

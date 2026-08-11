@@ -41,9 +41,10 @@
     <div class="width_con">
         <h2 class="section__title">요금 안내</h2>
 
-        <?php $applyBase = (session('customer_login')['is_login'] ?? false) ? '/service-apply' : '/signup'; ?>
+        <?// $applyBase = (session('customer_login')['is_login'] ?? false) ? '/service-apply' : '/signup'; ?>
+        <? $applyBase = "/service-apply";?>
 
-        <?= view('unit/product', ['applyBase' => $applyBase]) ?>
+        <?= view('unit/product', ['applyBase' => $applyBase, 'products' => $products ?? []]) ?>
     </div>
 </section>
 
