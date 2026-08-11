@@ -17,6 +17,7 @@ class ServiceLive_Entity
     private $license_key;
 
     private $status;
+    private $suspended_at;
 
     private $install_status;
     private $install_requested_at;
@@ -141,6 +142,24 @@ class ServiceLive_Entity
     public function setStatus($status): void
     {
         $this->status = $status;
+    }
+
+    // status가 SUSPENDED로 바뀐 시점 - "유예 15일" 유예기간 만료(→TERMINATED) 기준점.
+    // ACTIVE로 되돌아가면 NULL로 초기화된다 (ServiceLiveModel::updateStatus() 참고).
+    /**
+     * @return mixed
+     */
+    public function getSuspendedAt()
+    {
+        return $this->suspended_at;
+    }
+
+    /**
+     * @param mixed $suspended_at
+     */
+    public function setSuspendedAt($suspended_at): void
+    {
+        $this->suspended_at = $suspended_at;
     }
 
     // PENDING / INSTALLING / DONE / FAILED

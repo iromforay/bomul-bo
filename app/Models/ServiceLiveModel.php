@@ -53,10 +53,18 @@ class ServiceLiveModel extends CI_Model
         return $this->safeExecQuery($sql);
     }
 
-    // action='update' 콜백 완료 시 사용 - ACTIVE/SUSPENDED(member.service Y/N에 대응)
+    // status 변경 - SUSPENDED로 들어갈 때 suspended_at을 NOW()로 찍어 "유예 15일" 기준점을 남기고,
+    // ACTIVE로 돌아가면 다음 유예 때 새로 재는 게 맞으므로 NULL로 초기화한다. TERMINATED/REQUEST는
+    // suspended_at을 그대로 둔다(TERMINATED는 언제 유예가 시작됐었는지 이력으로 남겨도 무방).
     public function updateStatus($live_no, string $status)
     {
-        $sql = "UPDATE `$this->table` SET `status` = " . $this->db->escape($status) . " WHERE `live_no` = " . $this->db->escape((int) $live_no);
+        $set = ["`status` = " . $this->db->escape($status)];
+        if ($status === 'SUSPENDED') {
+            $set[] = "`suspended_at` = NOW()";
+        } elseif ($status === 'ACTIVE') {
+            $set[] = "`suspended_at` = NULL";
+        }
+        $sql = "UPDATE `$this->table` SET " . implode(",", $set) . " WHERE `live_no` = " . $this->db->escape((int) $live_no);
         return $this->safeExecQuery($sql);
     }
 
@@ -121,6 +129,31 @@ class ServiceLiveModel extends CI_Model
                 LEFT JOIN `product` p ON p.product_no = sa.product_no
                 LEFT JOIN `customer` c ON c.customer_no = sl.customer_no
                 WHERE sl.status = 'REQUEST'";
+        return $this->getExecQuery($sql);
+    }
+
+    // service_expire_check 배치(매일 06시) 1단계 - 만료일 당일이 됐는데 아직 정상(ACTIVE)인 건을
+    // 유예(SUSPENDED)로 전환할 대상. "만료일 즉시 유예" 정책이라 <= CURDATE()(당일 포함).
+    public function get_expired_active()
+    {
+        $sql = "SELECT live_no, server_no, fid, status
+                FROM `$this->table`
+                WHERE install_status = 'DONE'
+                  AND status = 'ACTIVE'
+                  AND expire_date <= CURDATE()";
+        return $this->getExecQuery($sql);
+    }
+
+    // service_expire_check 배치 2단계 - 유예(SUSPENDED) 시작 후 15일이 지난 건을 종료(TERMINATED)로
+    // 전환할 대상. suspended_at 기준(만료일 재연장 없이 관리자가 상태만 계속 유예로 뒀어도 정확함).
+    public function get_suspended_expired($graceDays = 15)
+    {
+        $sql = "SELECT live_no, server_no, fid, status, suspended_at
+                FROM `$this->table`
+                WHERE install_status = 'DONE'
+                  AND status = 'SUSPENDED'
+                  AND suspended_at IS NOT NULL
+                  AND suspended_at <= DATE_SUB(NOW(), INTERVAL " . (int) $graceDays . " DAY)";
         return $this->getExecQuery($sql);
     }
 }

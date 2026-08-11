@@ -8,6 +8,9 @@ use App\Libraries\AT_Result;
 
 class ServiceApplyService extends CI_Service
 {
+    // 만료 후 유예(SUSPENDED) 기간 - app/batch/service_expire_check.php와 동일한 값이어야 한다.
+    private const SUSPEND_GRACE_DAYS = 15;
+
     private $model;
     private $productModel;
     private $serverListModel;
@@ -351,8 +354,9 @@ class ServiceApplyService extends CI_Service
 
     // 큐 적재 즉시 service_live.expire_date를 반영(낙관적 갱신)하고, action='extend'로 운영서버에도
     // 통보한다 - fire-and-forget push라 운영서버 반영이 실패해도 BO 표시값은 이미 바뀐 채로 남는다.
-    // 만료일이 바뀌면 status(정상/종료)도 새 만료일 기준으로 같이 갱신한다 - 오늘<=새 만료일이면 정상(유지),
-    // 그 전이면 종료. queue payload에도 status를 실어 운영서버 bomul.member.status까지 맞춰준다.
+    // 만료일이 바뀌면 status도 새 만료일 기준으로 3단계로 같이 갱신한다(service:expire-check 배치와
+    // 동일 규칙 - 오늘<만료일=정상, 만료일 당일~+15일=유예, 그 이후=종료).
+    // queue payload에도 status를 실어 운영서버 bomul.member.status까지 맞춰준다.
     private function applyExpireDate(array $live, string $newExpireDate, string $successMsg): array
     {
         $server = $this->serverListModel->findByIdx($live['server_no']);
@@ -360,7 +364,14 @@ class ServiceApplyService extends CI_Service
             return AT_Result::toFailData("배정된 운영서버 정보를 찾을 수 없습니다.");
         }
 
-        $newStatus = ($newExpireDate >= date('Y-m-d')) ? 'ACTIVE' : 'TERMINATED';
+        $today = date('Y-m-d');
+        if ($newExpireDate > $today) {
+            $newStatus = 'ACTIVE';
+        } elseif ($newExpireDate >= date('Y-m-d', strtotime("-" . self::SUSPEND_GRACE_DAYS . " days"))) {
+            $newStatus = 'SUSPENDED';
+        } else {
+            $newStatus = 'TERMINATED';
+        }
 
         if (!$this->serviceLiveModel->updateExpireDate($live['live_no'], $newExpireDate)) {
             return AT_Result::toFailData("만료일 변경에 실패했습니다." . $this->dbErrorSuffix($this->serviceLiveModel));
