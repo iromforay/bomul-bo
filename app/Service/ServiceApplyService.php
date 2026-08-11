@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\Payment_Entity;
 use App\Entity\ServiceApply_Entity;
 use App\Entity\ServiceLive_Entity;
 use App\Libraries\AT_Result;
@@ -17,6 +18,7 @@ class ServiceApplyService extends CI_Service
     private $serviceLiveModel;
     private $queueModel;
     private $customerModel;
+    private $paymentModel;
 
     public function __construct()
     {
@@ -27,6 +29,27 @@ class ServiceApplyService extends CI_Service
         $this->serviceLiveModel = model('App\Models\ServiceLiveModel', true, $this->db);
         $this->queueModel = model('App\Models\QueueModel', true, $this->db);
         $this->customerModel = model('App\Models\CustomerModel', true, $this->db);
+        $this->paymentModel = model('App\Models\PaymentModel', true, $this->db);
+    }
+
+    // 무료(0원)/이벤트 상품 신청 시 즉시 결제완료로 이력을 남긴다 - 마이페이지 "내 결제 리스트"에서
+    // 유료 결제와 동일한 형태로 보이도록(Payment_Entity 주석 참고: "결제 이력이 있다"는 판단 기준을
+    // 하나로 통일). 유료 상품은 실결제 연동(#11) 전까지 이 메서드를 호출하는 지점 자체가 없다
+    // (MyPage::postExtend()가 가격>0이면 애초에 apply()/applyRenew()를 안 부르고 결제 스텁으로 보냄).
+    private function recordFreePayment($apply_no, array $product): void
+    {
+        if ((int) ($product['price'] ?? 0) > 0) {
+            return;
+        }
+
+        $entity = new Payment_Entity();
+        $entity->setApplyNo((int) $apply_no);
+        $entity->setPayMethod('NONE');
+        $entity->setPayAmount(0);
+        $entity->setPayStatus('PAID');
+        $entity->setPaidAt(date('Y-m-d H:i:s'));
+
+        $this->paymentModel->sql_save($entity);
     }
 
     // 어드민 "서비스 신청 현황" 목록
@@ -606,6 +629,70 @@ class ServiceApplyService extends CI_Service
             return AT_Result::toFailData("서비스 신청에 실패했습니다.");
         }
 
+        $this->recordFreePayment($apply_no, $product);
+
         return AT_Result::toSuccessData("서비스 신청이 완료되었습니다.", ['apply_no' => $apply_no]);
+    }
+
+    // 마이페이지 "서비스 연장 신청" - 신규 신청(apply())과 달리 사업자정보/도메인을 다시 입력받지
+    // 않고, 원래 승인됐던 신청서(service_live.apply_no)의 스냅샷을 그대로 복사해 apply_type=RENEW
+    // 신청서만 새로 만든다. 결제 분기(0원=즉시 신청 / 유료=결제 진행)는 컨트롤러가 이 메서드를
+    // 호출하기 전에 이미 끝내둔다 - 여기 도달했다는 건 "지금 바로 신청 접수해도 되는 상태"라는 뜻.
+    // 승인 처리는 approve()의 RENEW 분기(approveRenew())가 이어서 담당한다.
+    public function applyRenew($customer_no, $live_no, $product_no): array
+    {
+        $customer_no = (int) $customer_no;
+        $live_no     = (int) $live_no;
+        $product_no  = (int) $product_no;
+
+        $live = $this->serviceLiveModel->findByIdx($live_no);
+        if (!$live || (int) $live['customer_no'] !== $customer_no) {
+            return AT_Result::toFailData("연장할 서비스를 찾을 수 없습니다.");
+        }
+        if ($live['install_status'] !== 'DONE') {
+            return AT_Result::toFailData("아직 설치가 완료되지 않은 서비스는 연장 신청할 수 없습니다.");
+        }
+
+        $original = $this->model->findByIdx($live['apply_no']);
+        if (!$original) {
+            return AT_Result::toFailData("원본 신청 정보를 찾을 수 없습니다.");
+        }
+
+        $product = $this->productModel->findByIdx($product_no);
+        if (!$product || $product['status'] !== 'USE') {
+            return AT_Result::toFailData("신청할 수 없는 상품입니다.");
+        }
+
+        $entity = new ServiceApply_Entity();
+        $entity->setCustomerNo($customer_no);
+        $entity->setProductNo($product_no);
+        $entity->setApplyType('RENEW');
+        $entity->setRenewLiveNo($live_no);
+        $entity->setCompanyName($original['company_name']);
+        $entity->setCeoName($original['ceo_name']);
+        $entity->setLicenseNo($original['license_no']);
+        $entity->setBizNo($original['biz_no']);
+        $entity->setManagerName($original['manager_name']);
+        $entity->setManagerPhone($original['manager_phone']);
+        $entity->setManagerEmail($original['manager_email']);
+        $entity->setTel($original['tel']);
+        $entity->setFax($original['fax']);
+        $entity->setZipcode($original['zipcode']);
+        $entity->setAddr1($original['addr1']);
+        $entity->setAddr2($original['addr2']);
+        $entity->setHomepageName($original['homepage_name']);
+        $entity->setSubDomain($original['sub_domain']);
+        $entity->setCustomDomain($original['custom_domain']);
+        $entity->setMemo('서비스 연장 신청');
+        $entity->setStatus('REQUEST');
+
+        $apply_no = $this->model->sql_save($entity);
+        if (!$apply_no) {
+            return AT_Result::toFailData("연장 신청에 실패했습니다.");
+        }
+
+        $this->recordFreePayment($apply_no, $product);
+
+        return AT_Result::toSuccessData("서비스 연장 신청이 완료되었습니다. 관리자 승인 후 반영됩니다.", ['apply_no' => $apply_no]);
     }
 }

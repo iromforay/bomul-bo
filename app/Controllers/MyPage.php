@@ -5,6 +5,8 @@ namespace App\Controllers;
 use App\Libraries\AT_Result;
 use App\Service\CustomerService;
 use App\Service\MyPageService;
+use App\Service\ProductService;
+use App\Service\ServiceApplyService;
 
 // www 로그인 고객 전용 "마이페이지"(축약형, 워크맵 #16) - 내 서비스 현황(만료일 등) + 내 결제 리스트만
 // 보여준다. "서비스 연장 신청"/"정기결제 신청하기" 버튼은 실결제 연동(#11) 전까지는 준비중 안내만 한다.
@@ -28,11 +30,80 @@ class MyPage extends BaseController
         echo $this->view("default", "mypage", $data);
     }
 
-    // 서비스 연장 신청 - 카드결제(#11)가 붙기 전까지는 준비중 안내만 하고 마이페이지로 되돌린다.
+    // 서비스 연장 신청 - 연장 대상 서비스 확인 후 상품(기간) 선택 화면을 보여준다.
     public function getExtend()
     {
-        session()->setFlashdata('mypage_notice', "서비스 연장 신청 기능은 준비중입니다. 곧 만나보실 수 있어요.");
+        $customer = $this->requireLogin();
+        if ($customer === null) {
+            return redirect()->to(SITE . '/login?redirect_url=' . urlencode($this->currentPathWithQuery()));
+        }
+
+        $mypageService = new MyPageService();
+        $service = $mypageService->get_current_service($customer['customer_no']);
+
+        if (!$service || ($service['install_status'] ?? null) !== 'DONE') {
+            session()->setFlashdata('mypage_error', "연장 신청 가능한 서비스가 없습니다.");
+            return redirect()->to(SITE . '/mypage');
+        }
+
+        $data = [];
+        $data['service'] = $service;
+        $data['products'] = (new ProductService())->get_usable_base_list();
+        echo $this->view("default", "mypage_extend", $data);
+    }
+
+    // 상품(기간) 선택 후 제출 - 결제 분기점: 가격이 있으면 결제 진행 화면(스텁)으로만 보내고
+    // 신청서는 아직 만들지 않는다(#11 PG 연동 후 결제완료 콜백에서 만들도록 확장 예정).
+    // 0원이면 결제 없이 즉시 연장 신청 접수(ServiceApplyService::applyRenew()).
+    public function postExtend()
+    {
+        $customer = $this->requireLogin();
+        if ($customer === null) {
+            return redirect()->to(SITE . '/login?redirect_url=' . urlencode($this->currentPathWithQuery()));
+        }
+
+        $mypageService = new MyPageService();
+        $service = $mypageService->get_current_service($customer['customer_no']);
+        if (!$service) {
+            session()->setFlashdata('mypage_error', "연장 신청 가능한 서비스가 없습니다.");
+            return redirect()->to(SITE . '/mypage');
+        }
+
+        $product = (new ProductService())->get_row($this->request->getPost('product_no'));
+        if (!$product || $product['status'] !== 'USE') {
+            session()->setFlashdata('mypage_error', "신청할 수 없는 상품입니다.");
+            return redirect()->to(SITE . '/mypage/extend');
+        }
+
+        if ((int) $product['price'] > 0) {
+            return redirect()->to(SITE . '/mypage/extend/pay?product_no=' . (int) $product['product_no']);
+        }
+
+        $result = (new ServiceApplyService())->applyRenew($customer['customer_no'], $service['live_no'], $product['product_no']);
+
+        session()->setFlashdata($result['SUCCESS'] === 'TRUE' ? 'mypage_notice' : 'mypage_error', $result['MSG']);
         return redirect()->to(SITE . '/mypage');
+    }
+
+    // 결제 분기점 스텁 - 실제 PG 연동(#11) 전까지는 안내만 한다. 이 화면에 도달했다는 것 자체가
+    // "유료 상품을 골랐다"는 뜻이라, 나중에 여기서 PG 호출 → 결제완료 콜백 → applyRenew() 순서로
+    // 확장하면 된다.
+    public function getExtendPay()
+    {
+        $customer = $this->requireLogin();
+        if ($customer === null) {
+            return redirect()->to(SITE . '/login?redirect_url=' . urlencode($this->currentPathWithQuery()));
+        }
+
+        $product = (new ProductService())->get_row($this->request->getGet('product_no'));
+        if (!$product) {
+            session()->setFlashdata('mypage_error', "신청할 수 없는 상품입니다.");
+            return redirect()->to(SITE . '/mypage/extend');
+        }
+
+        $data = [];
+        $data['product'] = $product;
+        echo $this->view("default", "mypage_extend_pay", $data);
     }
 
     // 정기결제(구독) 신청 - 위와 동일한 이유로 준비중 안내만.

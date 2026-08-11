@@ -101,6 +101,8 @@ if ($host === 'ad.bomul.ai.kr') { //관리자
 
     $routes->get('mypage',             'MyPage::getindex');
     $routes->get('mypage/extend',      'MyPage::getExtend');
+    $routes->post('mypage/extend',     'MyPage::postExtend');
+    $routes->get('mypage/extend/pay',  'MyPage::getExtendPay');
     $routes->get('mypage/subscribe',   'MyPage::getSubscribe');
     $routes->post('mypage/documents',  'MyPage::postDocuments');
     $routes->post('mypage/uploadTemp', 'MyPage::postUploadTemp');
