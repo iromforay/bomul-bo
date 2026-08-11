@@ -36,7 +36,7 @@ class ServerListModel extends CI_Model
     }
 
     // 어드민 "서버 목록" - 전체, server_no순
-    public function get_list()
+    public function get_list($start = 0, $limit = 0)
     {
         $sql = "SELECT * FROM `$this->table` ORDER BY `server_no` ASC";
         return $this->getExecQuery($sql);
