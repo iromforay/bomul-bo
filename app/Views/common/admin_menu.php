@@ -40,6 +40,11 @@ $active = $active ?? '';
         <li><a href="<?= Admin_SITE ?? '' ?>/ServiceLive"><span class="ico">▸</span>서비스 라이브 현황</a></li>
         <li><a href="<?= Admin_SITE ?? '' ?>/Customer/payment"><span class="ico">▸</span>결제 현황</a></li>
     </ul>
+    <div class="grp-title">상품관리</div>
+    <ul>
+        <li><a href="<?= Admin_SITE ?? '' ?>/Product"><span class="ico">▸</span>상품(서비스) 목록</a></li>
+        <li><a href="<?= Admin_SITE ?? '' ?>/Product/write"><span class="ico">▸</span>상품 등록</a></li>
+    </ul>
     <div class="grp-title">상담문의</div>
     <ul>
         <li><a href="<?= Admin_SITE ?? '' ?>/Inquiry"><span class="ico">▸</span>상담 문의 내역</a></li>

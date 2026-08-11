@@ -24,10 +24,12 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
 - [ ] 7. crontab을 `app/batch/batch.php` 한 줄로 교체 (인프라 작업, 기존 spark 크론 대체)
 - [x] 8. 서비스 라이브(service_live) 리스트 / 상세 / 기간 연장·축소 / 상태 변경
 - [x] 9. 통합 배치 진입점 `app/batch/batch.php` 신설
-- [ ] 10. 운영 DB에 `service_live.suspended_at` 컬럼 반영 (인프라 작업 — [2026_08_10_service_live_suspended_at.sql](app/sql/2026_08_10_service_live_suspended_at.sql) 실행 필요, DB 접근 없어 직접 실행 못함)
+- [x] 10. 운영 DB에 `service_live.suspended_at` 컬럼 반영 
 - [ ] 11. 실결제 연동.
-- [ ] 12. 웹 서비스 하드코딩을 ad 서비스 정보로 코딩.
-- [ ] 13. 웹페이지 변경.
+- [x] 12. 서비스 리스트(상품) 관리 
+- [ ] 13. 웹 서비스 하드코딩을 ad 서비스 정보로 코딩.
+- [ ] 14. 약관, 개인정보 처리방침
+- [ ] 15. 웹페이지 변경.
    ```
   https://www.cafe24.com/commerce/start/founder.html
   -> 홈페이지를 만들어주는곳 가격비교와 기능비교
@@ -41,6 +43,15 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
 
 ## 처리내용
 
+### #12 (2026-08-10) — 상품(서비스) 관리 CRUD 신설
+
+- Admin 사이드메뉴 "상품관리" 그룹 신설(`/Product`) — 고객이 서비스 신청 시 선택하는 `product` 테이블(요금제) CRUD. `Manager` 컨트롤러의 가장 단순한 CRUD 패턴을 그대로 따름
+- 목록/등록/수정/삭제, 필드: 상품코드/상품명/가격/결제방식(월구독·1회결제·미결제)/이용기간(일)/이벤트여부/상태(사용·중지)/정렬순서/설명
+- 상품코드 중복 체크(`ProductModel::existsByCode()`), 이미 신청 이력이 있는 상품은 삭제 대신 '중지' 상태로 유도(고아 참조 방지 — [ServiceApplyModel::existsByProductNo()](app/Models/ServiceApplyModel.php) 신규)
+- `ProductModel`에 없던 `sql_save`/`sql_edit`/`sql_delete`/`get_list` 신규 추가(기존엔 조회 전용이었음)
+- 신규/변경 파일: [ProductModel.php](app/Models/ProductModel.php), [ProductService.php](app/Service/ProductService.php), [Controllers/Admin/Product.php](app/Controllers/Admin/Product.php), [Views/Admin/Product/list.php](app/Views/Admin/Product/list.php), [Views/Admin/Product/write.php](app/Views/Admin/Product/write.php), [Views/Admin/Product/modify.php](app/Views/Admin/Product/modify.php), [Routes.php](app/Config/Routes.php), [admin_menu.php](app/Views/common/admin_menu.php)
+- 실제 스키마 확인 완료(2026-08-10) 
+
 ### #3 (2026-08-10, 3단계 유예 정책으로 수정) — 사이트운영 상태 갱신 배치 (매일 06시)
 
 `service_live.status`와 운영서버 `bomul.member.status`를 3단계로 동기화: 정상(ACTIVE=OPERATING) →
@@ -49,7 +60,7 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
 - 1단계 — 만료일 당일이 된 정상(ACTIVE) 건 → 유예(SUSPENDED) 전환. [ServiceLiveModel::get_expired_active()](app/Models/ServiceLiveModel.php)가 `expire_date <= CURDATE()`인 ACTIVE 건을 조회, 큐(action='status', `USER_CLOSED`) 성공 시에만 로컬 status를 SUSPENDED로 갱신
 - 2단계 — 유예 시작 후 15일(`SUSPEND_GRACE_DAYS`) 경과한 건 → 종료(TERMINATED) 전환. [ServiceLiveModel::get_suspended_expired()](app/Models/ServiceLiveModel.php)가 `suspended_at <= NOW()-15일`인 SUSPENDED 건을 조회, 큐(action='status', `ALL_CLOSED`) 성공 시에만 TERMINATED로 갱신
 - 두 단계 모두 **큐 적재 성공 후에만** 로컬 status 갱신 — 실패 시 조회 조건에 계속 남아 다음 실행 때 재시도됨
-- 15일 경과 판정은 신규 컬럼 `service_live.suspended_at`(SUSPENDED로 바뀐 시점) 기준 — [ServiceLiveModel::updateStatus()](app/Models/ServiceLiveModel.php)가 상태 전환마다 자동 관리(SUSPENDED 진입 시 NOW() 기록, ACTIVE 복귀 시 NULL 초기화). 마이그레이션: [2026_08_10_service_live_suspended_at.sql](app/sql/2026_08_10_service_live_suspended_at.sql) (→ #10, 운영 DB 반영 필요)
+- 15일 경과 판정은 신규 컬럼 `service_live.suspended_at`(SUSPENDED로 바뀐 시점) 기준 — [ServiceLiveModel::updateStatus()](app/Models/ServiceLiveModel.php)가 상태 전환마다 자동 관리(SUSPENDED 진입 시 NOW() 기록, ACTIVE 복귀 시 NULL 초기화). 마이그레이션:  (→ #10, 운영 DB 반영 필요)
 - 관리자가 상세화면에서 수동으로 만료일을 바꿀 때도 동일한 3단계 규칙 적용 — [ServiceApplyService::applyExpireDate()](app/Service/ServiceApplyService.php): 오늘<만료일→정상 / 만료일 당일~+15일→유예 / 그 이후→종료. 상세화면에 유예 마감일/남은 일수 표시 추가 ([Views/Admin/ServiceLive/view.php](app/Views/Admin/ServiceLive/view.php))
 - `batch.php`에 `$h === '06'` 블록 추가 — analytics 패턴처럼 06시 내내 매분 재시도, 처리 대상 없으면 바로 종료
 

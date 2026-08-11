@@ -12,6 +12,15 @@ class ServiceApplyModel extends CI_Model
         return $this;
     }
 
+    // 상품 삭제 전 안전장치 - 이미 신청이력이 있는 상품을 삭제하면 그 신청서의 product_no가
+    // 고아 참조로 남으므로, 어드민 "상품 관리"에서 삭제 시 이걸로 막는다(상태 무관 전체 이력 기준).
+    public function existsByProductNo($product_no): bool
+    {
+        $sql = "SELECT `apply_no` FROM `$this->table` WHERE `product_no` = " . $this->db->escape((int) $product_no) . " LIMIT 1";
+        $rows = $this->getExecQuery($sql);
+        return !empty($rows);
+    }
+
     // 이벤트(2개월 무료 등) 상품 중복신청 체크용 - idx_customer_product 인덱스를 그대로 탄다.
     // 상태 무관 전체 신청이력 기준(REJECTED/CANCEL 포함) - 재신청 허용 정책이 정해지면 status 조건 추가.
     public function existsByCustomerProduct($customer_no, $product_no): bool
