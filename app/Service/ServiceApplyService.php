@@ -49,7 +49,14 @@ class ServiceApplyService extends CI_Service
         $entity->setPayStatus('PAID');
         $entity->setPaidAt(date('Y-m-d H:i:s'));
 
-        $this->paymentModel->sql_save($entity);
+        $payment_no = $this->paymentModel->sql_save($entity);
+        if (!$payment_no) {
+            log_message('error', 'recordFreePayment 실패 apply_no={0} db_error={1} query={2}', [
+                $apply_no,
+                json_encode($this->paymentModel->getDbError()),
+                $this->paymentModel->getQuery(),
+            ]);
+        }
     }
 
     // 어드민 "서비스 신청 현황" 목록
@@ -624,12 +631,15 @@ class ServiceApplyService extends CI_Service
         $entity->setMemo($data['memo'] ?? null);
         $entity->setStatus('REQUEST');
 
+        $this->db->transStart();
         $apply_no = $this->model->sql_save($entity);
         if (!$apply_no) {
+            $this->db->transComplete();
             return AT_Result::toFailData("서비스 신청에 실패했습니다.");
         }
 
         $this->recordFreePayment($apply_no, $product);
+        $this->db->transComplete();
 
         return AT_Result::toSuccessData("서비스 신청이 완료되었습니다.", ['apply_no' => $apply_no]);
     }
@@ -686,12 +696,15 @@ class ServiceApplyService extends CI_Service
         $entity->setMemo('서비스 연장 신청');
         $entity->setStatus('REQUEST');
 
+        $this->db->transStart();
         $apply_no = $this->model->sql_save($entity);
         if (!$apply_no) {
+            $this->db->transComplete();
             return AT_Result::toFailData("연장 신청에 실패했습니다.");
         }
 
         $this->recordFreePayment($apply_no, $product);
+        $this->db->transComplete();
 
         return AT_Result::toSuccessData("서비스 연장 신청이 완료되었습니다. 관리자 승인 후 반영됩니다.", ['apply_no' => $apply_no]);
     }

@@ -16,8 +16,10 @@ $payLabels = [
     'CANCELLED' => ['결제취소', 'stop'],
     'REFUNDED'  => ['환불', 'stop'],
 ];
+$typeLabels = ['NEW' => ['신규', 'wait'], 'RENEW' => ['연장', 'done']];
 $statusInfo = $statusLabels[$row['status']] ?? [$row['status'], 'wait'];
 $payInfo    = !empty($row['pay_status']) ? ($payLabels[$row['pay_status']] ?? [$row['pay_status'], 'wait']) : ['미결제', 'hold'];
+$typeInfo   = $typeLabels[$row['apply_type'] ?? 'NEW'] ?? [$row['apply_type'], 'wait'];
 
 // 세팅 진행 현황(승인완료 건만) - queue(action='new')의 status를 3단계로 매핑.
 // PENDING(대기, 아직 push 전) → SENT(세팅중, 운영서버로 push됨·응답 대기) → DONE(완료)/FAILED(실패).
@@ -45,11 +47,42 @@ $queueStepLabels = ['대기', '세팅중', $queueFailed ? '실패' : '완료'];
         <tr><th>신청번호</th><td><?= (int) $row['apply_no'] ?></td></tr>
         <tr><th>신청일</th><td><?= htmlspecialchars((string) $row['request_date'], ENT_QUOTES) ?></td></tr>
         <tr><th>신청 아이디</th><td><?= !empty($row['customer_login_id']) ? htmlspecialchars($row['customer_login_id'], ENT_QUOTES) : '<span style="color:#6B7A88;">탈퇴/알수없음</span>' ?></td></tr>
-        <tr><th>상품</th><td><?= !empty($row['product_name']) ? htmlspecialchars($row['product_name'], ENT_QUOTES) : '<span style="color:#6B7A88;">-</span>' ?></td></tr>
+        <tr><th>신청유형</th><td><span class="badge <?= $typeInfo[1] ?>"><?= htmlspecialchars($typeInfo[0], ENT_QUOTES) ?></span>
+            <?php if (($row['apply_type'] ?? 'NEW') === 'RENEW' && !empty($row['renew_live_no'])): ?>
+                <span style="color:#6B7A88; font-size:12px; margin-left:6px;">(연장 대상 live_no: <?= (int) $row['renew_live_no'] ?>)</span>
+            <?php endif; ?>
+        </td></tr>
         <tr><th>신청상태</th><td><span class="badge <?= $statusInfo[1] ?>"><?= htmlspecialchars($statusInfo[0], ENT_QUOTES) ?></span></td></tr>
         <tr><th>결제여부</th><td><span class="badge <?= $payInfo[1] ?>"><?= htmlspecialchars($payInfo[0], ENT_QUOTES) ?></span></td></tr>
         <?php if (!empty($row['reject_reason'])): ?>
         <tr><th>거절사유</th><td><?= htmlspecialchars($row['reject_reason'], ENT_QUOTES) ?></td></tr>
+        <?php endif; ?>
+        </tbody>
+    </table>
+</div>
+
+<div class="panel">
+    <div class="panel-head"><h2>신청 상품 정보</h2></div>
+    <table class="form-table">
+        <tbody>
+        <?php if (empty($row['product_name'])): ?>
+        <tr><td colspan="2" style="color:#6B7A88;">상품 정보를 찾을 수 없습니다(삭제된 상품일 수 있음).</td></tr>
+        <?php else: ?>
+        <tr><th>상품명</th><td>
+            <?= htmlspecialchars($row['product_name'], ENT_QUOTES) ?>
+            <span class="badge wait"><?= htmlspecialchars(product_period_label($row['billing_type'], $row['period_day']), ENT_QUOTES) ?></span>
+            <?php if (((string) ($row['is_event'] ?? '0')) === '1'): ?><span class="badge wait">이벤트</span><?php endif; ?>
+        </td></tr>
+        <tr><th>상품코드 / 유형</th><td><?= htmlspecialchars($row['product_code'] ?? '', ENT_QUOTES) ?> / <?= ($row['product_type'] ?? 'BASE') === 'ADDON' ? '부가서비스' : '기본상품' ?></td></tr>
+        <tr><th>판매가</th><td>
+            <?php if (!empty($row['list_price']) && (int) $row['list_price'] > (int) $row['price']): ?>
+                <span style="text-decoration:line-through; color:#6B7A88;"><?= number_format((int) $row['list_price']) ?>원</span>
+            <?php endif; ?>
+            <?= (int) $row['price'] > 0 ? number_format((int) $row['price']) . '원' : '무료' ?>
+        </td></tr>
+        <?php if (!empty($row['product_description'])): ?>
+        <tr><th>상품설명</th><td><?= htmlspecialchars($row['product_description'], ENT_QUOTES) ?></td></tr>
+        <?php endif; ?>
         <?php endif; ?>
         </tbody>
     </table>

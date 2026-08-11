@@ -47,10 +47,32 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
 - [x] 18. 상품 entity 재구성 — product_name에서 기간 분리, product_type(기본상품/부가서비스) 신설
 - [x] 19. 상품에 정가(원가) 추가 — 할인 강조 표시
 - [x] 20. service_apply 신규/연장 신청 구분 — 승인 시 queue action 분기(new/extend)
+- [x] 21. 마이페이지 서비스 연장 신청 화면(www) — 상품선택 + 0원/유료 결제 분기점
+- [x] 22. 0원 신청도 결제 이력(payment)에 기록되도록
+- [x] 23. Admin 서비스 신청 상세에 신청 상품 정보(가격/기간/정가) 표시
 
 ---
 
 ## 처리내용
+
+### #21~23 (2026-08-11) — 마이페이지 연장 신청 화면 + 0원 결제이력 + Admin 상품정보 표시
+
+**#21 www 연장 신청 화면**
+- `/mypage/extend`(GET) — 고객의 현재 서비스(설치완료 건만) 확인 후 상품(기간) 선택 그리드 표시. `unit/product.php`와 동일한 카드 스타일(할인율/기간배지) 재사용
+- `/mypage/extend`(POST) — 상품 선택 제출. **결제 분기점**: `price>0`이면 신청서를 만들지 않고 `/mypage/extend/pay`(결제 스텁)로만 보냄, `price=0`이면 [ServiceApplyService::applyRenew()](app/Service/ServiceApplyService.php) 즉시 호출해 신청 접수
+- `applyRenew()` — 신규 신청과 달리 사업자정보/도메인을 다시 안 받고, `service_live.apply_no`로 찾은 원본 신청서 스냅샷을 그대로 복사해 `apply_type=RENEW` 신청서만 새로 생성
+- `/mypage/extend/pay`(GET) — 결제 모듈(#11) 연동 전까지의 스텁 화면. "선택 상품/가격 확인 → 준비중 안내"만 하고, 나중에 여기에 PG 호출을 붙이면 되는 자리로 잡아둠
+- 신규/변경: [Controllers/MyPage.php](app/Controllers/MyPage.php), [Views/mypage_extend.php](app/Views/mypage_extend.php), [Views/mypage_extend_pay.php](app/Views/mypage_extend_pay.php), [Routes.php](app/Config/Routes.php)
+- 테스트 중 발견: 특정 `service_live`가 `install_status=FAILED`(운영서버 `bomul.member`에 `user_id='demo'` 중복으로 설치 실패)라 연장 신청이 막힘 — 이 저장소 밖(bomul-api/운영DB) 조치 필요, 해결 후 Admin "큐 적재" 버튼으로 재설치 재시도하면 됨
+
+**#22 0원 신청도 결제 이력(payment)에 기록**
+- [PaymentModel::sql_save()](app/Models/PaymentModel.php) 신규 — 이 모델에 처음 생기는 INSERT 메서드(기존엔 조회 전용)
+- [ServiceApplyService::recordFreePayment()](app/Service/ServiceApplyService.php) 신규 — `product.price<=0`일 때만 `pay_method='NONE', pay_amount=0, pay_status='PAID'`로 즉시 기록. `apply()`(신규)/`applyRenew()`(연장) 성공 직후 둘 다 호출
+- 유료 신청은 아직 호출 지점 자체가 없음(#11 실결제 연동 후 결제완료 콜백에서 같은 메서드로 pg_provider/pg_tid까지 채워 기록하면 됨)
+
+**#23 Admin 서비스 신청 상세에 상품 정보 표시**
+- [ServiceApplyModel::get_detail_by_apply_no()](app/Models/ServiceApplyModel.php) — `product`에서 `product_type/price/list_price/billing_type/period_day/is_event/description`까지 조인 확장
+- [Views/Admin/Service/view.php](app/Views/Admin/Service/view.php) — "신청 상품 정보" 패널 신규(상품명+기간배지+이벤트배지, 상품코드/유형, 판매가+정가 취소선, 상품설명). "신청 정보" 패널에도 신청유형(신규/연장) 배지 + 연장이면 대상 live_no 표시 추가
 
 ### #20 (2026-08-11) — service_apply 신규/연장 신청 구분, 승인 시 queue action 분기
 

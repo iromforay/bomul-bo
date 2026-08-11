@@ -82,7 +82,9 @@ class ServiceApplyModel extends CI_Model
     // service_live/큐(신규 세팅 action='new'만, extend·status 같은 이후 큐는 제외)까지 같이 조인한다.
     public function get_detail_by_apply_no($apply_no)
     {
-        $sql = "SELECT sa.*, c.customer_id AS customer_login_id, p.product_name, p.product_code,
+        $sql = "SELECT sa.*, c.customer_id AS customer_login_id,
+                       p.product_name, p.product_code, p.product_type, p.price, p.list_price,
+                       p.billing_type, p.period_day, p.is_event, p.description AS product_description,
                        pay.pay_status, pay.pay_method, pay.pay_amount, pay.paid_at,
                        sl.live_no, sl.install_status,
                        q.status AS queue_status, q.sent_at AS queue_sent_at,
