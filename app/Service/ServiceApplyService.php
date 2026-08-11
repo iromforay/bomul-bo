@@ -134,7 +134,8 @@ class ServiceApplyService extends CI_Service
             return AT_Result::toFailData("서비스 라이브 생성에 실패했습니다.");
         }
 
-        $this->serverListModel->incrementTenantCount($server['server_no']);
+        // server_list.tenant_count는 더 이상 별도로 갱신하지 않는다 - ServerListModel이 매 조회마다
+        // service_live를 실시간 COUNT()하므로 이 INSERT만으로 이미 반영됨 (findLeastLoaded() 참고).
 
         // service_apply/service_live는 이미 커밋됐고 트랜잭션으로 묶여있지 않다 - 여기서 실패해도
         // 되돌리지 않고, 관리자가 "큐 적재" 버튼(requeue())으로 이 live_no를 그대로 재사용해서
@@ -191,8 +192,6 @@ class ServiceApplyService extends CI_Service
         if (!$live) {
             return AT_Result::toFailData("서비스 라이브 생성에 실패했습니다.");
         }
-
-        $this->serverListModel->incrementTenantCount($server['server_no']);
 
         if (!$this->enqueue($apply, $live['live_no'], $server, $product, $live['license_key'])) {
             return AT_Result::toFailData("서비스 라이브는 생성됐지만 큐 적재에 실패했습니다. 다시 시도해주세요.");

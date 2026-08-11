@@ -30,6 +30,8 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
 - [x] 13. 웹 서비스 하드코딩을 ad 서비스 정보로 코딩.
 - [ ] 14. 약관, 개인정보 처리방침
 - [ ] 15. 웹페이지 변경.
+- [x] 16. 축약형 마이페이지 .
+- [ ] 17. 서비스 연장. (카드결제 붙는 실제 연장 로직 - #11 실결제 연동 이후. 지금은 마이페이지의 "서비스 연장 신청" 버튼이 준비중 안내만 함)
    ```
   https://www.cafe24.com/commerce/start/founder.html
   -> 홈페이지를 만들어주는곳 가격비교와 기능비교
@@ -38,10 +40,45 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
   온라인 이벤트를 하고 싶지만 랜딩 페이지가 없어서 고민
   나만의 홈페이지가 갖고 싶지만 , 만드는방법도 유지할 방법도 모르는 사람
   ``` 
+- [x] 16. 서비스 신청 상세 - 승인완료 시 세팅 진행 현황(대기/세팅중/완료·실패) 표시
+- [x] 17. 서비스 신청 현황 리스트에도 신청상태 옆 "세팅현황" 컬럼 추가
 
 ---
 
 ## 처리내용
+
+### #16 축약형 마이페이지 (2026-08-10) — 번호 중복 주의: 아래 "#16 서비스 신청 상세" 항목과는 다른 건
+
+www 로그인 고객 전용 `/mypage` 신설 — 내 서비스 현황(상품/도메인/이용상태/만료일) + 내 결제 리스트(전체, 최신순) 표시. "상품/서비스는 추후 여러 개로 늘어날 예정"이라 지금은 고객당 가장 최근 `service_live` 1건만 "현재 서비스"로 취급(다중 서비스 지원은 별도 과제).
+
+- [PaymentModel.php](app/Models/PaymentModel.php) 신규 — 이 저장소에 없던 첫 Payment 모델. `get_list_by_customer()`로 결제 이력 전체 조회
+- [ServiceLiveModel::getCurrentByCustomerNo()](app/Models/ServiceLiveModel.php) 신규
+- [MyPageService.php](app/Service/MyPageService.php) 신규
+- [Controllers/MyPage.php](app/Controllers/MyPage.php) 신규 — `requireLogin()`은 `ServiceApply.php`와 동일 패턴(복붙, 공통화는 안 함 — 기존 관례 따름)
+- [Views/mypage.php](app/Views/mypage.php) 신규 — SUSPENDED(유예) 상태면 완전종료 예정일(suspended_at+15일)도 같이 안내
+- "서비스 연장 신청"/"정기결제 신청하기" 버튼(`/mypage/extend`, `/mypage/subscribe`) — **실제 로직 없음, 준비중 안내 후 마이페이지로 리다이렉트만 함** (#11 실결제 연동, #17 서비스 연장 완료 후 채울 자리)
+- [header_menu.php](app/Views/common/header_menu.php) — 로그인 상태 헤더/모바일 메뉴에 "마이페이지" 링크 추가
+
+### #17 (2026-08-10) — 서비스 신청 현황 리스트에 "세팅현황" 컬럼 추가
+
+- [ServiceApplyModel::get_list_with_details()](app/Models/ServiceApplyModel.php) — `#16`과 동일 기준(action='new' 최신 큐)으로 `queue_status` 조인 추가
+- [Views/Admin/Service/list.php](app/Views/Admin/Service/list.php) — "신청상태" 컬럼 옆에 "세팅현황" 컬럼 신설, 대기/세팅중/완료/실패 배지 표시(큐 없으면 '-')
+
+### #16 (2026-08-10) — 서비스 신청 상세에 세팅 진행 현황 표시
+
+신청상태가 '승인완료(APPROVED)'인 건은 상세화면 하단에 큐(action='new') 상태 기준 3단계 스텝퍼를 표시: 대기(PENDING) › 세팅중(SENT) › 완료(DONE)｜실패(FAILED).
+
+- [ServiceApplyModel::get_detail_by_apply_no()](app/Models/ServiceApplyModel.php) — `service_live` + 해당 live의 **최초 세팅용 큐(action='new')만** 최신 1건 조인(연장/상태변경 같은 이후 큐는 제외해야 "세팅 진행"과 안 섞임)
+- [Views/Admin/Service/view.php](app/Views/Admin/Service/view.php) — APPROVED일 때만 패널 노출. 큐가 아직 없으면 "큐 적재 버튼으로 재시도" 안내, 있으면 스텝퍼 + 적재일시/완료(실패)일시 + 실패사유 표시
+- 큐 자체가 없는 경우(승인 직후 enqueue 실패 등)는 별도 안내 문구로 처리 — 목록의 기존 "큐 적재"(requeue) 버튼과 자연히 연결됨
+
+### #5 추가 (2026-08-10) — tenant_count 실시간 집계로 전환
+
+`server_list.tenant_count`가 승인 시 +1만 되고 감소 로직이 전혀 없어(큐 적재 실패/설치 실패/서비스 종료돼도 그대로 누적) 실제 배정 수와 계속 어긋나는 문제 발견 → 저장 컬럼 신뢰를 버리고 조회 시마다 `service_live`를 실시간 COUNT()하는 방식으로 전환.
+
+- [ServerListModel.php](app/Models/ServerListModel.php) — `findLeastLoaded()`/`findByIdx()`/`get_list()` 전부 `(SELECT COUNT(*) FROM service_live WHERE server_no=... AND status != 'TERMINATED') AS tenant_count` 서브쿼리로 계산해서 반환(반환 키는 그대로 `tenant_count`라 호출부/뷰 수정 불필요). `incrementTenantCount()` 메서드 제거
+- [ServiceApplyService.php](app/Service/ServiceApplyService.php) — `approve()`/`requeue()`에서 `incrementTenantCount()` 호출 제거(더 이상 필요 없음 — service_live INSERT만으로 다음 조회부터 자동 반영)
+- 저장된 `server_list.tenant_count` 컬럼 자체는 스키마에 남아있지만 이제 아무 데서도 읽거나 갱신하지 않음(죽은 컬럼) — 나중에 컬럼 자체를 DROP할지는 별도 판단 필요
 
 ### #5 (2026-08-10) — 서버 리스트(server_list) 관리 CRUD 신설
 

@@ -36,14 +36,21 @@ class ServiceApplyModel extends CI_Model
     // 어드민 "서비스 신청 현황" 목록용 - 순수하게 service_apply에 등록된 신청 목록만 보여준다.
     // 고객정보/결제정보처럼 복잡한 조인은 상세(get_detail_by_apply_no)에서만 붙인다.
     // product_name만 예외 - 신청 당시 어떤 상품을 신청했는지는 목록에서도 필요한 신청서 자체 정보.
-    // sl.status/install_status는 정지/재개 버튼을 어떤 걸 보여줄지 판단하는 데 씀
+    // sl.status/install_status는 정지/재개 버튼을 어떤 걸 보여줄지 판단하는 데 씀.
+    // queue_status는 신청상태 옆 "세팅현황" 배지용 - 최초 세팅용 큐(action='new')만, 상세와 동일 기준.
     public function get_list_with_details()
     {
         $sql = "SELECT sa.*, p.product_name, p.product_code,
-                       sl.status AS live_status, sl.install_status
+                       sl.status AS live_status, sl.install_status,
+                       q.status AS queue_status
                 FROM `$this->table` sa
                 LEFT JOIN `product` p ON p.product_no = sa.product_no
                 LEFT JOIN `service_live` sl ON sl.apply_no = sa.apply_no
+                LEFT JOIN `queue` q ON q.queue_no = (
+                    SELECT q2.queue_no FROM `queue` q2
+                    WHERE q2.live_no = sl.live_no AND q2.action = 'new'
+                    ORDER BY q2.queue_no DESC LIMIT 1
+                )
                 ORDER BY sa.apply_no DESC";
 
         return $this->getExecQuery($sql);
@@ -70,11 +77,16 @@ class ServiceApplyModel extends CI_Model
         return $rows[0] ?? null;
     }
 
-    // 어드민 "서비스 신청 상세" 단건 조회 - get_list_with_details()와 동일한 조인을 apply_no로 한정
+    // 어드민 "서비스 신청 상세" 단건 조회 - get_list_with_details()와 동일한 조인을 apply_no로 한정.
+    // 승인완료(APPROVED) 상태면 하단에 "세팅 진행 현황"(대기→세팅중→완료|실패)을 보여줘야 해서
+    // service_live/큐(신규 세팅 action='new'만, extend·status 같은 이후 큐는 제외)까지 같이 조인한다.
     public function get_detail_by_apply_no($apply_no)
     {
         $sql = "SELECT sa.*, c.customer_id AS customer_login_id, p.product_name, p.product_code,
-                       pay.pay_status, pay.pay_method, pay.pay_amount, pay.paid_at
+                       pay.pay_status, pay.pay_method, pay.pay_amount, pay.paid_at,
+                       sl.live_no, sl.install_status,
+                       q.status AS queue_status, q.sent_at AS queue_sent_at,
+                       q.completed_at AS queue_completed_at, q.fail_reason AS queue_fail_reason
                 FROM `$this->table` sa
                 LEFT JOIN `customer` c ON c.customer_no = sa.customer_no
                 LEFT JOIN `product` p ON p.product_no = sa.product_no
@@ -82,6 +94,12 @@ class ServiceApplyModel extends CI_Model
                     SELECT pay2.payment_no FROM `payment` pay2
                     WHERE pay2.apply_no = sa.apply_no
                     ORDER BY pay2.payment_no DESC LIMIT 1
+                )
+                LEFT JOIN `service_live` sl ON sl.apply_no = sa.apply_no
+                LEFT JOIN `queue` q ON q.queue_no = (
+                    SELECT q2.queue_no FROM `queue` q2
+                    WHERE q2.live_no = sl.live_no AND q2.action = 'new'
+                    ORDER BY q2.queue_no DESC LIMIT 1
                 )
                 WHERE sa.apply_no = " . $this->db->escape((int) $apply_no) . "
                 LIMIT 1";

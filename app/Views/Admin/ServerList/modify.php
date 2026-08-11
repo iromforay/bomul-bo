@@ -35,7 +35,7 @@
             </tr>
             <tr>
                 <th>배정 테넌트수</th>
-                <td><?= (int) $row['tenant_count'] ?> <span style="color:#6B7A88; font-size:12px;">(승인 시 자동 증가 - 여기서 직접 수정 불가)</span></td>
+                <td><?= (int) $row['real_tenant_count'] ?> <span style="color:#6B7A88; font-size:12px;">(종료(TERMINATED) 아닌 service_live 실시간 집계 - 직접 수정 불가)</span></td>
             </tr>
             <tr>
                 <th>설치가능 여부</th>

@@ -34,7 +34,7 @@ $err = session()->getFlashdata('err');
                     <td><?= htmlspecialchars($row['server_code'], ENT_QUOTES) ?></td>
                     <td><?= htmlspecialchars($row['server_name'], ENT_QUOTES) ?></td>
                     <td><?= htmlspecialchars($row['receiver_url'], ENT_QUOTES) ?></td>
-                    <td><?= (int) $row['tenant_count'] ?></td>
+                    <td><?= (int) $row['real_tenant_count'] ?></td>
                     <td>
                         <?php if (($row['installable_yn'] ?? 'Y') === 'Y'): ?>
                             <span class="badge done">가능</span>

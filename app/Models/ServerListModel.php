@@ -12,10 +12,20 @@ class ServerListModel extends CI_Model
         return $this;
     }
 
-    // 승인 시 배정할 서버 선정 - 설치가능(Y) + 정상가동(USE) 중 부하(tenant_count)가 가장 적은 곳
+    // 저장된 컬럼값 대신 실시간 COUNT()로 계산 - service_live 서브쿼리를 모든 SELECT에 공통으로 붙인다.
+    // TERMINATED(종료)는 더 이상 이 서버를 점유하지 않는 상태라 카운트에서 제외.
+    // (예전엔 server_list.tenant_count를 승인 시 +1만 하고 감소는 전혀 없어서, 큐 적재 실패/종료된
+    // 건도 계속 누적되어 실제 배정 수와 어긋나는 문제가 있었음 - 2026-08-10 실시간 계산으로 전환)
+    private function liveTenantCountSubquery(): string
+    {
+        return "(SELECT COUNT(*) FROM `service_live` sl WHERE sl.server_no = `$this->table`.server_no AND sl.status != 'TERMINATED')";
+    }
+
+    // 승인 시 배정할 서버 선정 - 설치가능(Y) + 정상가동(USE) 중 부하(실시간 tenant_count)가 가장 적은 곳
     public function findLeastLoaded()
     {
-        $sql = "SELECT * FROM `$this->table`
+        $sql = "SELECT *, " . $this->liveTenantCountSubquery() . " AS `real_tenant_count`
+                FROM `$this->table`
                 WHERE `installable_yn` = 'Y' AND `status` = 'USE'
                 ORDER BY `tenant_count` ASC, `server_no` ASC
                 LIMIT 1";
@@ -23,22 +33,22 @@ class ServerListModel extends CI_Model
         return $rows[0] ?? null;
     }
 
-    public function incrementTenantCount($server_no)
-    {
-        $sql = "UPDATE `$this->table` SET `tenant_count` = `tenant_count` + 1 WHERE `server_no` = " . $this->db->escape((int) $server_no);
-        return $this->safeExecQuery($sql);
-    }
-
     public function findByIdx($server_no)
     {
-        $rows = $this->findbyid((int) $server_no);
+        $sql = "SELECT *, " . $this->liveTenantCountSubquery() . " AS `real_tenant_count`
+                FROM `$this->table`
+                WHERE `server_no` = " . $this->db->escape((int) $server_no) . "
+                LIMIT 1";
+        $rows = $this->getExecQuery($sql);
         return $rows[0] ?? null;
     }
 
     // 어드민 "서버 목록" - 전체, server_no순
     public function get_list($start = 0, $limit = 0)
     {
-        $sql = "SELECT * FROM `$this->table` ORDER BY `server_no` ASC";
+        $sql = "SELECT *, " . $this->liveTenantCountSubquery() . " AS `real_tenant_count`
+                FROM `$this->table`
+                ORDER BY `server_no` ASC";
         return $this->getExecQuery($sql);
     }
 

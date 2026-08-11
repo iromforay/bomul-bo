@@ -9,6 +9,13 @@ $statusLabels = [
     'REJECTED' => ['승인거절', 'stop'],
     'CANCEL'   => ['신청취소', 'stop'],
 ];
+// 신청상태 옆 "세팅현황" 배지 - 상세화면 스텝퍼(대기/세팅중/완료/실패)와 동일한 queue(action='new') 기준.
+$queueLabels = [
+    'PENDING' => ['대기', 'wait'],
+    'SENT'    => ['세팅중', 'wait'],
+    'DONE'    => ['완료', 'done'],
+    'FAILED'  => ['실패', 'stop'],
+];
 ?>
 <div class="crumb">HOME &nbsp;›&nbsp; 고객관리 &nbsp;›&nbsp; <b>서비스 신청 현황</b></div>
 
@@ -26,17 +33,18 @@ $statusLabels = [
         <thead>
         <tr>
             <th>번호</th><th>신청일</th><th>상호명</th><th>대표자명</th>
-            <th>담당자</th><th>연락처</th><th>상품</th><th>희망도메인</th><th>신청상태</th><th>처리</th>
+            <th>담당자</th><th>연락처</th><th>상품</th><th>희망도메인</th><th>신청상태</th><th>세팅현황</th><th>처리</th>
         </tr>
         </thead>
         <tbody>
         <?php if (empty($list)): ?>
-            <tr><td colspan="10" style="text-align:center; color:#6B7A88;">서비스 신청 내역이 없습니다.</td></tr>
+            <tr><td colspan="11" style="text-align:center; color:#6B7A88;">서비스 신청 내역이 없습니다.</td></tr>
         <?php else: ?>
             <?php foreach ($list as $row): ?>
                 <?php
                 $statusInfo = $statusLabels[$row['status']] ?? [$row['status'], 'wait'];
                 $pending    = in_array($row['status'], ['REQUEST', 'REVIEW'], true);
+                $queueInfo  = !empty($row['queue_status']) ? ($queueLabels[$row['queue_status']] ?? [$row['queue_status'], 'wait']) : null;
                 ?>
                 <tr class="row-link" onclick="location.href='<?= Admin_SITE ?>/Service/view/<?= (int) $row['apply_no'] ?>'">
                     <td><?= (int) $row['apply_no'] ?></td>
@@ -48,6 +56,13 @@ $statusLabels = [
                     <td><?= !empty($row['product_name']) ? htmlspecialchars($row['product_name'], ENT_QUOTES) : '<span style="color:#6B7A88;">-</span>' ?></td>
                     <td><?= !empty($row['sub_domain']) ? htmlspecialchars($row['sub_domain'], ENT_QUOTES) : '<span style="color:#6B7A88;">-</span>' ?></td>
                     <td><span class="badge <?= $statusInfo[1] ?>"><?= htmlspecialchars($statusInfo[0], ENT_QUOTES) ?></span></td>
+                    <td>
+                        <?php if ($queueInfo): ?>
+                            <span class="badge <?= $queueInfo[1] ?>"><?= htmlspecialchars($queueInfo[0], ENT_QUOTES) ?></span>
+                        <?php else: ?>
+                            <span style="color:#6B7A88;">-</span>
+                        <?php endif; ?>
+                    </td>
                     <td onclick="event.stopPropagation();">
                         <?php if ($pending): ?>
                             <form method="post" action="<?= Admin_SITE ?>/Service/approve/<?= (int) $row['apply_no'] ?>" style="display:inline;" onsubmit="return confirm('승인하시겠습니까? 운영서버가 자동 배정됩니다.');">

@@ -18,6 +18,14 @@ $payLabels = [
 ];
 $statusInfo = $statusLabels[$row['status']] ?? [$row['status'], 'wait'];
 $payInfo    = !empty($row['pay_status']) ? ($payLabels[$row['pay_status']] ?? [$row['pay_status'], 'wait']) : ['미결제', 'hold'];
+
+// 세팅 진행 현황(승인완료 건만) - queue(action='new')의 status를 3단계로 매핑.
+// PENDING(대기, 아직 push 전) → SENT(세팅중, 운영서버로 push됨·응답 대기) → DONE(완료)/FAILED(실패).
+$queueStatus  = $row['queue_status'] ?? null;
+$queueStepMap = ['PENDING' => 1, 'SENT' => 2, 'DONE' => 3, 'FAILED' => 3];
+$queueStep    = $queueStepMap[$queueStatus] ?? 0;
+$queueFailed  = $queueStatus === 'FAILED';
+$queueStepLabels = ['대기', '세팅중', $queueFailed ? '실패' : '완료'];
 ?>
 <div class="crumb">HOME &nbsp;›&nbsp; 고객관리 &nbsp;›&nbsp; <b>서비스 신청 상세</b></div>
 
@@ -84,6 +92,43 @@ $payInfo    = !empty($row['pay_status']) ? ($payLabels[$row['pay_status']] ?? [$
         </tbody>
     </table>
 </div>
+
+<?php if ($row['status'] === 'APPROVED'): ?>
+<div class="panel">
+    <div class="panel-head"><h2>세팅 진행 현황</h2></div>
+    <?php if (!$queueStatus): ?>
+        <p style="padding:16px; color:#6B7A88;">
+            아직 세팅 큐에 등록되지 않았습니다. 목록에서 "큐 적재" 버튼으로 재시도해주세요.
+        </p>
+    <?php else: ?>
+        <div style="padding:16px; display:flex; align-items:center; gap:8px;">
+            <?php foreach ($queueStepLabels as $i => $label): ?>
+                <?php
+                $stepNo = $i + 1;
+                if ($queueFailed && $stepNo === 3) {
+                    $stepClass = 'stop';
+                } elseif ($stepNo <= $queueStep) {
+                    $stepClass = 'done';
+                } else {
+                    $stepClass = 'hold';
+                }
+                ?>
+                <span class="badge <?= $stepClass ?>"><?= $stepNo ?>. <?= htmlspecialchars($label, ENT_QUOTES) ?></span>
+                <?php if ($stepNo < 3): ?><span style="color:#6B7A88;">›</span><?php endif; ?>
+            <?php endforeach; ?>
+        </div>
+        <table class="form-table">
+            <tbody>
+            <tr><th>큐 적재일시</th><td><?= htmlspecialchars((string) ($row['queue_sent_at'] ?? ''), ENT_QUOTES) ?: '<span style="color:#6B7A88;">-</span>' ?></td></tr>
+            <tr><th>완료/실패일시</th><td><?= htmlspecialchars((string) ($row['queue_completed_at'] ?? ''), ENT_QUOTES) ?: '<span style="color:#6B7A88;">-</span>' ?></td></tr>
+            <?php if ($queueFailed): ?>
+            <tr><th>실패사유</th><td><?= !empty($row['queue_fail_reason']) ? nl2br(htmlspecialchars($row['queue_fail_reason'], ENT_QUOTES)) : '<span style="color:#6B7A88;">-</span>' ?></td></tr>
+            <?php endif; ?>
+            </tbody>
+        </table>
+    <?php endif; ?>
+</div>
+<?php endif; ?>
 
 <div class="form-actions">
     <a href="<?= Admin_SITE ?>/Service/modify/<?= (int) $row['apply_no'] ?>"><button type="button" class="primary">수정</button></a>

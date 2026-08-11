@@ -97,5 +97,9 @@ if ($host === 'ad.bomul.ai.kr') { //관리자
 
     $routes->get('service-apply',  'ServiceApply::getindex');
     $routes->post('service-apply', 'ServiceApply::postindex');
+
+    $routes->get('mypage',           'MyPage::getindex');
+    $routes->get('mypage/extend',    'MyPage::getExtend');
+    $routes->get('mypage/subscribe', 'MyPage::getSubscribe');
 }
 

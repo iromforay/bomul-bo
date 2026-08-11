@@ -91,6 +91,21 @@ class ServiceLiveModel extends CI_Model
         return $rows[0] ?? null;
     }
 
+    // 마이페이지(#16) "내 서비스 현황" - 상품/서비스가 여러 개로 늘어나기 전까지는 고객당 가장 최근
+    // service_live 1건만 "현재 서비스"로 보여준다(다중 서비스 지원은 추후 과제).
+    public function getCurrentByCustomerNo($customer_no)
+    {
+        $sql = "SELECT sl.*, sa.company_name, sa.sub_domain, p.product_name
+                FROM `$this->table` sl
+                LEFT JOIN `service_apply` sa ON sa.apply_no = sl.apply_no
+                LEFT JOIN `product` p ON p.product_no = sa.product_no
+                WHERE sl.customer_no = " . $this->db->escape((int) $customer_no) . "
+                ORDER BY sl.live_no DESC
+                LIMIT 1";
+        $rows = $this->getExecQuery($sql);
+        return $rows[0] ?? null;
+    }
+
     // 어드민 "서비스 라이브 현황" 목록 - 만료 임박한 건을 먼저 보도록 expire_date 오름차순.
     public function get_list_with_details()
     {
