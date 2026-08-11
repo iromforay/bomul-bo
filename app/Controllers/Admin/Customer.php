@@ -97,6 +97,21 @@ class Customer extends BaseController
         return redirect()->to(SITE . '/Customer/view/' . (int) $customer_no);
     }
 
+    // 고객 상세에서 등록번호/서류 확인 후 검증상태만 빠르게 바꿀 때 사용 - 전체 수정폼(edit()) 없이
+    // CustomerService::verify() 단독 호출. 다른 필드(이름/연락처 등)는 안 건드림.
+    public function postVerify($customer_no = null)
+    {
+        $service = new CustomerService();
+        $result = $service->verify(
+            $customer_no,
+            (string) $this->request->getPost('biz_reg_verified_yn'),
+            (string) $this->request->getPost('broker_reg_verified_yn')
+        );
+
+        session()->setFlashdata($result['SUCCESS'] === 'TRUE' ? 'msg' : 'err', $result['MSG']);
+        return redirect()->to(SITE . '/Customer/view/' . (int) $customer_no);
+    }
+
     // 드래그드랍 위젯이 드롭 즉시 호출 - customer/temp/에만 올려두고, 실제 저장은 안 건드린다.
     // customer_no를 몰라도 되는 구조라 등록(신규 가입) 화면에서도 그대로 재사용 가능.
     public function postUploadTemp()

@@ -27,6 +27,7 @@ class Product extends BaseController
         $service = new ProductService();
         $result = $service->save([
             'product_code' => $this->request->getPost('product_code'),
+            'product_type' => $this->request->getPost('product_type'),
             'product_name' => $this->request->getPost('product_name'),
             'price'        => $this->request->getPost('price'),
             'billing_type' => $this->request->getPost('billing_type'),
@@ -60,6 +61,7 @@ class Product extends BaseController
         $service = new ProductService();
         $result = $service->edit($product_no, [
             'product_code' => $this->request->getPost('product_code'),
+            'product_type' => $this->request->getPost('product_type'),
             'product_name' => $this->request->getPost('product_name'),
             'price'        => $this->request->getPost('price'),
             'billing_type' => $this->request->getPost('billing_type'),

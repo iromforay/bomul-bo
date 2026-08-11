@@ -18,7 +18,7 @@ class Home extends BaseController
     {
 
         $data=array();
-        $data['products'] = (new ProductService())->get_usable_list();
+        $data['products'] = (new ProductService())->get_usable_base_list();
         echo $this->view("default","index",$data);
     }
 }

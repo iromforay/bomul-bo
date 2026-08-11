@@ -35,6 +35,12 @@ class ProductService extends CI_Service
         return $this->model->get_usable_list();
     }
 
+    // www 요금 그리드용 - 기본상품(BASE)만. 부가서비스(ADDON)는 아직 단독 그리드에 안 섞임.
+    public function get_usable_base_list()
+    {
+        return $this->model->get_usable_base_list();
+    }
+
     // ?product=... 쿼리파라미터 하나로 PK든 product_code든 다 받아주는 통합 조회.
     // 숫자(예: "3")면 product_no로, 문자열(예: "1month")이면 product_code로 찾는다 -
     // unit/product.php 카드의 링크가 product_code를 쓰고, 재신청/에러복구 흐름(ServiceApply)은
@@ -102,6 +108,7 @@ class ProductService extends CI_Service
     private function buildEntity(?int $product_no, array $data): array
     {
         $product_code = trim($data['product_code'] ?? '');
+        $product_type = $data['product_type'] ?? 'BASE';
         $product_name = trim($data['product_name'] ?? '');
         $price        = (int) ($data['price'] ?? 0);
         $billing_type = $data['billing_type'] ?? '';
@@ -112,6 +119,9 @@ class ProductService extends CI_Service
 
         if ($product_code === '' || $product_name === '') {
             return [null, AT_Result::toFailData("상품코드와 상품명을 입력해주세요.")];
+        }
+        if (!in_array($product_type, ['BASE', 'ADDON'], true)) {
+            return [null, AT_Result::toFailData("상품유형을 선택해주세요.")];
         }
         if (!in_array($billing_type, ['MONTHLY', 'ONCE', 'NONE'], true)) {
             return [null, AT_Result::toFailData("결제방식을 선택해주세요.")];
@@ -135,6 +145,7 @@ class ProductService extends CI_Service
             $entity->setProductNo($product_no);
         }
         $entity->setProductCode($product_code);
+        $entity->setProductType($product_type);
         $entity->setProductName($product_name);
         $entity->setPrice($price);
         $entity->setBillingType($billing_type);

@@ -34,6 +34,7 @@ if ($host === 'ad.bomul.ai.kr') { //관리자
     $routes->get('Customer/modify/(:num)',      'Customer::getModify/$1');
     $routes->post('Customer/modify/(:num)',     'Customer::postModify/$1');
     $routes->post('Customer/uploadTemp',        'Customer::postUploadTemp');
+    $routes->post('Customer/verify/(:num)',     'Customer::postVerify/$1');
 
     $routes->get('Service',                     'Service::getIndex');
     $routes->get('Service/view/(:num)',         'Service::getView/$1');
@@ -98,8 +99,10 @@ if ($host === 'ad.bomul.ai.kr') { //관리자
     $routes->get('service-apply',  'ServiceApply::getindex');
     $routes->post('service-apply', 'ServiceApply::postindex');
 
-    $routes->get('mypage',           'MyPage::getindex');
-    $routes->get('mypage/extend',    'MyPage::getExtend');
-    $routes->get('mypage/subscribe', 'MyPage::getSubscribe');
+    $routes->get('mypage',             'MyPage::getindex');
+    $routes->get('mypage/extend',      'MyPage::getExtend');
+    $routes->get('mypage/subscribe',   'MyPage::getSubscribe');
+    $routes->post('mypage/documents',  'MyPage::postDocuments');
+    $routes->post('mypage/uploadTemp', 'MyPage::postUploadTemp');
 }
 

@@ -32,46 +32,75 @@
     </table>
 </div>
 
+<?php
+// N=대기, Y=검증완료, W=보류, F=검증실패 (CustomerService::VERIFY_STATUSES와 동일)
+$verifyOptions = ['N' => '검증대기', 'W' => '보류', 'Y' => '검증완료', 'F' => '검증실패'];
+?>
 <div class="panel">
     <div class="panel-head"><h2>등록번호 / 검증상태</h2></div>
-    <table class="form-table">
-        <tbody>
-        <tr>
-            <th>사업자등록번호</th>
-            <td>
-                <?= htmlspecialchars($row['biz_reg_no'] ?? '', ENT_QUOTES) ?: '<span style="color:#6B7A88;">미입력</span>' ?>
-                <?= verify_status_badge($row['biz_reg_verified_yn'] ?? null) ?>
-            </td>
-        </tr>
-        <tr>
-            <th>중개사무소등록번호</th>
-            <td>
-                <?= htmlspecialchars($row['broker_reg_no'] ?? '', ENT_QUOTES) ?: '<span style="color:#6B7A88;">미입력</span>' ?>
-                <?= verify_status_badge($row['broker_reg_verified_yn'] ?? null) ?>
-            </td>
-        </tr>
-        <tr>
-            <th>사업자등록증</th>
-            <td>
-                <?php if (!empty($row['biz_reg_file_name'])): ?>
-                    <a href="<?= SITE_PDS . $row['biz_reg_file_dir'] . $row['biz_reg_file_name'] ?>" target="_blank">첨부파일 보기</a>
-                <?php else: ?>
-                    <span style="color:#6B7A88;">미제출</span>
-                <?php endif; ?>
-            </td>
-        </tr>
-        <tr>
-            <th>중개사무소등록증</th>
-            <td>
-                <?php if (!empty($row['broker_reg_file_name'])): ?>
-                    <a href="<?= SITE_PDS . $row['broker_reg_file_dir'] . $row['broker_reg_file_name'] ?>" target="_blank">첨부파일 보기</a>
-                <?php else: ?>
-                    <span style="color:#6B7A88;">미제출</span>
-                <?php endif; ?>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+    <form method="post" action="<?= Admin_SITE ?>/Customer/verify/<?= (int) $row['customer_no'] ?>">
+        <table class="form-table">
+            <tbody>
+            <tr>
+                <th>사업자등록번호</th>
+                <td>
+                    <?= htmlspecialchars($row['biz_reg_no'] ?? '', ENT_QUOTES) ?: '<span style="color:#6B7A88;">미입력</span>' ?>
+                    <?= verify_status_badge($row['biz_reg_verified_yn'] ?? null) ?>
+                </td>
+            </tr>
+            <tr>
+                <th>사업자등록증</th>
+                <td>
+                    <?php if (!empty($row['biz_reg_file_name'])): ?>
+                        <a href="<?= SITE_PDS . $row['biz_reg_file_dir'] . $row['biz_reg_file_name'] ?>" target="_blank">첨부파일 보기</a>
+                    <?php else: ?>
+                        <span style="color:#6B7A88;">미제출</span>
+                    <?php endif; ?>
+                </td>
+            </tr>
+            <tr>
+                <th>사업자등록증 검증상태 변경</th>
+                <td>
+                    <select name="biz_reg_verified_yn">
+                        <?php foreach ($verifyOptions as $val => $label): ?>
+                            <option value="<?= $val ?>" <?= ($row['biz_reg_verified_yn'] ?? 'N') === $val ? 'selected' : '' ?>><?= $label ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th>중개사무소등록번호</th>
+                <td>
+                    <?= htmlspecialchars($row['broker_reg_no'] ?? '', ENT_QUOTES) ?: '<span style="color:#6B7A88;">미입력</span>' ?>
+                    <?= verify_status_badge($row['broker_reg_verified_yn'] ?? null) ?>
+                </td>
+            </tr>
+            <tr>
+                <th>중개사무소등록증</th>
+                <td>
+                    <?php if (!empty($row['broker_reg_file_name'])): ?>
+                        <a href="<?= SITE_PDS . $row['broker_reg_file_dir'] . $row['broker_reg_file_name'] ?>" target="_blank">첨부파일 보기</a>
+                    <?php else: ?>
+                        <span style="color:#6B7A88;">미제출</span>
+                    <?php endif; ?>
+                </td>
+            </tr>
+            <tr>
+                <th>중개사무소등록증 검증상태 변경</th>
+                <td>
+                    <select name="broker_reg_verified_yn">
+                        <?php foreach ($verifyOptions as $val => $label): ?>
+                            <option value="<?= $val ?>" <?= ($row['broker_reg_verified_yn'] ?? 'N') === $val ? 'selected' : '' ?>><?= $label ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="form-actions">
+            <button type="submit" class="primary">검증상태 저장</button>
+        </div>
+    </form>
 </div>
 
 <div class="panel">

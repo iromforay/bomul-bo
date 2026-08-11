@@ -2,11 +2,15 @@
 
 namespace App\Entity;
 
-// app/sql/2026_08_05_product_table.sql 의 product 테이블 매핑 - 서비스 신청 시 선택하는 결제 상품(구독형/1회성/이벤트).
+// app/sql/2026_08_05_product_table.sql + app/sql/2026_08_11_product_type.sql 의 product 테이블 매핑 -
+// 서비스 신청 시 선택하는 결제 상품(구독형/1회성/이벤트). product_name은 순수하게 "무엇인지"만
+// 담고(예: "중개사 사이트 개설"), 기간(1개월/6개월/구독형 등)은 billing_type+period_day로 별도
+// 계산해서 배지로 보여준다 - render_helper.php의 product_period_label() 참고.
 class Product_Entity
 {
     private $product_no;
     private $product_code;
+    private $product_type;
     private $product_name;
     private $price;
     private $billing_type;
@@ -48,6 +52,23 @@ class Product_Entity
     public function setProductCode($product_code): void
     {
         $this->product_code = $product_code;
+    }
+
+    // BASE(기본상품, 예: 중개사 사이트 개설) / ADDON(부가서비스, 예: 디자인 템플릿 적용)
+    /**
+     * @return mixed
+     */
+    public function getProductType()
+    {
+        return $this->product_type;
+    }
+
+    /**
+     * @param mixed $product_type
+     */
+    public function setProductType($product_type): void
+    {
+        $this->product_type = $product_type;
     }
 
     /**

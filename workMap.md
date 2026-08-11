@@ -15,7 +15,7 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
 
 할 일과 처리 여부만 짧게 기록. 번호는 고정 ID — [처리내용](#처리내용)에서 이 번호로 어떤 업무의 처리인지 연결한다. 완료돼도 번호/항목은 그대로 두고 체크만 표시.
 
-- [ ] 1. 사용자(중개사) 가입 시 필수서류 추가 — 사업자 등록증, 중개사무소 개설등록증
+- [x] 1. 사용자(중개사) 가입 시 필수서류 추가 — 사업자 등록증, 중개사무소 개설등록증 (마이페이지에서 제출받는 방식으로 구현)
 - [ ] 2. bomul-api 수신 핸들러 — `action='extend'`/`action='status'` (별도 저장소, bomul-api 작업)
 - [x] 3. cron 사이트운영 상태 갱신 — 만료일 지난 건 자동 종료 배치 (현재는 관리자 수동 변경 시에만 반영)
 - [ ] 4. 자동 로그인 — 회원/라이브서비스 리스트에서 `bo.bomul.ai.kr`로 토큰 기반 자동 로그인
@@ -31,7 +31,7 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
 - [ ] 14. 약관, 개인정보 처리방침
 - [ ] 15. 웹페이지 변경.
 - [x] 16. 축약형 마이페이지 .
-- [ ] 17. 서비스 연장. (카드결제 붙는 실제 연장 로직 - #11 실결제 연동 이후. 지금은 마이페이지의 "서비스 연장 신청" 버튼이 준비중 안내만 함)
+- [ ] 17. 서비스 연장/정기결제 신청. 
    ```
   https://www.cafe24.com/commerce/start/founder.html
   -> 홈페이지를 만들어주는곳 가격비교와 기능비교
@@ -42,10 +42,37 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
   ``` 
 - [x] 16. 서비스 신청 상세 - 승인완료 시 세팅 진행 현황(대기/세팅중/완료·실패) 표시
 - [x] 17. 서비스 신청 현황 리스트에도 신청상태 옆 "세팅현황" 컬럼 추가
+- [x] 18. 상품 entity 재구성 — product_name에서 기간 분리, product_type(기본상품/부가서비스) 신설
 
 ---
 
 ## 처리내용
+
+### #18 (2026-08-11) — 상품 entity 재구성: product_name에서 기간 분리 + product_type 신설
+
+상품명에 기간을 끼워넣던 방식("1개월 이용권" 등)이 향후 부가서비스(디자인 템플릿 적용 등)와 상충한다는 문제 제기 → product_name은 순수 명칭만 담고, 기간은 기존 컬럼에서 계산한 배지로 별도 표시, 부가서비스 구분은 신규 컬럼으로 분리.
+
+- [2026_08_11_product_type.sql](app/sql/2026_08_11_product_type.sql) 신규 — `product.product_type VARCHAR(10) DEFAULT 'BASE'`만 추가(스키마 변경 최소화). **운영 DB에 수동 반영 필요**
+- [render_helper.php::product_period_label()](app/Helpers/render_helper.php) 신규 — 새 컬럼 없이 `billing_type`+`period_day`에서 "1개월/6개월/12개월/구독형·자동연장" 라벨 계산. Admin 상품목록·수정화면, www 요금카드 양쪽에서 공용으로 사용
+- [Product_Entity.php](app/Entity/Product_Entity.php), [ProductModel.php](app/Models/ProductModel.php), [ProductService.php](app/Service/ProductService.php) — `product_type`(BASE/기본상품 · ADDON/부가서비스) 필드 추가, 검증 추가
+- [ProductModel::get_usable_base_list()](app/Models/ProductModel.php) 신규 — www 요금 그리드는 `product_type='BASE'`만 노출(부가서비스는 아직 단독 신청 그리드에 안 섞임, 향후 "기본상품 신청 후 추가" 흐름으로 갈 예정이라 이번엔 데이터 모델만 준비)
+- [Controllers/Home.php](app/Controllers/Home.php), [Controllers/ServiceApply.php](app/Controllers/ServiceApply.php) — `get_usable_list()` → `get_usable_base_list()` 교체
+- [Views/Admin/Product/list.php](app/Views/Admin/Product/list.php)/[write.php](app/Views/Admin/Product/write.php)/[modify.php](app/Views/Admin/Product/modify.php) — 상품유형 select 추가, 상품명 입력란에 "기간은 상품명에 넣지 마세요" 안내 + 현재 기간 라벨 표시
+- [Views/unit/product.php](app/Views/unit/product.php) — www 카드의 상품명 옆에 기간 배지 추가
+- 참고: 부가서비스를 실제로 판매하는 흐름(장바구니, 기본상품+부가서비스 묶음결제 등)은 이번 범위 밖 — 데이터 모델만 준비됨
+
+### #1 (2026-08-10) — 마이페이지에서 필수 서류(사업자등록증/중개사무소등록증) 제출
+
+기존에 이미 `CustomerService`/`CustomerModel`/`Customer_Entity`에 등록번호·검증상태·파일 필드(`biz_reg_no`, `broker_reg_no`, `*_verified_yn`, `*_file_dir`, `*_file_name`)와 드래그드랍 temp 업로드 로직(`uploadTemp()`, `finalizeCertificateFiles()`)이 다 있었음 — Admin 고객수정 화면에서만 쓰이고 있었고, www(고객 본인) 쪽엔 입력받는 화면이 없었던 게 갭이었음. 그 기존 인프라를 마이페이지에 그대로 연결.
+
+- **파일 저장 경로 변경**: `CustomerService::applyCertificateFile()`의 `$toDir`를 `customer/{customer_no}/{type}_reg/`에서 **`{customer_no}/`**로 변경(2026-08-10 확정) — 결과적으로 `public/pds/{customer_no}/`에 저장됨. 파일명이 md5 해시라 사업자/중개소 두 파일이 같은 폴더에 섞여도 충돌 없음. 이 변경은 기존 Admin 고객수정 업로드에도 동일하게 적용됨(같은 메서드 공유)
+- [CustomerService::saveDocuments()](app/Service/CustomerService.php) 신규 — 담당자명/이메일은 안 건드리고 등록번호+서류만 처리. 등록번호나 파일이 바뀌면 기존 검증상태를 무조건 '대기(N)'로 리셋(서류가 바뀐 이상 관리자 재확인 필요)
+- [Controllers/MyPage.php](app/Controllers/MyPage.php) — `postDocuments()`(제출), `postUploadTemp()`(드롭존 temp 업로드, `Signup::postuploadtemp()`와 동일 패턴)
+- [Views/mypage.php](app/Views/mypage.php) — Admin 고객수정 화면의 dropzone 마크업을 그대로 재사용(공용 `common/upload.js`), 검증상태(대기/보류/검증완료/실패) 표시
+- [Routes.php](app/Config/Routes.php) — `POST mypage/documents`, `POST mypage/uploadTemp` 추가
+- **삭제 방지(2026-08-10)**: 검증완료(Y)된 서류는 마이페이지에서 삭제 불가 — [mypage.php](app/Views/mypage.php)에서 검증완료 시 "삭제" 버튼 자체를 안 보여주고, [CustomerService::saveDocuments()](app/Service/CustomerService.php)가 요청 조작으로 `del_img`가 넘어와도 서버에서 거부(재제출/교체 업로드는 계속 허용)
+- **버그 수정(2026-08-10)**: `saveDocuments()`가 재제출 때마다 `verified_yn`을 무조건 'N'으로 리셋해서, Admin이 검증완료(Y) 처리해둬도 고객이 마이페이지를 다시 열기만 하면(내용 변경 없이) 조용히 초기화되던 문제. 등록번호/파일이 **실제로 바뀐 항목만** 리셋하도록 수정 — Admin 쪽 검증여부 변경 UI/로직(`Customer/modify.php`, `CustomerService::edit()`) 자체는 원래부터 손댄 적 없음
+- **미완성 기능 연결(2026-08-10)**: `ad.bomul.ai.kr/Customer/view/{no}`(고객 상세, 읽기전용)에는 검증상태를 바꿀 방법이 아예 없었음 — `CustomerService::verify()`는 이미 구현돼 있었지만(코멘트: "관리자가 서류 확인 후 검증 처리만 빠르게 할 때 사용") 어떤 라우트/화면에도 연결된 적이 없던 죽은 코드였음. `Customer::postVerify()` 신규 + `Customer/view.php`에 검증상태 변경 select+저장 폼 추가로 연결 완료 ([Controllers/Admin/Customer.php](app/Controllers/Admin/Customer.php), [Views/Admin/Customer/view.php](app/Views/Admin/Customer/view.php), [Routes.php](app/Config/Routes.php) `POST Customer/verify/(:num)`)
 
 ### #16 축약형 마이페이지 (2026-08-10) — 번호 중복 주의: 아래 "#16 서비스 신청 상세" 항목과는 다른 건
 

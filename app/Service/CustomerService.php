@@ -196,6 +196,65 @@ class CustomerService extends CI_Service
         return AT_Result::toSuccessData("고객 정보를 수정했습니다.");
     }
 
+    // 마이페이지(#1) "필수 서류 제출" - 등록번호(biz_reg_no/broker_reg_no) + 서류 파일만 다룬다.
+    // completeProfile()과 달리 담당자명/이메일은 안 건드림(그건 서비스 신청 단계 몫).
+    // 등록번호나 파일이 실제로 바뀐 항목만 검증(verified_yn)을 대기(N)로 되돌린다 - 아무것도 안
+    // 바뀌었는데 재제출했다고 매번 리셋하면 관리자가 어드민에서 검증완료(Y) 처리해둔 게 고객이
+    // 마이페이지를 다시 열기만 해도 조용히 사라지는 문제가 생기므로, 실제 변경분에 한정한다.
+    public function saveDocuments($customer_no, array $data): array
+    {
+        $customer_no   = (int) $customer_no;
+        $biz_reg_no    = trim($data['biz_reg_no'] ?? '');
+        $broker_reg_no = trim($data['broker_reg_no'] ?? '');
+
+        if ($biz_reg_no === '' || $broker_reg_no === '') {
+            return AT_Result::toFailData("사업자등록번호와 중개사무소등록번호를 입력해주세요.");
+        }
+
+        $row = $this->get_row($customer_no);
+        if (!$row) {
+            return AT_Result::toFailData("존재하지 않는 고객입니다.");
+        }
+
+        $delList = (array) ($data['del_img'] ?? []);
+
+        // 검증완료(Y)된 서류는 삭제 금지 - 화면에서 삭제 버튼을 안 보여주는 것과는 별개로, 요청을
+        // 직접 조작해서 넘겨도 서버에서 막아야 한다(재업로드로 교체하는 건 막지 않음 - 새 파일이
+        // 오면 어차피 검증이 대기로 리셋되고 관리자가 다시 확인함).
+        if (in_array('biz', $delList, true) && ($row['biz_reg_verified_yn'] ?? 'N') === 'Y') {
+            return AT_Result::toFailData("검증완료된 사업자등록증은 삭제할 수 없습니다.");
+        }
+        if (in_array('broker', $delList, true) && ($row['broker_reg_verified_yn'] ?? 'N') === 'Y') {
+            return AT_Result::toFailData("검증완료된 중개사무소등록증은 삭제할 수 없습니다.");
+        }
+
+        $bizChanged = $biz_reg_no !== trim((string) ($row['biz_reg_no'] ?? ''))
+            || trim((string) ($data['biz_reg_file_name'] ?? '')) !== ''
+            || in_array('biz', $delList, true);
+        $brokerChanged = $broker_reg_no !== trim((string) ($row['broker_reg_no'] ?? ''))
+            || trim((string) ($data['broker_reg_file_name'] ?? '')) !== ''
+            || in_array('broker', $delList, true);
+
+        $entity = new Customer_Entity();
+        $entity->setCustomerNo($customer_no);
+        $entity->setBizRegNo($biz_reg_no);
+        $entity->setBrokerRegNo($broker_reg_no);
+        if ($bizChanged) {
+            $entity->setBizRegVerifiedYn('N');
+        }
+        if ($brokerChanged) {
+            $entity->setBrokerRegVerifiedYn('N');
+        }
+
+        if (!$this->model->sql_edit($entity)) {
+            return AT_Result::toFailData("저장에 실패했습니다.");
+        }
+
+        $this->finalizeCertificateFiles($customer_no, $row, $data);
+
+        return AT_Result::toSuccessData("필수 서류가 제출되었습니다. 검증 완료까지 영업일 기준 1~2일 소요됩니다.");
+    }
+
     // 드래그드랍 위젯이 드롭 즉시 호출 - customer/temp/에만 올려두고, 실제 소유자(customer_no)가
     // 정해지는 저장(save/edit) 시점에 finalizeCertificateFiles()가 최종 경로로 옮긴다.
     // customer_no를 몰라도 되는 구조라 등록 화면(신규 가입)에서도, 나중에 만들 사용자 페이지에서도
@@ -262,7 +321,9 @@ class CustomerService extends CI_Service
             return false;
         }
 
-        $toDir = "customer/{$entity->getCustomerNo()}/{$type}_reg/";
+        // public/pds/{customer_no}/ 아래 - 파일명 자체가 md5 해시라 biz/broker 둘 다 같은 폴더에
+        // 섞여도 충돌 없음(2026-08-10 확정 - 예전엔 customer/{no}/{type}_reg/였음).
+        $toDir = "{$entity->getCustomerNo()}/";
         if (!$uploader->move(self::TEMP_DIR, $tempName, $toDir)) {
             return false; // temp 파일이 이미 없어졌거나 하는 경우 - 조용히 스킵
         }

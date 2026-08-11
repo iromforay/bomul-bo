@@ -26,6 +26,14 @@ class ProductModel extends CI_Model
         return $this->getExecQuery($sql);
     }
 
+    // www 요금 안내 그리드용 - 기본상품(BASE)만. 부가서비스(ADDON, 예: 디자인 템플릿 적용)는 아직
+    // 단독 신청 그리드에 섞일 흐름이 없어서(기본상품 신청 후 추가하는 형태가 될 예정) 제외한다.
+    public function get_usable_base_list()
+    {
+        $sql = "SELECT * FROM `$this->table` WHERE `status` = 'USE' AND `product_type` = 'BASE' ORDER BY `sort` ASC, `product_no` ASC";
+        return $this->getExecQuery($sql);
+    }
+
     public function findByIdx($product_no)
     {
         $rows = $this->findbyid((int) $product_no);
@@ -59,13 +67,14 @@ class ProductModel extends CI_Model
         };
 
         $osql = " INSERT INTO `$this->table` SET
-                        `product_code`=%s, `product_name`=%s, `price`=%s,
+                        `product_code`=%s, `product_type`=%s, `product_name`=%s, `price`=%s,
                         `billing_type`=%s, `period_day`=%s, `description`=%s,
                         `status`=%s, `is_event`=%s, `sort`=%s
                 ";
         $sql = sprintf(
             $osql,
             $this->db->escape($entity->getProductCode()),
+            $this->db->escape($entity->getProductType() ?? 'BASE'),
             $this->db->escape($entity->getProductName()),
             $this->db->escape((int) $entity->getPrice()),
             $this->db->escape($entity->getBillingType()),
@@ -85,7 +94,7 @@ class ProductModel extends CI_Model
         };
 
         $osql = " UPDATE `$this->table` SET
-                        `product_code`=%s, `product_name`=%s, `price`=%s,
+                        `product_code`=%s, `product_type`=%s, `product_name`=%s, `price`=%s,
                         `billing_type`=%s, `period_day`=%s, `description`=%s,
                         `status`=%s, `is_event`=%s, `sort`=%s
                   WHERE `product_no` = %s
@@ -93,6 +102,7 @@ class ProductModel extends CI_Model
         $sql = sprintf(
             $osql,
             $this->db->escape($entity->getProductCode()),
+            $this->db->escape($entity->getProductType() ?? 'BASE'),
             $this->db->escape($entity->getProductName()),
             $this->db->escape((int) $entity->getPrice()),
             $this->db->escape($entity->getBillingType()),
