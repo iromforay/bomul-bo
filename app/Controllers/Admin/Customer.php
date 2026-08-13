@@ -112,6 +112,14 @@ class Customer extends BaseController
         return redirect()->to(SITE . '/Customer/view/' . (int) $customer_no);
     }
 
+    // 고객 목록 "로그인" 버튼 - FE로 리다이렉트하기 전에 ad 자신에게 session_token 생성을 요청하는 1단계
+    public function getSessionLogin($customer_no = null)
+    {
+        $service = new CustomerService();
+        echo AT_Result::toJson($service->createSessionLogin((int) $customer_no));
+        exit;
+    }
+
     // 드래그드랍 위젯이 드롭 즉시 호출 - customer/temp/에만 올려두고, 실제 저장은 안 건드린다.
     // customer_no를 몰라도 되는 구조라 등록(신규 가입) 화면에서도 그대로 재사용 가능.
     public function postUploadTemp()

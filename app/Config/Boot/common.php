@@ -56,6 +56,9 @@ define('APP_PDS', ROOT_PATH.'/public/pds/');
 // 도메인 분기 없이 .env의 ad_site를 그대로 고정 사용.
 define('Admin_SITE', bomul_normalize_site_url(getenv('ad_site')));
 
+// bo.bomul.ai.kr(중개사 로그인) - ad에서 만든 자동로그인 session_token을 이 주소로 GET 전송한다.
+define('BO_SITE', bomul_normalize_site_url(getenv('bo_site')));
+
 define('AES_KEY', getenv("AES_KEY"));
 define('LOG_DIR', getenv("LOG_DIR"));
 

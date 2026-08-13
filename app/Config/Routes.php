@@ -35,6 +35,7 @@ if ($host === 'ad.bomul.ai.kr') { //관리자
     $routes->post('Customer/modify/(:num)',     'Customer::postModify/$1');
     $routes->post('Customer/uploadTemp',        'Customer::postUploadTemp');
     $routes->post('Customer/verify/(:num)',     'Customer::postVerify/$1');
+    $routes->get('Customer/sessionLogin/(:num)', 'Customer::getSessionLogin/$1');
 
     $routes->get('Service',                     'Service::getIndex');
     $routes->get('Service/view/(:num)',         'Service::getView/$1');

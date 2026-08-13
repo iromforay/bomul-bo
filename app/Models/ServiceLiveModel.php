@@ -106,6 +106,21 @@ class ServiceLiveModel extends CI_Model
         return $rows[0] ?? null;
     }
 
+    // 어드민 "고객 목록" 자동로그인(#4) - 고객당 최신 service_live 1건의 설치상태 + 배정 서버의
+    // api_key(=ad/bo 공용 session_token salt)까지 함께 조회. 미설치(install_status != DONE)면
+    // 호출부(CustomerService::createSessionLogin)가 자동로그인을 막는다.
+    public function getForSessionLogin($customer_no)
+    {
+        $sql = "SELECT sl.install_status, s.api_key
+                FROM `$this->table` sl
+                LEFT JOIN `server_list` s ON s.server_no = sl.server_no
+                WHERE sl.customer_no = " . $this->db->escape((int) $customer_no) . "
+                ORDER BY sl.live_no DESC
+                LIMIT 1";
+        $rows = $this->getExecQuery($sql);
+        return $rows[0] ?? null;
+    }
+
     // 어드민 "서비스 라이브 현황" 목록 - 만료 임박한 건을 먼저 보도록 expire_date 오름차순.
     public function get_list_with_details()
     {

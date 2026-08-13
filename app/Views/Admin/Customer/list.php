@@ -22,12 +22,12 @@ $err = session()->getFlashdata('err');
         <tr>
             <th>번호</th><th>아이디</th><th>담당자</th><th>중개사무소명</th>
             <th>사업자등록번호</th><th>중개사무소등록번호</th><th>휴대폰</th><th>이메일</th>
-            <th>사업자검증</th><th>중개사검증</th><th>사용여부</th><th>가입일</th>
+            <th>사업자검증</th><th>중개사검증</th><th>사용여부</th><th>가입일</th><th>자동로그인</th>
         </tr>
         </thead>
         <tbody>
         <?php if (empty($list)): ?>
-            <tr><td colspan="12" style="text-align:center; color:#6B7A88;">등록된 고객이 없습니다.</td></tr>
+            <tr><td colspan="13" style="text-align:center; color:#6B7A88;">등록된 고객이 없습니다.</td></tr>
         <?php else: ?>
             <?php foreach ($list as $row): ?>
                 <tr class="row-link" onclick="location.href='<?= Admin_SITE ?>/Customer/view/<?= (int) $row['customer_no'] ?>'">
@@ -49,9 +49,20 @@ $err = session()->getFlashdata('err');
                         <?php endif; ?>
                     </td>
                     <td><?= htmlspecialchars((string) $row['reg_date'], ENT_QUOTES) ?></td>
+                    <td onclick="event.stopPropagation();">
+                        <button type="button" class="js-session-login" data-customer-no="<?= (int) $row['customer_no'] ?>">로그인</button>
+                    </td>
                 </tr>
             <?php endforeach; ?>
         <?php endif; ?>
         </tbody>
     </table>
 </div>
+
+<script>
+    window.BOMUL_SESSION_LOGIN_CONFIG = {
+        sessionUrl: '<?= Admin_SITE ?>/Customer/sessionLogin/',
+        boLoginUrl: '<?= BO_SITE ?>/session_login'
+    };
+</script>
+<script src="<?= RS_JS ?>/common/customer_session_login.js?var=<?= FRESH_TIME ?>"></script>

@@ -384,6 +384,40 @@ class CustomerService extends CI_Service
         return AT_Result::toFailData("검증 처리에 실패했습니다.");
     }
 
+    // 어드민 "고객 목록" 자동로그인(#4) - bo.bomul.ai.kr/session_login으로 넘길 session_token 생성.
+    // salt는 별도 공유값 없이 고객에게 배정된 server_list.api_key를 그대로 쓴다(고객<->서비스 1:1,
+    // ad/bo 둘 다 이미 알고 있는 값이라 새 비밀값을 추가로 관리할 필요가 없음).
+    // hash_hmac 사용 이유: 단순 hash(secret+data)는 length-extension 공격에 취약 - key/data가
+    // 구조적으로 분리된 HMAC이라야 salt/customer_pw를 몰라도 유효한 토큰을 이어붙여 위조하는 걸 막는다.
+    public function createSessionLogin($customer_no): array
+    {
+        $row = $this->get_row((int) $customer_no);
+        if (!$row) {
+            return AT_Result::toFailData("존재하지 않는 고객입니다.");
+        }
+
+        $liveModel = model('App\Models\ServiceLiveModel', true, $this->db);
+        $live = $liveModel->getForSessionLogin($customer_no);
+
+        if (!$live || $live['install_status'] !== 'DONE') {
+            return AT_Result::toFailData("사이트가 설치중입니다. 설치후 시도하세요.");
+        }
+
+        $salt = (string) ($live['api_key'] ?? '');
+        if ($salt === '') {
+            return AT_Result::toFailData("배정된 서버에 API Key가 없어 자동로그인을 생성할 수 없습니다.");
+        }
+
+        $time = (string) time();
+        $token = hash_hmac('sha256', $row['customer_id'] . $time, $row['customer_pw'] . $salt);
+
+        return AT_Result::toSuccessData('', [
+            'session_token' => $token,
+            'id'            => $row['customer_id'],
+            'time'          => $time,
+        ]);
+    }
+
     /*
      * TODO: 결제 완료 후 실사용자 전환(이관) 로직 - 아직 미구현.
      * fid(도메인)는 customer가 아니라 서비스 신청 1건(service_apply.sub_domain → 승인되면
