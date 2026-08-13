@@ -39,6 +39,19 @@ function bomul_normalize_site_url(string $raw): string
     return $raw;
 }
 
+// 현재 요청 호스트가 "ad(관리자)" 호스트인지 판별. 운영 도메인(ad.bomul.ai.kr) 하나만 하드코딩해두면
+// 개발서버(ad.byldev.bomul.ai.kr 등)가 늘어날 때마다 소스를 고쳐야 해서, .env의 AD_HOST(콤마 구분
+// 목록)를 읽어다 분기한다. development.php/production.php(SITE 파일 선택), Routes.php(라우팅
+// namespace 분기)에서 공통으로 사용.
+function bomul_is_ad_host(string $host): bool
+{
+    $adHosts = array_filter(array_map('trim', explode(',', (string) getenv('AD_HOST'))));
+    if ($adHosts === []) {
+        $adHosts = ['ad.bomul.ai.kr']; // AD_HOST 미설정 시 기존 동작 유지
+    }
+    return in_array($host, $adHosts, true);
+}
+
 $root_path = dirname(__DIR__, 3);
 
 define('ROOT_PATH', $root_path);

@@ -26,7 +26,7 @@ defined('CI_DEBUG') || define('CI_DEBUG', false);
 
 require_once __DIR__ . '/common.php';
 
-// SITE는 도메인별로 갈린다 - ad.bomul.ai.kr이면 site_ad.php, 그 외(www/apex)면 site_www.php.
+// SITE는 도메인별로 갈린다 - AD_HOST(.env)에 속한 호스트면 site_ad.php, 그 외(www/apex)면 site_www.php.
 $host = $_SERVER['HTTP_HOST'] ?? '';
-require_once __DIR__ . '/' . ($host === 'ad.bomul.ai.kr' ? 'site_ad.php' : 'site_www.php');
+require_once __DIR__ . '/' . (bomul_is_ad_host($host) ? 'site_ad.php' : 'site_www.php');
 require_once __DIR__ . '/site_common.php';

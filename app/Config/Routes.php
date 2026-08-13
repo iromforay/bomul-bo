@@ -7,7 +7,7 @@ use CodeIgniter\Router\RouteCollection;
 //$routes->get('/', 'Home::index');
 
 $host = $_SERVER['HTTP_HOST'] ?? '';
-if ($host === 'ad.bomul.ai.kr') { //관리자
+if (bomul_is_ad_host($host)) { //관리자
 
 
     // 🌐 관리자 전용: 모든 요청을 Web namespace로 자동 라우팅
