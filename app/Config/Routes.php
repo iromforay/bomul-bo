@@ -126,5 +126,8 @@ if (bomul_is_ad_host($host)) { //관리자
 
     $routes->get('notice',             'Notice::getIndex');
     $routes->get('notice/view/(:num)', 'Notice::getView/$1');
+
+    $routes->get('terms',   'Terms::getIndex');
+    $routes->get('privacy', 'Privacy::getIndex');
 }
 
