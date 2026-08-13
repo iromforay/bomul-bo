@@ -15,7 +15,7 @@
                 <li><a href="/#faq">자주 묻는 질문</a></li>
                 <li><a href="/notice">공지사항</a></li>
                 <li><a href="/qna">QNA</a></li>
-                <li><a href="/#inquiry">상담 신청</a></li>
+                <li><a href="/inquiry">상담 신청</a></li>
             </ul>
         </nav>
 
@@ -49,7 +49,7 @@
         <li><a href="/#faq">자주 묻는 질문</a></li>
         <li><a href="/notice">공지사항</a></li>
         <li><a href="/qna">QNA</a></li>
-        <li><a href="/#inquiry">상담 신청</a></li>
+        <li><a href="/inquiry">상담 신청</a></li>
     </ul>
     <?php if (!empty($customerLogin['is_login'])): ?>
         <a href="/mypage" class="btn btn--outline btn--block">마이페이지</a>

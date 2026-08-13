@@ -95,7 +95,9 @@ if ($host === 'ad.bomul.ai.kr') { //관리자
     $routes->setDefaultNamespace('App\Controllers');
     $routes->get('/',     'Home::getindex');
     $routes->get('Home',  'Home::getindex');
-    $routes->post('inquiry', 'Home::postInquiry');
+
+    $routes->get('inquiry',  'Inquiry::getindex');
+    $routes->post('inquiry', 'Inquiry::postindex');
 
     $routes->get('signup',            'Signup::getindex');
     $routes->post('signup',           'Signup::postindex');

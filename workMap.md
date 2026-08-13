@@ -34,7 +34,7 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
 - [x] 17. 서비스 연장/정기결제 신청. — 연장(마이페이지 0원 신청)만 완료, 정기결제는 미착수(#11 대기)
 - [x] 18. 상담문의  
 - [x] 19. QNA 
-- [ ] 20. 상담문의,QNA,공지사항 www와 연동 
+- [x] 20. 상담문의,QNA,공지사항 www와 연동 — #24~27로 완료(상담문의는 홈 리드폼+독립 `/inquiry` 페이지, QNA/공지사항은 목록/상세)
    ```
   https://www.cafe24.com/commerce/start/founder.html
   -> 홈페이지를 만들어주는곳 가격비교와 기능비교
@@ -54,10 +54,32 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
 - [x] 24. 통합 게시판(상담문의/QNA/공지사항) Admin CRUD 구조 신설 — www 작성 화면은 미포함(다음 단계)
 - [x] 25. www QNA 게시판(목록/상세/글쓰기) — 통합 게시판(#24) board_type=QNA 그대로 사용
 - [x] 26. www 상담문의(홈 리드폼 실연동) + 공지사항(목록/상세) — 통합 게시판(#24) board_type=INQUIRY/NOTICE
+- [x] 27. 상담문의 독립 페이지(`/inquiry`) 분리 — 홈 `#inquiry` 섹션 리드폼과 별개로 서비스신청(`/service-apply`)처럼 단독 URL로도 접근 가능
+- [x] 28. 상담문의 폼 AJAX 제출로 전환 
 
 ---
 
 ## 처리내용
+
+### #28 (2026-08-11) — 상담문의 폼 AJAX 제출로 전환
+
+"페이지 이동 없이 하는것을 선호"라는 요청 — 원래 폼 submit → 서버 리다이렉트 → flashdata로 결과 표시하던 방식(이 프로젝트 다른 모든 폼과 동일한 패턴)에서 이 폼만 예외적으로 AJAX로 바꿈. **이 프로젝트에서 fetch/AJAX로 제출하는 첫 폼** — 나머지(mypage, signup, service-apply 등)는 여전히 풀 페이지 리다이렉트 방식 그대로.
+
+- [Controllers/Inquiry.php](app/Controllers/Inquiry.php) — `postindex()`가 더 이상 리다이렉트하지 않고 `AT_Result::toJson()`으로 JSON만 반환(성공/실패 메시지 그대로 `MSG` 필드). `getindex()`도 flashdata 전달 제거(더 이상 안 씀)
+- [public/resources/js/common/inquiry.js](public/resources/js/common/inquiry.js) 신규 — `.inquiry-form` 클래스를 가진 폼을 전부 가로채서 `fetch`로 `/inquiry`에 제출, 응답의 `SUCCESS`/`MSG`로 폼 하단에 인라인 메시지 표시(성공 시 폼 리셋). 홈 `#inquiry` 섹션과 독립 `/inquiry` 페이지 둘 다 같은 스크립트 공유
+- [Views/index.php](app/Views/index.php)/[Views/inquiry.php](app/Views/inquiry.php) — 폼에 `<p class="inquiry-form__msg">` 메시지 영역 추가, 스크립트 include 추가
+- 참고: jQuery는 이미 `header.php`에서 전역 로드되지만 이 스크립트는 순수 `fetch`/vanilla JS로 작성(의존성 최소화)
+
+### #27 (2026-08-11) — 상담문의 독립 페이지(`/inquiry`) 분리
+
+원래 홈페이지 `#inquiry` 섹션 리드폼(`Home::postInquiry()`)만 있었는데, "www에서 문의 등록 가능한가?"라는 질문에 답하며 서비스신청(`/service-apply`)처럼 **URL로 바로 접근 가능한 독립 페이지가 필요하다**고 판단해 분리.
+
+- [Controllers/Inquiry.php](app/Controllers/Inquiry.php) 신규 — `getindex()`(폼 표시)/`postindex()`(제출). `Home::postInquiry()`에 있던 로직을 그대로 옮김(로그인 불필요, 해피콜 모델 그대로 유지)
+- [Controllers/Home.php](app/Controllers/Home.php) — `postInquiry()` 및 관련 flash 전달 제거(원래 자리로 원복)
+- [Views/inquiry.php](app/Views/inquiry.php) 신규 — mypage/qna와 동일한 `.signup-wrap/.signup-card` 마크업, 접수 후 이 페이지에 안내문구 표시
+- [Views/index.php](app/Views/index.php) — 홈 `#inquiry` 섹션 폼은 그대로 유지(같은 `/inquiry`로 POST). 제출 후에는 홈으로 안 돌아오고 `/inquiry` 페이지로 이동해 접수 안내를 봄(중복 UI 방지 차원에서 홈에 있던 inline 안내문구는 제거)
+- [Routes.php](app/Config/Routes.php) — `GET/POST inquiry` → `Inquiry::getindex/postindex`로 교체
+- [header_menu.php](app/Views/common/header_menu.php) — 상단 메뉴 "상담 신청"이 `/#inquiry`(홈 스크롤) 대신 `/inquiry`(독립 페이지)를 가리키도록 변경
 
 ### #26 (2026-08-11) — www 상담문의(홈 리드폼 실연동) + 공지사항(목록/상세)
 
