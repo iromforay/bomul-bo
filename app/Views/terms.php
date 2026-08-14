@@ -1,7 +1,7 @@
 <div class="signup-wrap">
     <div class="signup-card">
         <h1 class="signup-title">이용약관</h1>
-        <p class="signup-desc">시행일 : [YYYY-MM-DD] (초안 - 공정거래위원회 표준약관을 참고하여 작성. 배포 전 검토·수정 필요)</p>
+        <p class="signup-desc">시행일 : [2026-08-13] (초안 - 공정거래위원회 표준약관을 참고하여 작성. 배포 전 검토·수정 필요)</p>
     </div>
 
     <div class="signup-card terms-body">
@@ -102,7 +102,7 @@
         </ol>
 
         <h2>부칙</h2>
-        <p>이 약관은 [YYYY년 MM월 DD일]부터 시행합니다.</p>
+        <p>이 약관은 [2026 08월 13일]부터 시행합니다.</p>
 
     </div>
 </div>
