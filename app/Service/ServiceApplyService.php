@@ -36,7 +36,7 @@ class ServiceApplyService extends CI_Service
     // 유료 결제와 동일한 형태로 보이도록(Payment_Entity 주석 참고: "결제 이력이 있다"는 판단 기준을
     // 하나로 통일). 유료 상품은 실결제 연동(#11) 전까지 이 메서드를 호출하는 지점 자체가 없다
     // (MyPage::postExtend()가 가격>0이면 애초에 apply()/applyRenew()를 안 부르고 결제 스텁으로 보냄).
-    private function recordFreePayment($apply_no, array $product): void
+    private function recordFreePayment($apply_no, $customer_no, array $product): void
     {
         if ((int) ($product['price'] ?? 0) > 0) {
             return;
@@ -44,6 +44,7 @@ class ServiceApplyService extends CI_Service
 
         $entity = new Payment_Entity();
         $entity->setApplyNo((int) $apply_no);
+        $entity->setCustomerNo((int) $customer_no);
         $entity->setPayMethod('NONE');
         $entity->setPayAmount(0);
         $entity->setPayStatus('PAID');
@@ -572,8 +573,11 @@ class ServiceApplyService extends CI_Service
         return AT_Result::toSuccessData("거절 처리되었습니다.");
     }
 
-    // $data['customer_no']는 항상 서버(세션)에서 채워서 넘겨야 한다 - 폼 입력값으로 받으면 안 됨(타 계정 신청 위조 방지)
-    public function apply(array $data): array
+    // apply()의 검증 부분만 떼어낸 것 - 결제로 넘어가기 전(ServiceApply::postindex())에 미리
+    // 한 번 돌려서 "검증 실패인데 결제부터 시켜버리는" 사고를 막는다. apply() 자신도 실제 저장
+    // 직전에 다시 이 메서드를 호출해서 재검증한다(결제 대기 중 다른 신청이 먼저 도메인을 가져갔을 수 있음).
+    // 반환: error(문제 있으면 메시지, 없으면 null), product(검증 통과 시 상품 row)
+    public function validateApplyData(array $data): array
     {
         $customer_no  = (int) ($data['customer_no'] ?? 0);
         $product_no   = (int) ($data['product_no'] ?? 0);
@@ -584,35 +588,54 @@ class ServiceApplyService extends CI_Service
         $sub_domain    = trim($data['sub_domain'] ?? '');
 
         if ($customer_no <= 0) {
-            return AT_Result::toFailData("로그인 후 이용해주세요.");
+            return ['error' => "로그인 후 이용해주세요.", 'product' => null];
         }
         if ($product_no <= 0 || $company_name === '' || $ceo_name === '' || $manager_phone === '' || $manager_email === '' || $sub_domain === '') {
-            return AT_Result::toFailData("필수 항목을 입력해주세요.");
+            return ['error' => "필수 항목을 입력해주세요.", 'product' => null];
         }
 
         if (!preg_match('/^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/', $sub_domain)) {
-            return AT_Result::toFailData("도메인 주소는 영문 소문자/숫자/하이픈만 사용할 수 있습니다.");
+            return ['error' => "도메인 주소는 영문 소문자/숫자/하이픈만 사용할 수 있습니다.", 'product' => null];
         }
         // 세팅 전 상태(REQUEST/REVIEW/APPROVED)를 점유중인 다른 신청서와만 충돌 - 한 고객이
         // 서비스를 여러 개 신청할 수 있으므로 customer_no와 무관하게 sub_domain 자체로만 체크한다.
         if ($this->model->existsBySubDomain($sub_domain)) {
-            return AT_Result::toFailData("이미 사용중인 도메인 주소입니다.");
+            return ['error' => "이미 사용중인 도메인 주소입니다.", 'product' => null];
         }
 
         $product = $this->productModel->findByIdx($product_no);
         if (!$product || $product['status'] !== 'USE') {
-            return AT_Result::toFailData("신청할 수 없는 상품입니다.");
+            return ['error' => "신청할 수 없는 상품입니다.", 'product' => null];
         }
 
         // 이벤트 상품은 고객당 1회 - 상태 무관 기존 신청이력이 있으면 재신청 차단
         // (재신청 허용 정책이 REJECTED/CANCEL 예외를 두는 쪽으로 바뀌면 existsByCustomerProduct에 status 조건 추가)
         if (((string) $product['is_event']) === '1' && $this->model->existsByCustomerProduct($customer_no, $product_no)) {
-            return AT_Result::toFailData("이미 신청한 이벤트 상품입니다.");
+            return ['error' => "이미 신청한 이벤트 상품입니다.", 'product' => null];
         }
+
+        return ['error' => null, 'product' => $product];
+    }
+
+    // $data['customer_no']는 항상 서버(세션)에서 채워서 넘겨야 한다 - 폼 입력값으로 받으면 안 됨(타 계정 신청 위조 방지)
+    public function apply(array $data): array
+    {
+        $customer_no = (int) ($data['customer_no'] ?? 0);
+        $company_name  = trim($data['company_name'] ?? '');
+        $ceo_name      = trim($data['ceo_name'] ?? '');
+        $manager_phone = trim($data['manager_phone'] ?? '');
+        $manager_email = trim($data['manager_email'] ?? '');
+        $sub_domain    = trim($data['sub_domain'] ?? '');
+
+        $validation = $this->validateApplyData($data);
+        if ($validation['error'] !== null) {
+            return AT_Result::toFailData($validation['error']);
+        }
+        $product = $validation['product'];
 
         $entity = new ServiceApply_Entity();
         $entity->setCustomerNo($customer_no);
-        $entity->setProductNo($product_no);
+        $entity->setProductNo((int) ($data['product_no'] ?? 0));
         $entity->setCompanyName($company_name);
         $entity->setCeoName($ceo_name);
         $entity->setLicenseNo($data['license_no'] ?? null);
@@ -638,7 +661,7 @@ class ServiceApplyService extends CI_Service
             return AT_Result::toFailData("서비스 신청에 실패했습니다.");
         }
 
-        $this->recordFreePayment($apply_no, $product);
+        $this->recordFreePayment($apply_no, $customer_no, $product);
         $this->db->transComplete();
 
         return AT_Result::toSuccessData("서비스 신청이 완료되었습니다.", ['apply_no' => $apply_no]);
@@ -703,7 +726,7 @@ class ServiceApplyService extends CI_Service
             return AT_Result::toFailData("연장 신청에 실패했습니다.");
         }
 
-        $this->recordFreePayment($apply_no, $product);
+        $this->recordFreePayment($apply_no, $customer_no, $product);
         $this->db->transComplete();
 
         return AT_Result::toSuccessData("서비스 연장 신청이 완료되었습니다. 관리자 승인 후 반영됩니다.", ['apply_no' => $apply_no]);
