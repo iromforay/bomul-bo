@@ -508,6 +508,15 @@ main {padding-top: var(--header-h);}
 .form-domain-preview {display: flex;}
 .form-domain-preview input {border-radius: 8px 0 0 8px;}
 .form-domain-suffix {display: flex; align-items: center; padding: 0 14px; border: 1px solid var(--color-line); border-left: none; border-radius: 0 8px 8px 0; background: var(--color-surface); font-size: 0.85rem; color: var(--color-muted); white-space: nowrap;}
+
+.terms-body {line-height: 1.7; font-size: 0.9rem; color: #334155;}
+.terms-body h2 {font-size: 1.05rem; margin: 32px 0 10px;}
+.terms-body h2:first-child {margin-top: 0;}
+.terms-body p {margin: 0 0 8px;}
+.terms-body ol, .terms-body ul {margin: 0 0 8px; padding-left: 22px;}
+.terms-body ol ol, .terms-body ol ul {margin-top: 6px;}
+.terms-body li {margin-bottom: 6px;}
+
 .signup-success {text-align: center; padding: 40px 0;}
 .signup-success__icon {font-size: 2.5rem; margin-bottom: 16px;}
 
@@ -619,6 +628,9 @@ main {padding-top: var(--header-h);}
 .footer__bottom {display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px; padding-top: 28px;}
 .footer__biz {display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.8rem; color: #64748B;}
 .footer__biz li:not(:last-child)::after {content: '|'; margin-left: 14px; color: #334155;}
+.footer__policy {order: -1; flex: 0 0 100%; display: flex; flex-wrap: wrap; gap: 4px 16px; margin-bottom: 4px;}
+.footer__policy a {font-size: 0.8rem; color: #94A3B8;}
+.footer__policy a:hover {color: #fff;}
 .footer__copy {margin: 0; font-size: 0.8rem; color: #64748B;}
 
 @media (max-width: 720px) {

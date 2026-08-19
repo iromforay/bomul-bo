@@ -25,6 +25,11 @@
                 <li>주소 [주소를 입력하세요]</li>
                 <li>고객센터 [번호를 입력하세요]</li>
             </ul>
+            <nav class="footer__policy" aria-label="정책">
+                <a href="/terms">이용약관</a>
+                <a href="/privacy">개인정보처리방침</a>
+            </nav>
+
             <p class="footer__copy">Copyright &copy; <?= date('Y') ?> 보이는 매물. All rights reserved.</p>
         </div>
 
