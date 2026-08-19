@@ -30,3 +30,17 @@
 
     </div>
 </footer>
+
+<!-- AOS -->
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js?var=<?=FRESH_TIME?>"></script>
+
+<script>
+    AOS.init({
+        duration: 800,
+        easing: 'ease-out-cubic',
+        once: true,
+        offset: 80,
+        delay: 0,
+        anchorPlacement: 'top-bottom'
+    });
+</script>

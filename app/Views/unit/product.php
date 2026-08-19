@@ -13,7 +13,7 @@ $products = $products ?? [];
     <?php if (empty($products)): ?>
         <p class="pricing-empty">현재 신청 가능한 상품이 없습니다.</p>
     <?php endif; ?>
-    <?php foreach ($products as $product): ?>
+    <?php foreach ($products as $index => $product): ?>
         <?php
         $isEvent = ((string) ($product['is_event'] ?? '0')) === '1';
         $price = (int) ($product['price'] ?? 0);
@@ -24,7 +24,7 @@ $products = $products ?? [];
             ? number_format($price) . '원' . ($product['billing_type'] === 'MONTHLY' ? ' / 월' : '')
             : '무료';
         ?>
-        <div class="pricing-card<?= ($isEvent || $hasDiscount) ? ' pricing-card--featured' : '' ?>">
+        <div class="pricing-card<?= ($isEvent || $hasDiscount) ? ' pricing-card--featured' : '' ?>" data-aos="fade-up" data-aos-delay="<?= $index * 100 ?>">
             <?php if ($isEvent): ?>
                 <span class="pricing-card__badge">이벤트</span>
             <?php endif; ?>

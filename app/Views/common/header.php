@@ -3,11 +3,14 @@
 
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<link rel="icon" type="image/png" href="<?=RS_IMG?>/header/favicon.png">
+<link rel="icon" type="image/x-icon" href="<?=RS_IMG?>/header/favicon.ico">
 <style>
 
 </style>
 <link rel="stylesheet" href="<?=RS_CSS?>/common/style.css?var=<?=FRESH_TIME?>" >
+
+<!-- AOS -->
+<link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css?var=<?=FRESH_TIME?>" >
 
 <script src="<?=RS_JS?>/common/index.js?var=<?=FRESH_TIME?>"></script>
 

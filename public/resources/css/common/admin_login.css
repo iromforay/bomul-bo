@@ -21,7 +21,8 @@ body {
 .login-wrap {width:100%; max-width:380px; padding: 24px;}
 
 .login-brand {text-align:center; margin-bottom:20px;}
-.login-brand .mark {display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:6px; background: var(--accent); color:#fff; font-weight:800; font-size:15px; margin-bottom:10px;}
+.login-brand .mark {display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:6px; background: #fff; color:#fff; font-weight:800; font-size:15px; margin-bottom:10px;}
+.login-brand .mark img{width: 100%; height: 100%; object-fit: cover;}
 .login-brand h1 {margin:0; font-size:15px; font-weight:700; color:#fff; letter-spacing:.02em;}
 .login-brand p {margin:4px 0 0; font-size:11.5px; color:#B9C6D3;}
 

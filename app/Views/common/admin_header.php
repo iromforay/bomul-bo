@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
 <meta name="robots" content="noindex, nofollow">
-<link rel="icon" type="image/png" href="<?=RS_IMG?>/header/favicon.png">
+<link rel="icon" type="image/x-icon" href="<?=RS_IMG?>/header/favicon.ico">
 <title><?= isset($common['title']) && $common['title'] !== '' ? htmlspecialchars($common['title'], ENT_QUOTES) . ' :: ' : '' ?>보이는 매물 Admin</title>
 
 <link rel="stylesheet" href="<?= RS_CSS ?>/common/admin.css?var=<?=FRESH_TIME?>">

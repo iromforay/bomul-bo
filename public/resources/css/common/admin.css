@@ -24,6 +24,7 @@ ul {list-style:none; margin:0; padding:0;}
 .util-bar .left span {margin-right:14px; opacity:.85;}
 .util-bar .right span {margin-left:14px; cursor:pointer;}
 .util-bar .right span:hover {color:#fff;}
+.util-bar .right a {margin-left:6px;}
 
 .top-nav {position:fixed; top: var(--bar-h); left:0; right:0; height: var(--topbar-h); background: var(--navy); display:flex; align-items:center; padding:0 14px; gap: 22px; z-index:1001;}
 .top-nav .brand {color:#fff; font-weight:700; font-size:15px; letter-spacing:.02em; margin-right:4px; white-space:nowrap;}

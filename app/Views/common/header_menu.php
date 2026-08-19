@@ -13,8 +13,8 @@
                 <li><a href="/#features">주요 기능</a></li>
                 <li><a href="/#pricing">요금 안내</a></li>
                 <li><a href="/#faq">자주 묻는 질문</a></li>
-                <li><a href="/notice">공지사항</a></li>
-                <li><a href="/qna">QNA</a></li>
+                <!-- <li><a href="/notice">공지사항</a></li> -->
+                <!-- <li><a href="/qna">QNA</a></li> -->
                 <li><a href="/inquiry">상담 신청</a></li>
             </ul>
         </nav>
@@ -56,7 +56,7 @@
         <a href="/service-apply" class="btn btn--primary btn--block">서비스 신청하기</a>
         <a href="/logout" class="btn btn--outline btn--block">로그아웃</a>
     <?php else: ?>
-        <a href="/login" class="btn btn--outline btn--block">로그인</a>
+        <a href="/login" class="btn btn--outline btn--block" style="margin-bottom: 10px;">로그인</a>
         <a href="/signup" class="btn btn--primary btn--block">가입 신청하기</a>
     <?php endif; ?>
 </div>

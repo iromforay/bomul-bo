@@ -4,13 +4,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/x-icon" href="<?=RS_IMG?>/header/favicon.ico">
     <title>관리자 로그인 :: 보이는 매물 Admin</title>
     <link rel="stylesheet" href="<?= RS_CSS ?>/common/admin_login.css?var=<?= FRESH_TIME ?>">
 </head>
 <body>
     <div class="login-wrap">
         <div class="login-brand">
-            <div class="mark">보물</div>
+            <div class="mark">
+                <img src="<?= RS_IMG ?>/header/symbol_logo.png" alt="보이는 매물">
+            </div>
             <h1>보이는 매물</h1>
             <p>ADMIN</p>
         </div>
