@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Service\CustomerService;
+use App\Service\PaymentService;
 use App\Service\ProductService;
 use App\Service\ServiceApplyService;
 
@@ -72,9 +73,8 @@ class ServiceApply extends BaseController
             $profileComplete = true;
         }
 
-        // 희망 도메인은 신청서마다 새로 입력받는다 - 유일성 체크는 ServiceApplyService::apply() 안에서.
-        $applyService = new ServiceApplyService();
-        $applyResult = $applyService->apply([
+        // 희망 도메인은 신청서마다 새로 입력받는다 - 유일성 체크는 ServiceApplyService::validateApplyData() 안에서.
+        $applyData = [
             'customer_no'   => $customer['customer_no'],
             'product_no'    => $this->request->getPost('product_no'),
             'company_name'   => $customer['company_name'],
@@ -88,10 +88,75 @@ class ServiceApply extends BaseController
             'tel'            => $this->request->getPost('tel'),
             'homepage_name'  => $this->request->getPost('homepage_name'),
             'memo'           => $this->request->getPost('memo'),
+        ];
+
+        $applyService = new ServiceApplyService();
+        $validation = $applyService->validateApplyData($applyData);
+        if ($validation['error'] !== null) {
+            return $this->showError($customer, $profileComplete, $validation['error']);
+        }
+
+        $price = (int) ($validation['product']['price'] ?? 0);
+
+        // 0원(무료·이벤트)은 결제 없이 바로 신청서 생성 - 유료는 결제 먼저(#11), 결제 성공 후
+        // getComplete()에서 apply()를 호출해 신청서를 만든다(신청서를 결제 전에 만들지 않음).
+        if ($price <= 0) {
+            $applyResult = $applyService->apply($applyData);
+            if ($applyResult['SUCCESS'] !== 'TRUE') {
+                return $this->showError($customer, $profileComplete, $applyResult['MSG']);
+            }
+
+            $data = [];
+            $data['done'] = true;
+            echo $this->view("default", "service_apply", $data);
+            return;
+        }
+
+        $payData = (new PaymentService())->pay([
+            'amount'    => $price,
+            'orderName' => $validation['product']['product_name'] ?? '서비스 신청',
+            'returnUrl' => SITE . '/service-apply/complete',
+            'context'   => ['apply_data' => $applyData],
         ]);
+        echo $this->view("default", "payment/pay_widget", $payData);
+    }
+
+    // 결제(#11) 완료 후 복귀 지점 - 결제 성공 시에만 신청서(service_apply)를 생성한다.
+    public function getComplete()
+    {
+        $customer = $this->requireLogin();
+        if ($customer === null) {
+            return redirect()->to(SITE . '/login?redirect_url=' . urlencode($this->currentPathWithQuery()));
+        }
+
+        $orderId = (string) $this->request->getGet('order_id');
+        $paymentService = new PaymentService();
+        $order = $paymentService->pullOrder($orderId);
+
+        if ($order === null || !($order['confirm']['success'] ?? false)) {
+            $message = $order['confirm']['result']['message'] ?? "결제가 완료되지 않았습니다. 다시 시도해주세요.";
+            return $this->showError($customer, true, $message);
+        }
+
+        $applyData = $order['context']['apply_data'] ?? [];
+        $applyService = new ServiceApplyService();
+        $applyResult = $applyService->apply($applyData);
 
         if ($applyResult['SUCCESS'] !== 'TRUE') {
-            return $this->showError($customer, $profileComplete, $applyResult['MSG']);
+            // 결제는 이미 성공했는데 신청서 생성이 실패한 케이스 - 자동 환불은 하지 않고 로그만
+            // 남긴다(결제수단 컨텍스트가 이 시점엔 다 사라진 뒤라 여기서 취소 처리하기 애매함).
+            // 관리자가 pg_tid로 토스 콘솔에서 직접 취소 처리해야 한다.
+            log_message('error', 'ServiceApply::getComplete apply() 실패(결제는 성공) customer_no={0} msg={1} order_id={2}', [
+                $customer['customer_no'],
+                $applyResult['MSG'],
+                $orderId,
+            ]);
+            return $this->showError($customer, true, "결제는 완료되었으나 신청 처리 중 오류가 발생했습니다. 고객센터로 문의해주세요.");
+        }
+
+        $applyNo = $applyResult['RECORD']['apply_no'] ?? null;
+        if ($applyNo !== null) {
+            $paymentService->recordPayment((int) $applyNo, (int) $customer['customer_no'], $order['confirm']);
         }
 
         $data = [];

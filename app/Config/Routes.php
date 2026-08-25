@@ -108,8 +108,9 @@ if (bomul_is_ad_host($host)) { //관리자
     $routes->post('login',  'Login::postindex');
     $routes->get('logout',  'Login::getlogout');
 
-    $routes->get('service-apply',  'ServiceApply::getindex');
-    $routes->post('service-apply', 'ServiceApply::postindex');
+    $routes->get('service-apply',          'ServiceApply::getindex');
+    $routes->post('service-apply',         'ServiceApply::postindex');
+    $routes->get('service-apply/complete', 'ServiceApply::getComplete');
 
     $routes->get('mypage',             'MyPage::getindex');
     $routes->get('mypage/extend',      'MyPage::getExtend');
@@ -126,6 +127,15 @@ if (bomul_is_ad_host($host)) { //관리자
 
     $routes->get('notice',             'Notice::getIndex');
     $routes->get('notice/view/(:num)', 'Notice::getView/$1');
+
+    // 결제(#11) 공용 모듈 중앙 콜백 - PaymentService::pay()를 부른 호출자와 무관하게 PG는 항상 여기로 응답
+    $routes->get('pay/success', 'Pay::getSuccess');
+    $routes->get('pay/fail',    'Pay::getFail');
+
+    // 토스페이먼츠 결제 연동(#11) 테스트 전용 - PaymentService 공용 모듈 호출 예시 겸 동작 확인용
+    $routes->get('pay-test',          'PayTest::getIndex');
+    $routes->post('pay-test',         'PayTest::postIndex');
+    $routes->get('pay-test/complete', 'PayTest::getComplete');
 
     $routes->get('terms',   'Terms::getIndex');
     $routes->get('privacy', 'Privacy::getIndex');

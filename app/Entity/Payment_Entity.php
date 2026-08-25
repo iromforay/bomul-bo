@@ -7,22 +7,24 @@ namespace App\Entity;
 // "결제(신청) 이력이 있다"는 판단 기준을 하나로 통일한다.
 class Payment_Entity
 {
-    private $payment_no;
-    private $apply_no;
+    private $payment_no; //결제 시퀀스(PK)
+    private $apply_no; //신청서 번호(FK - service_apply.apply_no)
+    private $customer_no; //고객 번호(FK - customer.customer_no) - 마이페이지 결제내역 조회를 apply_no 조인 없이 바로 하기 위한 비정규화 컬럼
 
-    private $pay_method;
-    private $pg_provider;
-    private $pg_tid;
+    private $pay_method; //결제수단 - CARD/VBANK/TRANSFER/NONE(무료·이벤트)
+    private $pg_provider; //PG사 (예: TOSS)
+    private $pg_tid; //PG 거래ID (토스는 paymentKey)
 
-    private $pay_amount;
-    private $pay_status;
+    private $pay_amount; //결제금액 - 신청 시점 product.price 스냅샷
+    private $pay_status; //결제상태 - READY/PAID/FAILED/CANCELLED/REFUNDED
 
-    private $paid_at;
-    private $cancelled_at;
-    private $fail_reason;
+    private $paid_at; //결제완료일시
+    private $cancelled_at; //취소일시
+    private $fail_reason; //실패사유
+    private $pg_response; //PG사 응답 전문(json_encode) - 감사/디버깅용 원본 보관
 
-    private $created_at;
-    private $updated_at;
+    private $created_at; //생성일시
+    private $updated_at; //수정일시
 
     /**
      * @return mixed
@@ -54,6 +56,22 @@ class Payment_Entity
     public function setApplyNo($apply_no): void
     {
         $this->apply_no = $apply_no;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCustomerNo()
+    {
+        return $this->customer_no;
+    }
+
+    /**
+     * @param mixed $customer_no
+     */
+    public function setCustomerNo($customer_no): void
+    {
+        $this->customer_no = $customer_no;
     }
 
     // CARD / VBANK / TRANSFER / NONE(무료-이벤트)
@@ -185,6 +203,22 @@ class Payment_Entity
     public function setFailReason($fail_reason): void
     {
         $this->fail_reason = $fail_reason;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPgResponse()
+    {
+        return $this->pg_response;
+    }
+
+    /**
+     * @param mixed $pg_response
+     */
+    public function setPgResponse($pg_response): void
+    {
+        $this->pg_response = $pg_response;
     }
 
     /**

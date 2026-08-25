@@ -1,6 +1,6 @@
 # bomul-bo 작업 맵
 
-> 마지막 정리: 2026-08-10
+> 마지막 정리: 2026-08-14
 
 ## 프로젝트 개요
 
@@ -25,7 +25,7 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
 - [x] 8. 서비스 라이브(service_live) 리스트 / 상세 / 기간 연장·축소 / 상태 변경
 - [x] 9. 통합 배치 진입점 `app/batch/batch.php` 신설
 - [x] 10. 운영 DB에 `service_live.suspended_at` 컬럼 반영 
-- [ ] 11. 실결제 연동.
+- [ ] 11. 실결제 연동. — 공용 결제 모듈(PaymentService)과 신규 신청 연동은 완료(#29~31), 연장/부가서비스/자동결제(빌링)는 남음
 - [x] 12. 서비스 리스트(상품) 관리 
 - [x] 13. 웹 서비스 하드코딩을 ad 서비스 정보로 코딩.
 - [x] 14. 약관, 개인정보 처리방침
@@ -56,10 +56,47 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
 - [x] 26. www 상담문의(홈 리드폼 실연동) + 공지사항(목록/상세) — 통합 게시판(#24) board_type=INQUIRY/NOTICE
 - [x] 27. 상담문의 독립 페이지(`/inquiry`) 분리 — 홈 `#inquiry` 섹션 리드폼과 별개로 서비스신청(`/service-apply`)처럼 단독 URL로도 접근 가능
 - [x] 28. 상담문의 폼 AJAX 제출로 전환 
-
+- [x] 29. 결제(#11) 공용 모듈 `PaymentService`/중앙 콜백 `Pay` 컨트롤러 구축 — 토스페이먼츠 결제위젯(SDK v2) 연동, 실결제 테스트(계좌이체) 성공까지 확인
+- [x] 30. `payment` 테이블에 `pg_response`(PG 응답 원문 JSON), `customer_no`(마이페이지 조회용) 컬럼 추가 — 마이그레이션 작성, **운영 DB 반영 필요**
+- [x] 31. 서비스 신규 신청(`ServiceApply`)에 결제 연동 — 0원은 기존처럼 즉시 신청서 생성, 유료는 결제 성공 후에만 신청서 생성하도록 정책 통일
+- [ ] 32. 서비스 연장(`MyPage::getExtendPay`)/부가서비스 결제 연동, 자동결제(빌링) — #11 잔여 작업
+- [x] 33. 네이버 서치어드바이저 사이트 등록 매뉴얼 초안 (`app/html/naver_search_advisor_manual.html`) — 등록 절차만 남기고 정리, 스크린샷+캡션은 다음 단계
+```
+실제 서치어드바이저 진행별 화면 캡쳐후 캡션을 다는 형태로 진행.
+```
 ---
 
 ## 처리내용
+
+### #33 (2026-08-14) — 네이버 서치어드바이저 등록 매뉴얼 초안
+
+`app/html/naver_search_advisor_manual.html` 신규 — 로그인/캡차 구간은 자동화 불가(네이버가 봇으로 판단해 이미지 캡차를 띄움, API도 없음)라 담당자가 직접 화면을 보며 진행하는 절차서. 처음엔 "왜 자동화가 안 되는가/사전 준비물/다수 도메인 체크리스트/FAQ"까지 다 넣었다가, "등록 절차만 필요하다"는 피드백으로 해당 섹션들 전부 제거하고 6단계 절차만 남김.
+
+- 검토 중 하단 각주가 저장소에 없는 `app/naver_login_verify.py`를 참조하고 있던 걸 발견해 해당 각주 통째로 제거(다른 섹션 정리하며 같이 빠짐)
+- 절차만 남기고 보니 "초심자가 이것만 보고 따라할 수 있는가"라는 지적이 나옴 — 텍스트만으로는 메뉴 위치 등 확인 불가라는 게 이유. **다음 단계**: 담당자가 단계별 화면 캡처를 직접 떠서 `<img>`로 넣어두면, 그 이미지를 보고 캡션(설명 문구)을 다는 방식으로 이어가기로 함(아직 이미지 없음)
+
+### #29~31 (2026-08-14) — 결제(#11) 공용 모듈 구축 + 서비스 신규 신청 연동
+
+**#29 공용 결제 모듈**: "어떤 컨트롤러든 결제 버튼 하나로 결제창을 띄우고 싶다"는 요구에서 시작. 여러 번 구조를 갈아엎으며 다음 형태로 확정:
+- [PaymentService.php](app/Service/PaymentService.php) 신규 — `pay()`(주문정보 세션 저장 + 위젯에 넘길 데이터만 반환, echo는 안 함 - 호출자가 `$this->view()`로 직접 렌더링해야 레이아웃을 자유롭게 고를 수 있음), `confirm()`(토스 승인 API 호출), `peekOrder()`/`pullOrder()`(세션 조회), `recordPayment()`(결제건 DB 기록)
+- [Controllers/Pay.php](app/Controllers/Pay.php) 신규 — `getSuccess()`/`getFail()`. PG 응답은 호출자와 무관하게 항상 여기로만 오고, 승인 처리 후 호출자가 `pay()` 시점에 지정했던 `return_url`로 결과(`order_id`, `pay_result`)를 붙여 돌려보낸다. 호출자↔중앙콜백 매개는 별도 테이블 없이 `orderId` 키 세션으로 최소 구현(장바구니처럼 세션을 오래 끄는 흐름이면 테이블로 바꿔야 할 수 있음)
+- [payment/pay_widget.php](app/Views/payment/pay_widget.php) 신규 — 결제위젯 콘텐츠 조각. 사이트 기본 레이아웃(`$this->view("default", ...)`)에 얹혀서 렌더링되므로 PC/모바일 분기 등도 호출자 쪽에서 자유롭게 가능
+- 시행착오: 처음엔 새 창(팝업)으로 띄우려다가, 모바일에서 계좌이체/간편결제가 은행 앱으로 튀어나갔다 돌아오는 구조라 팝업이 깨지기 쉽고, 하이브리드 앱 WebView는 `window.open()` 자체가 잘 안 먹는다는 이유로 **최상위 페이지 리다이렉트 방식으로 확정**(토스 SDK 기본 설계와도 일치)
+- 실제 토스 테스트 키(`.env`의 `clientKey`/`secretKey`, `test_gck_docs_...` — 결제위젯 전용 키)로 계좌이체 결제까지 실서버에서 성공 확인(`status: DONE`)
+- 실서버 검증 중 www 전체가 `Call to undefined function bomul_is_ad_host()`로 죽는 사고 발견 → `app/Config/Boot/common.php` 등 부트 파일이 실서버에 최신 상태로 없었던 배포 동기화 문제였음(#22 후속과 같은 유형). 파일 재업로드로 해결 — 이 세션에서 건드린 코드와는 무관한 기존 배포 이슈였음
+
+**#30 payment 테이블 컬럼 추가**: [2026_08_14_payment_pg_response.sql](app/sql/2026_08_14_payment_pg_response.sql), [2026_08_14_payment_customer_no.sql](app/sql/2026_08_14_payment_customer_no.sql) 신규. **운영 DB에 수동 반영 필요**(둘 다 아직 미반영 상태일 수 있음, 확인 필요)
+- `pg_response TEXT` — PG 응답 전문을 `json_encode()`해서 그대로 보관(감사/디버깅용)
+- `customer_no INT` + 인덱스 — 마이페이지 "내 결제 리스트"를 `service_apply` 조인 없이 바로 조회할 수 있도록 비정규화
+- [Payment_Entity.php](app/Entity/Payment_Entity.php) 두 필드 추가, [PaymentModel::sql_save()](app/Models/PaymentModel.php)도 반영. 겸사겸사 엔티티엔 있었지만 저장 SQL에서 빠져있던 `fail_reason`도 같이 저장하도록 수정(기존 버그)
+- 이 세션에서 "Entity의 private 필드마다 한 줄 주석으로 용도를 달 것"이라는 작업 규칙이 새로 생겨 `Payment_Entity.php` 전체 필드에 주석 반영(메모리에도 저장)
+
+**#31 서비스 신규 신청 결제 연동**: 기존엔 가격 무관하게 결제 없이 바로 `service_apply`를 만들었는데, 연장(#21)과 정책을 통일 — "결제 먼저, 성공해야 신청서 생성"으로 변경.
+- [ServiceApplyService::validateApplyData()](app/Service/ServiceApplyService.php) 신규 — `apply()`의 검증 로직(도메인 형식/중복, 상품 유효성, 이벤트 중복신청)을 분리. `apply()` 자신도 저장 직전 이 메서드로 재검증(결제 대기 중 다른 신청이 도메인을 먼저 가져갔을 가능성 방어)
+- [ServiceApplyService::recordFreePayment()](app/Service/ServiceApplyService.php) — `customer_no` 인자 추가(#30의 비정규화 컬럼 채우기 위해), `apply()`/`applyRenew()` 양쪽 호출부 반영
+- [Controllers/ServiceApply.php](app/Controllers/ServiceApply.php) — `postindex()`가 검증 후 0원이면 기존처럼 즉시 `apply()`, 유료면 신청 폼 입력값 전체를 `PaymentService::pay()`의 `context`에 담아 결제위젯으로 이동(신청서는 아직 안 만듦). `getComplete()`(`GET /service-apply/complete`) 신규 — 결제 성공 확인 후에야 `apply()` 호출, 성공 시 `PaymentService::recordPayment()`로 결제 기록. 결제는 성공했는데 신청서 생성이 실패하는 예외 케이스는 자동 환불 없이 로그만 남기고 고객센터 안내(결제 컨텍스트가 이 시점엔 사라진 뒤라 여기서 취소 처리하기 애매함 — 필요시 관리자가 `pg_tid`로 토스 콘솔에서 직접 취소)
+- [Routes.php](app/Config/Routes.php) — `GET service-apply/complete`, `GET/POST pay/success`,`pay/fail`, `GET/POST pay-test*` 라우트 추가
+- **다음 단계**: `MyPage::getExtendPay()`(연장 결제 스텁)를 실제 `PaymentService`로 교체, 부가서비스 결제 연동, 자동결제(빌링) 착수. 실서버에서 신규신청 유료 상품으로 결제→완료까지 전체 왕복은 아직 팀장님 확인 전(리뷰 요청함)
 
 ### #28 (2026-08-11) — 상담문의 폼 AJAX 제출로 전환
 

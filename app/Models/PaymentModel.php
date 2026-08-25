@@ -20,18 +20,21 @@ class PaymentModel extends CI_Model
         };
 
         $osql = " INSERT INTO `$this->table` SET
-                        `apply_no`=%s, `pay_method`=%s, `pg_provider`=%s, `pg_tid`=%s,
-                        `pay_amount`=%s, `pay_status`=%s, `paid_at`=%s
+                        `apply_no`=%s, `customer_no`=%s, `pay_method`=%s, `pg_provider`=%s, `pg_tid`=%s,
+                        `pay_amount`=%s, `pay_status`=%s, `paid_at`=%s, `fail_reason`=%s, `pg_response`=%s
                 ";
         $sql = sprintf(
             $osql,
             $this->db->escape((int) $entity->getApplyNo()),
+            $esc($entity->getCustomerNo()),
             $this->db->escape($entity->getPayMethod()),
             $esc($entity->getPgProvider()),
             $esc($entity->getPgTid()),
             $this->db->escape((int) $entity->getPayAmount()),
             $this->db->escape($entity->getPayStatus()),
-            $esc($entity->getPaidAt())
+            $esc($entity->getPaidAt()),
+            $esc($entity->getFailReason()),
+            $esc($entity->getPgResponse())
         );
         return $this->safeExecQuery($sql);
     }
