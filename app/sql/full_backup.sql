@@ -46,6 +46,28 @@ insert  into `batch_schedule`(`id`,`job_type`,`run_date`,`fid`,`status`,`sent_at
 (7,'analytics_daily','2026-08-08','foray','sent','2026-08-09 02:00:01',NULL,'2026-08-09 02:00:01'),
 (8,'analytics_daily','2026-08-09','foray','sent','2026-08-10 02:00:01',NULL,'2026-08-10 02:00:01');
 
+/*Table structure for table `bo_usage_daily` */
+
+DROP TABLE IF EXISTS `bo_usage_daily`;
+
+CREATE TABLE `bo_usage_daily` (
+  `bo_usage_daily_no` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `stat_date` date NOT NULL COMMENT '집계 대상일(전일)',
+  `live_no` bigint(20) unsigned NOT NULL COMMENT '어느 라이브 서비스(=테넌트)인지 (service_live.live_no)',
+  `customer_no` int(10) unsigned NOT NULL COMMENT '고객 IDX - live_no 조인 없이 바로 조회(payment 패턴과 동일 비정규화)',
+  `fid` varchar(50) NOT NULL COMMENT '테넌트 식별자(=접속한 DB명)',
+  `login_yn` char(1) NOT NULL DEFAULT 'N' COMMENT '그 날짜에 bo 로그인 여부(중앙 login_session 기준)',
+  `setup_touch_yn` char(1) NOT NULL DEFAULT 'N' COMMENT '그 날짜에 기본세팅(basic/menu/img/add_menu) 테이블을 손댔는지',
+  `content_add_count` int(10) unsigned NOT NULL DEFAULT 0 COMMENT '그 날짜에 새로 등록된 컨텐츠(property+note+post) 건수',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`bo_usage_daily_no`),
+  UNIQUE KEY `uk_stat_date_live_no` (`stat_date`,`live_no`),
+  KEY `idx_customer_no` (`customer_no`),
+  KEY `idx_stat_date` (`stat_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='#37 테넌트(bo) 일별 사용 현황 - bomul-bo 배치가 직접 스캔한 전일치 로그';
+
+/*Data for the table `bo_usage_daily` */
+
 /*Table structure for table `board` */
 
 DROP TABLE IF EXISTS `board`;
@@ -129,7 +151,7 @@ CREATE TABLE `login_session` (
   `status` varchar(20) DEFAULT NULL,
   `write_date` datetime DEFAULT NULL,
   PRIMARY KEY (`login_session_no`)
-) ENGINE=InnoDB AUTO_INCREMENT=117 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=118 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 /*Data for the table `login_session` */
 
@@ -249,7 +271,8 @@ insert  into `login_session`(`login_session_no`,`session_id`,`data`,`fid`,`statu
 (113,'d652ec865d87bddec3c8fbcb46677de9776b366f951052dc0c51535e75934f74','a:14:{s:9:\"member_no\";s:1:\"3\";s:7:\"user_id\";s:9:\"Xodid9811\";s:8:\"user_pwd\";s:64:\"d3d31557a6ab23c02cfcfdc7038a2bf1c7565e359839e9d2ac4112e662aa6b85\";s:3:\"fid\";s:4:\"mapo\";s:7:\"service\";N;s:5:\"fname\";N;s:4:\"ftel\";N;s:9:\"faddress1\";N;s:9:\"faddress2\";N;s:10:\"regist_num\";N;s:7:\"mb_name\";N;s:5:\"mb_id\";N;s:5:\"mb_hp\";N;s:8:\"mb_email\";N;}','mapo',NULL,'2026-08-22 08:26:22'),
 (114,'ed5b9634588efaf047c961af0096f5add69c4ab524cf28614dabefeca970331d','a:14:{s:9:\"member_no\";s:1:\"1\";s:7:\"user_id\";s:5:\"foray\";s:8:\"user_pwd\";s:64:\"fb90e380976a9d5e84d41bf80eaced96d81026c6f5a4fe43b9c70a26ebbdaf78\";s:3:\"fid\";s:5:\"foray\";s:7:\"service\";s:9:\"OPERATING\";s:5:\"fname\";s:5:\"foray\";s:4:\"ftel\";N;s:9:\"faddress1\";N;s:9:\"faddress2\";N;s:10:\"regist_num\";N;s:7:\"mb_name\";N;s:5:\"mb_id\";s:5:\"foray\";s:5:\"mb_hp\";N;s:8:\"mb_email\";N;}','foray',NULL,'2026-08-26 00:59:58'),
 (115,'c0d618f8a3eeda198969acb6513dfd8625a060ea3fdd350574edfb7ed490039e','a:14:{s:9:\"member_no\";s:1:\"1\";s:7:\"user_id\";s:5:\"foray\";s:8:\"user_pwd\";s:64:\"fb90e380976a9d5e84d41bf80eaced96d81026c6f5a4fe43b9c70a26ebbdaf78\";s:3:\"fid\";s:5:\"foray\";s:7:\"service\";s:9:\"OPERATING\";s:5:\"fname\";s:5:\"foray\";s:4:\"ftel\";N;s:9:\"faddress1\";N;s:9:\"faddress2\";N;s:10:\"regist_num\";N;s:7:\"mb_name\";N;s:5:\"mb_id\";s:5:\"foray\";s:5:\"mb_hp\";N;s:8:\"mb_email\";N;}','foray',NULL,'2026-08-26 02:36:33'),
-(116,'7e3555caf1b49e9cec7fbdaa499b66f4908dd1d4972187c2c38658f6d5988fc8','a:14:{s:9:\"member_no\";s:1:\"1\";s:7:\"user_id\";s:5:\"foray\";s:8:\"user_pwd\";s:64:\"fb90e380976a9d5e84d41bf80eaced96d81026c6f5a4fe43b9c70a26ebbdaf78\";s:3:\"fid\";s:5:\"foray\";s:7:\"service\";s:9:\"OPERATING\";s:5:\"fname\";s:5:\"foray\";s:4:\"ftel\";N;s:9:\"faddress1\";N;s:9:\"faddress2\";N;s:10:\"regist_num\";N;s:7:\"mb_name\";N;s:5:\"mb_id\";s:5:\"foray\";s:5:\"mb_hp\";N;s:8:\"mb_email\";N;}','foray',NULL,'2026-08-26 04:35:20');
+(116,'7e3555caf1b49e9cec7fbdaa499b66f4908dd1d4972187c2c38658f6d5988fc8','a:14:{s:9:\"member_no\";s:1:\"1\";s:7:\"user_id\";s:5:\"foray\";s:8:\"user_pwd\";s:64:\"fb90e380976a9d5e84d41bf80eaced96d81026c6f5a4fe43b9c70a26ebbdaf78\";s:3:\"fid\";s:5:\"foray\";s:7:\"service\";s:9:\"OPERATING\";s:5:\"fname\";s:5:\"foray\";s:4:\"ftel\";N;s:9:\"faddress1\";N;s:9:\"faddress2\";N;s:10:\"regist_num\";N;s:7:\"mb_name\";N;s:5:\"mb_id\";s:5:\"foray\";s:5:\"mb_hp\";N;s:8:\"mb_email\";N;}','foray',NULL,'2026-08-26 04:35:20'),
+(117,'42a98f1e23d4cf3254e12c6b203c49e54babb6d5530d39b094b95737ceeac6eb','a:14:{s:9:\"member_no\";s:1:\"2\";s:7:\"user_id\";s:4:\"demo\";s:8:\"user_pwd\";s:64:\"29838e96a4a6f7f053937dc30924bd2c6b9ef8d68e1a2542a6afaf7ebed1a1f4\";s:3:\"fid\";s:5:\"demo1\";s:7:\"service\";s:9:\"OPERATING\";s:5:\"fname\";N;s:4:\"ftel\";N;s:9:\"faddress1\";N;s:9:\"faddress2\";N;s:10:\"regist_num\";N;s:7:\"mb_name\";N;s:5:\"mb_id\";N;s:5:\"mb_hp\";N;s:8:\"mb_email\";N;}','demo1',NULL,'2026-08-27 07:19:17');
 
 /*Table structure for table `manager` */
 
@@ -299,9 +322,9 @@ CREATE TABLE `member` (
 
 insert  into `member`(`member_no`,`user_id`,`user_pwd`,`fid`,`service`,`fname`,`ftel`,`faddress1`,`faddress2`,`regist_num`,`mb_name`,`mb_id`,`mb_hp`,`mb_email`) values 
 (1,'foray','fb90e380976a9d5e84d41bf80eaced96d81026c6f5a4fe43b9c70a26ebbdaf78','foray','OPERATING','foray',NULL,NULL,NULL,NULL,NULL,'foray',NULL,NULL),
-(2,'demo','29838e96a4a6f7f053937dc30924bd2c6b9ef8d68e1a2542a6afaf7ebed1a1f4','demo1','ALL_CLOSED',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(2,'demo','29838e96a4a6f7f053937dc30924bd2c6b9ef8d68e1a2542a6afaf7ebed1a1f4','demo1','OPERATING',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (3,'Xodid9811','d3d31557a6ab23c02cfcfdc7038a2bf1c7565e359839e9d2ac4112e662aa6b85','mapo','ALL_CLOSED',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(4,'ljh','17fa2c7ca93fcdc0fd57ef7ecd47d8a503e1365377a529545324e4b9e1c1a23c','ljh',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+(4,'ljh','17fa2c7ca93fcdc0fd57ef7ecd47d8a503e1365377a529545324e4b9e1c1a23c','ljh','OPERATING',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 
 /*Table structure for table `payment` */
 
@@ -388,7 +411,7 @@ CREATE TABLE `queue` (
   PRIMARY KEY (`queue_no`),
   KEY `idx_status` (`status`),
   KEY `idx_server` (`server_no`,`status`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='승인된 서비스신청을 운영서버로 push하는 중앙 발송 큐 (1회성 이벤트, bomul-api의 batch_schedule과 별개)';
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='승인된 서비스신청을 운영서버로 push하는 중앙 발송 큐 (1회성 이벤트, bomul-api의 batch_schedule과 별개)';
 
 /*Data for the table `queue` */
 
@@ -396,7 +419,9 @@ insert  into `queue`(`queue_no`,`live_no`,`server_no`,`fid`,`action`,`payload`,`
 (1,3,1,'demo1','new','{\"fid\":\"demo1\",\"license_key\":\"1e38c91b53f293c5c8c7e2a49d642ea4\",\"product_code\":\"1month\",\"company_name\":\"데모공인중개사사무소\",\"ceo_name\":\"test\",\"biz_no\":\"123-45-67890\",\"license_no\":\"11110-2024-00099\",\"customer_id\":\"demo\",\"customer_pw\":\"29838e96a4a6f7f053937dc30924bd2c6b9ef8d68e1a2542a6afaf7ebed1a1f4\"}','FAILED','2026-08-11 02:10:01',NULL,'member 등록 실패 - user_id 중복(demo)','2026-08-11 02:09:48','2026-08-11 03:00:02'),
 (2,4,1,'mapo','new','{\"fid\":\"mapo\",\"license_key\":\"d90bbba8cbd80b7e65e5686b5047428f\",\"product_code\":\"2month\",\"company_name\":\"마포공인중개사사무소\",\"ceo_name\":\"최언화\",\"biz_no\":\"2826633332\",\"license_no\":\"7645677827\",\"customer_id\":\"Xodid9811\",\"customer_pw\":\"d3d31557a6ab23c02cfcfdc7038a2bf1c7565e359839e9d2ac4112e662aa6b85\"}','DONE','2026-08-12 07:35:02','2026-08-12 07:36:02',NULL,'2026-08-12 07:34:45','2026-08-12 07:36:02'),
 (3,4,1,'mapo','status','{\"fid\":\"mapo\",\"status\":\"ALL_CLOSED\"}','DONE','2026-08-22 08:28:01','2026-08-22 08:29:01',NULL,'2026-08-22 08:27:12','2026-08-22 08:29:01'),
-(4,5,1,'ljh','new','{\"fid\":\"ljh\",\"license_key\":\"fc01757abdc8b5ef15ac129af720a5f9\",\"product_code\":\"2month\",\"company_name\":\"이정희\",\"ceo_name\":\"이정희\",\"biz_no\":\"11111111111111\",\"license_no\":\"111111111111111\",\"customer_id\":\"ljh\",\"customer_pw\":\"17fa2c7ca93fcdc0fd57ef7ecd47d8a503e1365377a529545324e4b9e1c1a23c\"}','DONE','2026-08-26 05:23:02','2026-08-26 05:24:02',NULL,'2026-08-26 05:22:55','2026-08-26 05:24:02');
+(4,5,1,'ljh','new','{\"fid\":\"ljh\",\"license_key\":\"fc01757abdc8b5ef15ac129af720a5f9\",\"product_code\":\"2month\",\"company_name\":\"이정희\",\"ceo_name\":\"이정희\",\"biz_no\":\"11111111111111\",\"license_no\":\"111111111111111\",\"customer_id\":\"ljh\",\"customer_pw\":\"17fa2c7ca93fcdc0fd57ef7ecd47d8a503e1365377a529545324e4b9e1c1a23c\"}','DONE','2026-08-26 05:23:02','2026-08-26 05:24:02',NULL,'2026-08-26 05:22:55','2026-08-26 05:24:02'),
+(5,3,1,'demo1','extend','{\"fid\":\"demo1\",\"expire_date\":\"2026-12-31\",\"status\":\"OPERATING\"}','FAILED','2026-08-27 07:09:02',NULL,'member 등록 실패 - payload에 customer_id/customer_pw가 없습니다','2026-08-27 07:08:48','2026-08-27 07:10:01'),
+(6,3,1,'demo1','status','{\"fid\":\"demo1\",\"status\":\"OPERATING\"}','DONE','2026-08-27 07:12:01','2026-08-27 07:13:02',NULL,'2026-08-27 07:11:31','2026-08-27 07:13:02');
 
 /*Table structure for table `server_list` */
 
@@ -509,7 +534,7 @@ CREATE TABLE `service_live` (
 /*Data for the table `service_live` */
 
 insert  into `service_live`(`live_no`,`customer_no`,`apply_no`,`server_no`,`fid`,`license_key`,`status`,`install_status`,`install_requested_at`,`installed_at`,`install_error`,`start_date`,`expire_date`,`created_at`,`suspended_at`,`updated_at`) values 
-(3,2,1,1,'demo1','1e38c91b53f293c5c8c7e2a49d642ea4','ACTIVE','DONE','2026-08-11 02:08:52',NULL,'member 등록 실패 - user_id 중복(demo)','2026-08-11','2026-09-10','2026-08-11 02:08:52',NULL,'2026-08-11 05:53:01'),
+(3,2,1,1,'demo1','1e38c91b53f293c5c8c7e2a49d642ea4','ACTIVE','DONE','2026-08-11 02:08:52',NULL,'member 등록 실패 - user_id 중복(demo)','2026-08-11','2026-12-31','2026-08-11 02:08:52',NULL,'2026-08-27 07:08:48'),
 (4,4,8,1,'mapo','d90bbba8cbd80b7e65e5686b5047428f','TERMINATED','DONE','2026-08-12 07:34:45','2026-08-12 07:36:02',NULL,'2026-08-12','2026-10-11','2026-08-12 07:34:45',NULL,'2026-08-22 08:27:12'),
 (5,5,9,1,'ljh','fc01757abdc8b5ef15ac129af720a5f9','ACTIVE','DONE','2026-08-26 05:22:55','2026-08-26 05:24:02',NULL,'2026-08-26','2026-10-25','2026-08-26 05:22:55',NULL,'2026-08-26 05:24:02');
 
@@ -531,7 +556,7 @@ CREATE TABLE `setting_queue` (
   PRIMARY KEY (`setting_no`),
   KEY `idx_status` (`status`),
   KEY `idx_pending_callback` (`status`,`callback_sent_at`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='운영서버 로컬 - receiver가 push 수신 적재, 로컬 cron이 처리, 완료되면 콜백 감시 대상';
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci COMMENT='운영서버 로컬 - receiver가 push 수신 적재, 로컬 cron이 처리, 완료되면 콜백 감시 대상';
 
 /*Data for the table `setting_queue` */
 
@@ -539,7 +564,9 @@ insert  into `setting_queue`(`setting_no`,`queue_no`,`fid`,`action`,`payload`,`s
 (1,1,'demo1','new','{\"fid\":\"demo1\",\"license_key\":\"1e38c91b53f293c5c8c7e2a49d642ea4\",\"product_code\":\"1month\",\"company_name\":\"데모공인중개사사무소\",\"ceo_name\":\"test\",\"biz_no\":\"123-45-67890\",\"license_no\":\"11110-2024-00099\",\"customer_id\":\"demo\",\"customer_pw\":\"29838e96a4a6f7f053937dc30924bd2c6b9ef8d68e1a2542a6afaf7ebed1a1f4\",\"queue_no\":1,\"action\":\"new\"}','FAILED','member 등록 실패 - user_id 중복(demo)','2026-08-11 03:00:02','2026-08-11 02:10:01','2026-08-11 03:00:02'),
 (2,2,'mapo','new','{\"fid\":\"mapo\",\"license_key\":\"d90bbba8cbd80b7e65e5686b5047428f\",\"product_code\":\"2month\",\"company_name\":\"마포공인중개사사무소\",\"ceo_name\":\"최언화\",\"biz_no\":\"2826633332\",\"license_no\":\"7645677827\",\"customer_id\":\"Xodid9811\",\"customer_pw\":\"d3d31557a6ab23c02cfcfdc7038a2bf1c7565e359839e9d2ac4112e662aa6b85\",\"queue_no\":2,\"action\":\"new\"}','DONE','설치 완료(mapo) / member 등록 완료','2026-08-12 07:36:02','2026-08-12 07:35:02','2026-08-12 07:36:02'),
 (3,3,'mapo','status','{\"fid\":\"mapo\",\"status\":\"ALL_CLOSED\",\"queue_no\":3,\"action\":\"status\"}','DONE','member.service=ALL_CLOSED 변경 완료(mapo)','2026-08-22 08:29:01','2026-08-22 08:28:01','2026-08-22 08:29:01'),
-(4,4,'ljh','new','{\"fid\":\"ljh\",\"license_key\":\"fc01757abdc8b5ef15ac129af720a5f9\",\"product_code\":\"2month\",\"company_name\":\"이정희\",\"ceo_name\":\"이정희\",\"biz_no\":\"11111111111111\",\"license_no\":\"111111111111111\",\"customer_id\":\"ljh\",\"customer_pw\":\"17fa2c7ca93fcdc0fd57ef7ecd47d8a503e1365377a529545324e4b9e1c1a23c\",\"queue_no\":4,\"action\":\"new\"}','DONE','설치 완료(ljh) / member 등록 완료','2026-08-26 05:24:02','2026-08-26 05:23:02','2026-08-26 05:24:02');
+(4,4,'ljh','new','{\"fid\":\"ljh\",\"license_key\":\"fc01757abdc8b5ef15ac129af720a5f9\",\"product_code\":\"2month\",\"company_name\":\"이정희\",\"ceo_name\":\"이정희\",\"biz_no\":\"11111111111111\",\"license_no\":\"111111111111111\",\"customer_id\":\"ljh\",\"customer_pw\":\"17fa2c7ca93fcdc0fd57ef7ecd47d8a503e1365377a529545324e4b9e1c1a23c\",\"queue_no\":4,\"action\":\"new\"}','DONE','설치 완료(ljh) / member 등록 완료','2026-08-26 05:24:02','2026-08-26 05:23:02','2026-08-26 05:24:02'),
+(5,5,'demo1','extend','{\"fid\":\"demo1\",\"expire_date\":\"2026-12-31\",\"status\":\"OPERATING\",\"queue_no\":5,\"action\":\"extend\"}','FAILED','member 등록 실패 - payload에 customer_id/customer_pw가 없습니다','2026-08-27 07:10:01','2026-08-27 07:09:02','2026-08-27 07:10:01'),
+(6,6,'demo1','status','{\"fid\":\"demo1\",\"status\":\"OPERATING\",\"queue_no\":6,\"action\":\"status\"}','DONE','member.service=OPERATING 변경 완료(demo1)','2026-08-27 07:13:02','2026-08-27 07:12:01','2026-08-27 07:13:02');
 
 /*Table structure for table `visit_conversion` */
 
@@ -577,9 +604,17 @@ CREATE TABLE `visit_log` (
   KEY `idx_visitor_token` (`visitor_token`),
   KEY `idx_created_at` (`created_at`),
   KEY `idx_landing_keyword` (`is_landing`,`search_keyword`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='www 방문 로그 - 검색어/유입경로 집계용';
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='www 방문 로그 - 검색어/유입경로 집계용';
 
 /*Data for the table `visit_log` */
+
+insert  into `visit_log`(`visit_log_no`,`visitor_token`,`page_path`,`referrer_host`,`search_keyword`,`utm_source`,`utm_medium`,`utm_campaign`,`device_type`,`is_landing`,`created_at`) values 
+(1,'b184cc18e7f8ad89de67c4cc50e50d99','/',NULL,NULL,NULL,NULL,NULL,'PC','Y','2026-08-27 05:05:55'),
+(2,'b184cc18e7f8ad89de67c4cc50e50d99','/',NULL,NULL,NULL,NULL,NULL,'PC','N','2026-08-27 05:06:04'),
+(3,'b184cc18e7f8ad89de67c4cc50e50d99','/',NULL,NULL,NULL,NULL,NULL,'PC','N','2026-08-27 07:02:37'),
+(4,'b184cc18e7f8ad89de67c4cc50e50d99','/',NULL,NULL,NULL,NULL,NULL,'PC','N','2026-08-27 07:02:43'),
+(5,'b184cc18e7f8ad89de67c4cc50e50d99','/',NULL,NULL,NULL,NULL,NULL,'PC','N','2026-08-27 07:02:45'),
+(6,'b184cc18e7f8ad89de67c4cc50e50d99','/',NULL,NULL,NULL,NULL,NULL,'PC','N','2026-08-27 07:03:09');
 
 /*Table structure for table `visit_stat_daily` */
 
