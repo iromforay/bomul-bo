@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\VisitConversion_Entity;
 use App\Entity\VisitLog_Entity;
+use App\Entity\VisitStatDaily_Entity;
 
 // #36 방문자 집계(검색어)/가입 전환 - app/sql/2026_08_27_visit_log.sql 세 테이블을 다룬다.
 // 쿠키(vtok/vses) 읽기·쓰기는 Controller 책임(Response 객체가 있어야 함) - 여기는 순수 로직 + DB 저장만.
@@ -24,12 +25,14 @@ class VisitService extends CI_Service
 
     private $logModel;
     private $conversionModel;
+    private $statModel;
 
     public function __construct()
     {
         parent::__construct();
         $this->logModel = model('App\Models\VisitLogModel', true, $this->db);
         $this->conversionModel = model('App\Models\VisitConversionModel', true, $this->db);
+        $this->statModel = model('App\Models\VisitStatDailyModel', true, $this->db);
     }
 
     // 방문자 식별 토큰 신규 발급 - 개인정보 아님(서버가 만든 랜덤값일 뿐 어떤 개인정보와도 매핑 안 됨)
@@ -124,5 +127,28 @@ class VisitService extends CI_Service
         $entity->setCustomerNo($customerNo);
 
         $this->conversionModel->sql_save($entity);
+    }
+
+    // 배치(visit_stat_aggregate.php) 전용 - $stat_date(YYYY-MM-DD) 하루치를 검색어/유입경로별로
+    // 집계해서 visit_stat_daily에 UPSERT. 재실행해도 안전(멱등) - 같은 날짜를 다시 돌리면 값만 덮어씀.
+    // 반환값: [처리한 그룹 수, 실패한 그룹 수] - 배치가 로그 남길 때 사용.
+    public function aggregateDaily(string $stat_date): array
+    {
+        $rows = $this->logModel->get_daily_keyword_stats($stat_date);
+
+        $done = 0;
+        $failed = 0;
+        foreach ($rows as $row) {
+            $entity = new VisitStatDaily_Entity();
+            $entity->setStatDate($stat_date);
+            $entity->setSearchKeyword($row['search_keyword']);
+            $entity->setReferrerHost($row['referrer_host']);
+            $entity->setVisitCount($row['visit_count']);
+            $entity->setSignupCount($row['signup_count']);
+
+            $this->statModel->sql_upsert($entity) ? $done++ : $failed++;
+        }
+
+        return [$done, $failed];
     }
 }
