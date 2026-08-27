@@ -6,6 +6,8 @@
         <p class="hero__desc" data-aos="fade-up" data-aos-delay="200">보이는 매물은 공인중개사무소 전용 홈페이지 제작·관리 서비스입니다.<br>매물 등록부터 고객 상담까지, 필요한 기능을 한 곳에서 관리하세요.</p>
         <div class="hero__actions" data-aos="fade-up" data-aos-delay="300">
             <a href="/signup" class="btn btn--primary">가입 신청하기</a>
+            <a href="https://demo1.bomul.ai.kr" target="_blank" rel="noopener" class="btn btn--outline">사용자 체험 (매물 홈페이지)</a>
+            <button type="button" class="btn btn--outline js-bo-session-login">관리자 체험 (매물 관리자 화면)</button>
             <a href="#features" class="btn btn--outline">주요 기능 보기</a>
         </div>
     </div>
@@ -299,3 +301,10 @@
 </section>
 
 <script src="<?= RS_JS ?>/common/inquiry.js?var=<?= FRESH_TIME ?>"></script>
+<script>
+    window.BOMUL_SESSION_LOGIN_CONFIG = {
+        sessionUrl: '/demo/sessionLogin',
+        boLoginUrl: '<?= BO_SITE ?>/session_login'
+    };
+</script>
+<script src="<?= RS_JS ?>/common/bo_session_login.js?var=<?= FRESH_TIME ?>"></script>

@@ -141,6 +141,9 @@ if (bomul_is_ad_host($host)) { //관리자
     $routes->get('terms',   'Terms::getIndex');
     $routes->get('privacy', 'Privacy::getIndex');
 
+    // #39 홈 "관리자 체험" 데모 - 로그인 없이 데모 테넌트 bo 세션 발급
+    $routes->get('demo/sessionLogin', 'Demo::getSessionLogin');
+
     // 방문자 집계(#36) 수집 API - 공통 JS(track.js)가 페이지 로드마다 호출
     $routes->post('track/visit', 'Track::postCollect');
 }

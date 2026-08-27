@@ -91,6 +91,14 @@ class ServiceLiveModel extends CI_Model
         return $rows[0] ?? null;
     }
 
+    // #39 홈 "관리자 체험" 데모 - fid(서브도메인)로 역조회해서 customer_no를 얻을 때 사용. fid는 유니크 가정.
+    public function findByFid($fid)
+    {
+        $sql = "SELECT * FROM `$this->table` WHERE `fid` = " . $this->db->escape($fid) . " LIMIT 1";
+        $rows = $this->getExecQuery($sql);
+        return $rows[0] ?? null;
+    }
+
     // 마이페이지(#16) "내 서비스 현황" - 상품/서비스가 여러 개로 늘어나기 전까지는 고객당 가장 최근
     // service_live 1건만 "현재 서비스"로 보여준다(다중 서비스 지원은 추후 과제).
     public function getCurrentByCustomerNo($customer_no)

@@ -1,10 +1,11 @@
-// #35 마이페이지 "매물 관리자 바로가기" 버튼 - 본인 세션으로 session_token을 생성한 뒤
-// bo.bomul.ai.kr/session_login으로 새 탭에서 연다. customer_session_login.js(어드민 고객목록)와
-// 같은 패턴이지만 customer_no를 URL에 안 실음(본인 것만 되도록 서버가 세션에서 판단).
+// bo.bomul.ai.kr session_login 공통 트리거 - "매물 관리자 바로가기"(#35, 마이페이지)와
+// "관리자 체험"(#39, 홈 데모) 둘 다 이 스크립트 하나를 공유한다. 어느 세션(본인/데모)의
+// session_token을 만들지는 cfg.sessionUrl이 가리키는 서버쪽 엔드포인트가 결정하고,
+// 이 스크립트는 그 결과로 새 탭을 여는 것만 담당(customer_session_login.js와 같은 패턴).
 (function () {
     var cfg = window.BOMUL_SESSION_LOGIN_CONFIG || {};
 
-    document.querySelectorAll('.js-mypage-session-login').forEach(function (btn) {
+    document.querySelectorAll('.js-bo-session-login').forEach(function (btn) {
         btn.addEventListener('click', function () {
             if (!cfg.sessionUrl || !cfg.boLoginUrl) {
                 return;
