@@ -63,12 +63,12 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
 - [x] 33. 네이버 서치어드바이저 사이트 등록 매뉴얼 초안 (`app/html/naver_search_advisor_manual.html`) — 등록 절차만 남기고 정리, 스크린샷+캡션은 다음 단계
 - [x] 34. 약관,개인정보처리방침( link - 14)
 - [ ] 35. mypage 에서 bo.bomul.ai.kr 로 연결포인트 (연결포인트가 없다. 즉 중개사가 bo.bomul.ai.kr을 알 방법이 없음)
-- [ ] 36. 방문자 집계 (검색어), 가입자 , 검색어 대비 가입자 등
+- [x] 36. 방문자 집계 (검색어), 가입자 , 검색어 대비 가입자 등 — a~d 수집 파이프라인 완료(아래 처리내용). **일별 집계 배치(`visit_stat_daily` 적재)와 관리자 통계 화면은 아직 없음 - 다음 단계**
      ```
-    a.수집 항목 분석 (개인정보 미수집 원칙 반영)
-    b.DDL 설계 및 테이블 구축
-    c.백엔드 처리 (컨트롤러/모델 저장 API)
-    d.공통 JS 개발 (위 API 호출)
+    a.수집 항목 분석 (개인정보 미수집 원칙 반영) - 완료
+    b.DDL 설계 및 테이블 구축 - 완료(app/sql/2026_08_27_visit_log.sql, DB 반영 확인됨)
+    c.백엔드 처리 (컨트롤러/모델 저장 API) - 완료
+    d.공통 JS 개발 (위 API 호출) - 완료
      ```
 - [ ] 37. bo 사용 기록 수집
 - [x] 38. seo 최적화 — 1단계(title/description/canonical/OG 태그, robots.txt, sitemap.xml) 완료. 콘텐츠 확장/구조화데이터 등은 다음 단계
@@ -78,6 +78,24 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
 ---
 
 ## 처리내용
+
+### #36-d (2026-08-27) — 방문자 집계 공통 JS + 레이아웃 연결
+
+- [public/resources/js/common/track.js](public/resources/js/common/track.js) 신규 — 페이지 로드(`load` 이벤트) 시 `document.referrer`/`location.pathname`/`location.search`를 `FormData`에 담아 `/track/visit`로 전송. `navigator.sendBeacon()` 우선 사용(페이지 이동 중에도 요청이 안 끊기는 analytics용 표준 API), 미지원 브라우저만 `fetch(..., {keepalive:true})`로 폴백
+- [layout/default.php](app/Views/layout/default.php) — `nav.js` 다음 줄에 `track.js` include, www 전체 공개 페이지에 전역 적용(로그인/마이페이지 등도 포함 - 어떤 페이지든 방문 자체는 집계, 검색어/전환 판단은 `is_landing` 플래그로 어차피 랜딩 시점만 봄)
+- **검증 관련**: 로컬에 PHP 내장서버로 실제 기동해서 확인하려 했으나, 이 세션 환경에서 DB(`bomul-bo`가 쓰는 MySQL, `172.18.0.1`에서의 접속)가 `Access denied`로 막혀 있어 브라우저 E2E 확인은 못 했음(`php -l`/JS 문법 체크, 라우트·쿠키 로직 코드 리뷰까지만 완료). **팀장님 쪽에서 실제 페이지 방문 → `visit_log`에 행이 쌓이는지, 회원가입 → `visit_conversion` 매핑되는지 한 번 확인 부탁드립니다**
+- a~d 4단계(수집 항목 분석 → DDL → 백엔드 → JS)로 #36 파이프라인은 일단 완결. `visit_stat_daily`(일별 집계 테이블)를 채우는 배치와 이걸 보여줄 관리자 통계 화면은 이번 범위 밖이라 아직 없음 — 다음 단계로 남겨둠
+
+### #36-c (2026-08-27) — 방문자 집계 백엔드(Entity/Model/Service/Controller)
+
+a(수집 항목 분석)·b(DDL, `app/sql/2026_08_27_visit_log.sql`, DB 반영 확인됨) 이후 백엔드만 구축. **JS는 아직 없음(d 단계) — 지금은 API를 호출하는 곳이 없어서 실제 수집은 아직 안 됨.**
+
+- [VisitLog_Entity](app/Entity/VisitLog_Entity.php)/[VisitConversion_Entity](app/Entity/VisitConversion_Entity.php), [VisitLogModel](app/Models/VisitLogModel.php)/[VisitConversionModel](app/Models/VisitConversionModel.php) 신규 — 기존 Payment/Board Entity·Model 패턴 그대로(필드별 주석, `sql_save()`). `VisitConversionModel::sql_save()`는 `INSERT IGNORE`로 `uk_customer_no` 중복 호출을 조용히 무시
+- [VisitService](app/Service/VisitService.php) 신규 — 리퍼러 파싱(호스트/검색어, 네이버 `query`/구글·다음 `q`), utm_* 파싱, 봇 UA 필터링(`bot|crawler|spider` 등), PC/MOBILE 판별, `collectPageView()`/`recordConversion()`. 쿠키 읽기/쓰기는 Service가 아니라 Controller 책임으로 분리(Response 객체가 있어야 쿠키를 쓸 수 있어서)
+- [Controllers/Track.php](app/Controllers/Track.php) 신규 — `POST /track/visit`(`Track::postCollect`). **주의**: referrer는 이 요청 자체의 HTTP Referer 헤더를 쓰면 안 됨(beacon 요청의 Referer는 우리 사이트 자신) — JS가 `document.referrer`를 body로 실어 보내야 함(d 단계에서 구현). 방문자 식별은 `vtok`(1년 쿠키) + 세션 판별용 `vses`(세션쿠키) 두 개로 분리
+- [Routes.php](app/Config/Routes.php) — `POST track/visit` 추가(www 블록)
+- [Controllers/Signup.php](app/Controllers/Signup.php) — 가입 성공(`customer_no` 발급) 직후 `VisitService::recordConversion()` 호출 추가. `vtok` 쿠키 있으면(=검색 등으로 유입된 방문자) `visit_conversion`에 매핑 저장 — 이건 JS 없이도 서버 단에서 바로 동작
+- **다음 단계(d)**: 공통 JS(`track.js`) 작성해서 `/track/visit`을 페이지 로드마다 호출(`document.referrer`/`location.search`/`location.pathname` 실어서), `layout/default.php`에 include
 
 ### #38 (2026-08-27) — www 기본 SEO 1단계
 

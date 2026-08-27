@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Libraries\AT_Result;
 use App\Service\CustomerService;
+use App\Service\VisitService;
 
 // 공개 회원가입 페이지 - id/pw/company_name/phone 4개만 받는 간편가입. 사업자정보·도메인·상품선택은
 // 전부 로그인 이후 /service-apply에서 처리한다 (Signup은 계정 생성만 책임진다).
@@ -52,6 +53,10 @@ class Signup extends BaseController
         }
 
         $customer_no = (int) $result['RECORD']['customer_no'];
+
+        // #36 방문자 집계 - vtok 쿠키가 있으면(=SEO/검색 등으로 유입된 방문자) 가입회원과 매핑해서
+        // "검색어별 가입 전환율"을 나중에 조인 계산할 수 있게 남겨둔다. 쿠키 없으면(직접 URL 등) 스킵.
+        (new VisitService())->recordConversion($_COOKIE[VisitService::COOKIE_TOKEN] ?? null, $customer_no);
 
         // customer insert 성공 = 계정 생성 완료 - 이 시점부터 세션상 "로그인된 회원"으로 취급해서
         // 뒤이은 /service-apply의 "비회원 신청 금지" 규칙을 그대로 지키게 한다.

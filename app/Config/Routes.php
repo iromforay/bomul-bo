@@ -139,5 +139,8 @@ if (bomul_is_ad_host($host)) { //관리자
 
     $routes->get('terms',   'Terms::getIndex');
     $routes->get('privacy', 'Privacy::getIndex');
+
+    // 방문자 집계(#36) 수집 API - 공통 JS(track.js)가 페이지 로드마다 호출
+    $routes->post('track/visit', 'Track::postCollect');
 }
 

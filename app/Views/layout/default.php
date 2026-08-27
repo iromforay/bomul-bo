@@ -20,5 +20,6 @@
      <!-- end footer -->
 
     <script src="<?= RS_JS ?>/common/nav.js?var=<?=FRESH_TIME?>"></script>
+    <script src="<?= RS_JS ?>/common/track.js?var=<?=FRESH_TIME?>"></script>
     </body>
 </html>
