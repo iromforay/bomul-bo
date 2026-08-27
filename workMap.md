@@ -60,24 +60,101 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
 - [x] 30. `payment` 테이블에 `pg_response`(PG 응답 원문 JSON), `customer_no`(마이페이지 조회용) 컬럼 추가 — 마이그레이션 작성, **운영 DB 반영 필요**
 - [x] 31. 서비스 신규 신청(`ServiceApply`)에 결제 연동 — 0원은 기존처럼 즉시 신청서 생성, 유료는 결제 성공 후에만 신청서 생성하도록 정책 통일
 - [ ] 32. 서비스 연장(`MyPage::getExtendPay`)/부가서비스 결제 연동, 자동결제(빌링) — #11 잔여 작업
+```
+네이버 SEO 등록준비 단계
+``` 
 - [x] 33. 네이버 서치어드바이저 사이트 등록 매뉴얼 초안 (`app/html/naver_search_advisor_manual.html`) — 등록 절차만 남기고 정리, 스크린샷+캡션은 다음 단계
 - [x] 34. 약관,개인정보처리방침( link - 14)
-- [ ] 35. mypage 에서 bo.bomul.ai.kr 로 연결포인트 (연결포인트가 없다. 즉 중개사가 bo.bomul.ai.kr을 알 방법이 없음)
-- [x] 36. 방문자 집계 (검색어), 가입자 , 검색어 대비 가입자 등 — a~d 수집 파이프라인 완료(아래 처리내용). **일별 집계 배치(`visit_stat_daily` 적재)와 관리자 통계 화면은 아직 없음 - 다음 단계**
-     ```
-    a.수집 항목 분석 (개인정보 미수집 원칙 반영) - 완료
-    b.DDL 설계 및 테이블 구축 - 완료(app/sql/2026_08_27_visit_log.sql, DB 반영 확인됨)
-    c.백엔드 처리 (컨트롤러/모델 저장 API) - 완료
-    d.공통 JS 개발 (위 API 호출) - 완료
-     ```
-- [ ] 37. bo 사용 기록 수집
+- [x] 35. mypage 에서 bo.bomul.ai.kr 로 연결포인트 (연결포인트가 없다. 즉 중개사가 bo.bomul.ai.kr을 알 방법이 없음) — 마이페이지에 "매물 관리자 바로가기" 버튼 추가, 아래 처리내용 참고
+- [x] 36. 방문자 집계 (검색어), 가입자 , 검색어 대비 가입자 등 — a~d 수집 파이프라인 + `visit_stat_daily` 집계 배치(10분 간격)까지 완료(아래 처리내용). 관리자 통계 화면은 아직 없음 - 다음 단계
+   - a.수집 항목 분석 (개인정보 미수집 원칙 반영) - 완료
+   - b.DDL 설계 및 테이블 구축 - 완료(app/sql/2026_08_27_visit_log.sql, DB 반영 확인됨)
+   - c.백엔드 처리 (컨트롤러/모델 저장 API) - 완료
+   - d.공통 JS 개발 (위 API 호출) - 완료
+- [x] 37. bo 사용 기록 수집 — "매일 배치가 전일 작업 현황을 가져오도록" 요청으로 fid당 1행 스냅샷에서 날짜별 로그(`bo_usage_daily`)로 재설계. 로그인(중앙 login_session)/기본세팅 여부/컨텐츠 신규건수를 배치가 테넌트 DB에 직접 붙어 전일치로 스캔(아래 처리내용)
 - [x] 38. seo 최적화 — 1단계(title/description/canonical/OG 태그, robots.txt, sitemap.xml) 완료. 콘텐츠 확장/구조화데이터 등은 다음 단계
+- [x] 39. www 에 데모사이트 연결 (bo.bomul.ai.kr 의 demo , demo.bomul.ai.kr 연결 -기존 sessionLogin으로 불가능.) — 비회원 대상 샘플이라 인증 불필요, 홈 히어로 영역에 단순 링크로 처리(아래 처리내용)
+- [x] 40. ad 관리자 대시보드 — 주간 방문자 그래프, 주간 인기 검색어 표, 가입사용자 추이(14일)를 실데이터로 구성. 기존 Admin 홈은 이 서비스와 무관한 정적 목업(매물/문의 데이터)이었음 - 실데이터로 교체(아래 처리내용)
 ```
 실제 서치어드바이저 진행별 화면 캡쳐후 캡션을 다는 형태로 진행.
 ```
 ---
 
 ## 처리내용
+
+### #40 (2026-08-27) — ad 관리자 대시보드 (실데이터)
+
+"ad에선 사용자의 사용여부를 볼 수 있도록 대시보드를 만들 것" 요청. 착수 전 확인해보니 `Admin/Home::getindex()` → `Views/Admin/index.php`가 이 서비스와 무관한 완전 정적 목업(매물번호 P-1042, 상담문의 등 - 이 앱은 SaaS 운영 관리자용이라 개별 매물을 안 다룸)이었음. 이번에 실데이터로 전면 교체.
+
+- [VisitStatDailyModel::get_daily_totals()](app/Models/VisitStatDailyModel.php)/[get_top_keywords()](app/Models/VisitStatDailyModel.php) 신규 — #36 `visit_stat_daily`에서 날짜별 합계, 검색어별 랭킹(검색어 없는 행은 제외) 조회
+- [CustomerModel::get_daily_signup_counts()](app/Models/CustomerModel.php) 신규 — `customer.reg_date` 기준 날짜별 가입건수
+- [Admin/Home.php](app/Controllers/Admin/Home.php) — 최근 7일(방문자/검색어), 14일(가입추이) 데이터를 모아 뷰에 전달. "오늘"은 하루가 안 끝나 그래프가 들쭉날쭉해 보여서 조회 구간을 항상 "어제까지"로 자름
+- [Views/Admin/index.php](app/Views/Admin/index.php) — KPI 3개(최근 7일 방문자/가입전환/1위 검색어) + 주간 방문자 막대그래프 + 가입사용자 추이 막대그래프 + 인기 검색어 표. **외부 차트 라이브러리 없이 CSS만으로 막대그래프 구현**(admin.css `.bar-chart` 신규) - Admin에 차트 라이브러리가 아예 없었고, 주간 단위라 막대 7~14개면 라이브러리 없이도 충분하다고 판단
+- 0건인 날짜도 막대가 빈 채로 나오게 조회 결과를 날짜 범위로 0-fill(그래프가 뚝뚝 끊기지 않게)
+- **검증**: 이 세션은 DB 접속 권한이 없어 실데이터로는 못 봤지만, 가짜 데이터/빈 데이터 둘 다로 뷰 템플릿을 직접 `include`해서 PHP Warning/Notice 없이 렌더링되는 것까지 확인함(코드 리뷰보다 한 단계 더 확인한 것). **실서버에서 화면이 실제로 어떻게 나오는지는 확인 부탁드립니다**
+- **다음 단계**: #37(`bo_usage_daily`) 기반 "활성화 여부"(로그인/세팅/컨텐츠) 위젯은 이번 범위에 안 넣음 - 필요하면 이어서 추가
+
+### #37 (2026-08-27) — bo 사용 기록 수집: 배치 직접 DB 스캔 방식으로 구현
+
+처음엔 bomul-api가 이벤트를 API로 보고하는 구조(Callback 패턴 재사용)로 설계하다가, "API 통신 하지 말고 cron으로 직접 DB에서 가져와라 - 극초기엔 테넌트 DB가 같은 서버에 있어 원격이 아니다"라는 방향 전환을 받아 전면 재작업. 원격 API 없이 bomul-bo 배치가 각 `{fid}` 테넌트 DB에 직접 접속하는 구조로 확정.
+
+**사전 조사** (`bomul-api` 저장소 열람 권한을 받아 확인):
+- `doc/service-live structure.md` — DB가 두 계층: 중앙 `bomul`(공용, `login_session` 포함) / 테넌트별 `{fid}`(완전 분리된 개별 DB, `basic`/`menu`/`img`/`add_menu`/`post`/`property`/`note` 등)
+- `login_session`은 중앙 `bomul` DB에 있어서 **bomul-bo가 이미 연결된 DB로 바로 조회 가능** — 새 연결 불필요
+- [TenantProvisioner.php](C:\me\bomul-api\app\Libraries\TenantProvisioner.php)에서 신규 `{fid}` DB를 만들 때 `config('Database')->default`(중앙 DB 계정)를 그대로 재사용하는 걸 확인 — 테넌트 DB 전용 별도 계정이 없다는 뜻이라, 같은 계정/같은 호스트 전제로 직접 접속 가능하다고 판단
+
+**구현** (1차로 fid당 1행 누적 스냅샷 `bo_usage_summary`로 만들었다가, "매일 배치가 전일 작업 현황을 가져오도록"이라는 후속 요청으로 **날짜별 로그 `bo_usage_daily`로 재설계** — 최종 상태만 기록):
+- [app/sql/2026_08_27_bo_usage_daily.sql](app/sql/2026_08_27_bo_usage_daily.sql) — `bo_usage_daily` 신규(날짜+live_no당 1행, UPSERT). #36 `visit_stat_daily`와 동일 구조 - 대시보드(#40)에서 추이를 봐야 해서 누적 스냅샷보다 날짜별 로그가 맞다고 판단
+- [BoUsageDaily_Entity](app/Entity/BoUsageDaily_Entity.php)/[BoUsageDailyModel](app/Models/BoUsageDailyModel.php) — `sql_upsert()`는 `VisitStatDailyModel`과 동일하게 insertID() 대신 DB 에러 유무로 성공 판정(ON DUPLICATE KEY UPDATE 케이스 대비). 필드는 그 날짜의 `login_yn`/`setup_touch_yn`/`content_add_count`(신규 등록분만, 누적 아님)
+- [LoginSessionModel::get_login_fids_on_date()](app/Models/LoginSessionModel.php) 신규 — 중앙 `login_session`에서 특정 날짜에 로그인한 fid 목록 한 번에 조회
+- [ServiceLiveModel::get_active_for_usage_scan()](app/Models/ServiceLiveModel.php) — 스캔 대상(install_status=DONE, 미종료) + `server_list` 조인으로 접속용 `db_host`/`db_port` 같이 조회
+- [BoUsageScanService::runForDate()](app/Service/BoUsageScanService.php) — 테넌트마다 `config('Database')->default` 계정으로 새 `mysqli` 커넥션을 열어(`db_connect('default')`를 그대로 쓰면 같은 커넥션 쓰는 다른 코드까지 DB가 바뀌어버려서 안 됨 - TenantProvisioner와 동일한 이유) 지정한 날짜에 `basic/menu/add_menu/img` 중 하나라도 손댔으면 `setup_touch_yn='Y'`, `property`+`note`(is_deleted=0만, `created_at` 그 날짜)+`post`(`write_date` 그 날짜)의 그날 신규 건수 합을 `content_add_count`로 계산
+- [app/batch/bo_usage_scan.php](app/batch/bo_usage_scan.php) 신규 — `service_expire_check.php`와 동일한 `bootConsole()` 부팅 패턴. 전일(어제)치를 하루 1번(03시대 - #36의 02시와 안 겹치는 시간대) 집계
+- [batch.php](app/batch/batch.php) — `$h==='03'` 블록에 require 추가. crontab 자체는 안 건드림(기존 매분 도는 구조 그대로)
+- **되돌린 것**: `Admin\Callback::postUsageSummary()`와 관련 라우트를 API 방식(bomul-api가 보고) 설계 단계에서 만들었다가, "API 통신 하지 말고 cron으로 직접 DB에서 가져와라"는 방향 전환을 받아 제거함(코드에 안 남기고 깔끔히 되돌림)
+- **검증 한계**: 이전과 동일한 이유(이 세션 DB 접속 권한 없음)로 `php app/batch/bo_usage_scan.php` 직접 실행 시 Service/Model까지 정상 진입하는 것만 확인, 실제 테넌트 DB 스캔 결과는 확인 못 함. **운영 서버에서 실행해보시고, 특히 "테넌트 DB가 정말 bomul-bo와 같은 MySQL 호스트/계정으로 접속되는지"부터 확인 부탁드립니다** — 이 전제가 깨지면(호스트 분리 등) 이 배치 방식 자체를 다시 설계해야 합니다
+- **다음 단계**: 대시보드(#40)에 `bo_usage_daily` 기반 위젯("로그인/세팅/컨텐츠 활성화" 추이)은 아직 안 넣음
+
+### #39-보완 (2026-08-27) — 데모 2종 분리: 사용자 체험(demo1) + 관리자 체험(bo)
+
+처음엔 "비회원 샘플 사이트"를 단순 링크 하나로만 처리했는데, "데모가 2개(관리자 체험 bo.bomul.ai.kr - session login 필요 / 사용자 체험 demo1.bomul.ai.kr)"라는 정정을 받아 재작업. 링크 URL도 `demo.bomul.ai.kr`(존재 안 함, 추측이었음) → `demo1.bomul.ai.kr`(`server_list`에 실제 등록된 데모 테넌트 fid)로 수정.
+
+- **사용자 체험**: [index.php](app/Views/index.php) 히어로 버튼 → `https://demo1.bomul.ai.kr` 새 탭. 로그인 불필요, 그냥 고정 링크
+- **관리자 체험**: `bo.bomul.ai.kr`은 세션 로그인이 필요해서 단순 링크로 안 됨. #35(`MyPage::getSessionLogin()`)와 같은 `CustomerService::createSessionLogin()`을 재사용하되, 이번엔 "로그인된 본인"이 아니라 **비로그인 방문자용**이라 서버가 `customer_no`를 데모 테넌트(`fid='demo1'`) 걸로 직접 고정 — 요청값으로 임의 고객 토큰을 만들 수 없게 막음
+  - [ServiceLiveModel::findByFid()](app/Models/ServiceLiveModel.php) 신규 — fid로 `customer_no` 역조회
+  - [Demo::getSessionLogin()](app/Controllers/Demo.php) 신규 — `GET /demo/sessionLogin`(로그인 불필요, `DEMO_FID='demo1'` 하드코딩)
+  - [Routes.php](app/Config/Routes.php) — `GET demo/sessionLogin` 추가
+- **JS 공통화**: 기존 `mypage_session_login.js`를 `bo_session_login.js`로 개명 + 셀렉터를 `.js-mypage-session-login` → `.js-bo-session-login`으로 일반화 — 마이페이지(#35)와 홈 데모(#39) 버튼 둘 다 같은 스크립트 하나를 공유(둘 다 "session_token 받아서 새탭 열기"라는 동일 동작이라 분리할 이유가 없었음). 각 페이지는 `window.BOMUL_SESSION_LOGIN_CONFIG`로 자기 `sessionUrl`만 다르게 지정
+- **검증 한계**: 이전과 동일(DB 접속 권한 없음) - 코드 리뷰/문법체크까지만. **실서버에서 "관리자 체험" 버튼 클릭 → bo.bomul.ai.kr 데모 세션 열리는지, "사용자 체험" 버튼이 demo1.bomul.ai.kr로 가는지 확인 부탁드립니다**
+
+### #35 (2026-08-27) — 마이페이지 → bo.bomul.ai.kr 연결포인트
+
+기존엔 어드민 "고객 목록"에서 직원이 눌러주는 자동로그인(#4, `CustomerService::createSessionLogin()`)만 있어서 중개사 본인은 bo.bomul.ai.kr 자체를 알 방법이 없었음(BO_SITE가 `Boot/common.php`에 이미 전역 상수로 있었고 로직도 재사용 가능한 상태라, 새로 만들 건 "고객 본인이 트리거하는 진입점" 하나였음).
+
+- [MyPage::getSessionLogin()](app/Controllers/MyPage.php) 신규 — `Admin/Customer::getSessionLogin($customer_no)`과 달리 URL 파라미터로 고객번호를 안 받고, 세션에 로그인된 본인(`requireLogin()`)의 `customer_no`만 써서 `CustomerService::createSessionLogin()` 호출. 다른 고객 토큰을 만들 수 없게 막은 것 - 재사용이지 신규 로직 아님(기존 salt/HMAC 방식 그대로)
+- [Routes.php](app/Config/Routes.php) — `GET mypage/sessionLogin` 추가
+- [mypage.php](app/Views/mypage.php) — "내 서비스 현황" 액션 버튼 줄에 **"매물 관리자 바로가기"** 버튼 추가. `service['install_status'] === 'DONE'`일 때만 노출(설치 전엔 `createSessionLogin()`이 서버에서도 어차피 막음 - 버튼을 미리 숨겨서 헛클릭 방지). 기존 "서비스 연장 신청" 버튼은 `btn--primary`→`btn--outline`로 내리고 이 버튼이 primary 자리
+- [public/resources/js/common/mypage_session_login.js](public/resources/js/common/mypage_session_login.js) 신규 — 기존 [customer_session_login.js](public/resources/js/common/customer_session_login.js)(어드민 고객목록)과 동일한 fetch→새탭 오픈 패턴, `customer_no` 파라미터만 뺌
+- **검증 한계**: 이 세션은 DB 접속 권한이 없어(반복된 사유) 실제 로그인 세션을 만들어 버튼 클릭까지 브라우저로 확인은 못 함 - `php -l`/JS 문법 체크와 기존 어드민 흐름과의 로직 대조까지만 완료. **실서버에서 로그인된 중개사 계정으로 버튼 클릭 → bo.bomul.ai.kr 새 탭이 뜨는지 확인 부탁드립니다**
+
+### #36 후속2 (2026-08-27) — 집계 배치 주기를 02시 1회 → 10분 간격으로 변경
+
+"매시 정각/10/20/30/40/50분에 돌게" 요청 — 하루 1번(전일치)이 아니라 **당일치를 10분마다 다시 집계**하는 방식으로 변경. 여전히 배치/UPSERT 구조라 "실시간 카운터"는 아니고(이전 설계 논의에서 합의한 방향 유지), 주기만 하루→10분으로 당김.
+
+- [app/batch/batch.php](app/batch/batch.php) — `$h==='02'` 조건을 `in_array($i, ['00','10',...,'50'])`로 교체(시간대 무관 매시 10분 간격)
+- [app/batch/visit_stat_aggregate.php](app/batch/visit_stat_aggregate.php) — 집계 대상을 "어제"에서 "오늘"로 변경. 다만 자정 시간대(00시)에만 "어제"도 한 번 더 같이 재집계하도록 추가 — 안 그러면 23:50~24:00 마지막 10분 트래픽이 자정 넘기며 "오늘" 집계로 넘어가버려 어제 몫에서 영영 누락됨
+- crontab 자체(`* * * * *` 매분)는 그대로 - `batch.php`가 매분 불려도 되고, 그중 정시/10분 단위에만 이 잡이 골라 도는 구조라 crontab 변경 불필요
+- 검증은 이전과 동일한 사유(DB 접속 권한 없음)로 코드 경로까지만 확인, 실서버 반영 여부는 팀장님 확인 필요
+
+### #36 후속 (2026-08-27) — visit_stat_daily 집계 배치(cron)
+
+- [VisitStatDaily_Entity](app/Entity/VisitStatDaily_Entity.php)/[VisitStatDailyModel](app/Models/VisitStatDailyModel.php) 신규 — `sql_upsert()`는 `ON DUPLICATE KEY UPDATE`(재실행해도 안전/멱등). **주의**: safeExecQuery()가 INSERT 쿼리는 무조건 insertID()를 반환하는데, UPDATE만 일어난 경우 MySQL이 0을 줄 수 있어(falsy) 성공을 실패로 오판할 뻔했음 - 반환값 대신 DB 에러 유무로 성공 판정하도록 처리
+- [VisitLogModel::get_daily_keyword_stats()](app/Models/VisitLogModel.php) 신규 — 특정일 `is_landing='Y'` 행을 `visit_conversion`과 LEFT JOIN해서 검색어/유입경로별 방문자수·가입전환수 집계. `search_keyword`/`referrer_host`의 NULL을 `COALESCE(...,'')`로 맞춰서 그룹핑(안 그러면 `visit_stat_daily`의 UNIQUE KEY가 NULL을 다 다른 값으로 봐서 집계가 흩어짐)
+- [VisitService::aggregateDaily()](app/Service/VisitService.php) 신규 — 위 두 개 연결하는 오케스트레이션
+- [app/batch/visit_stat_aggregate.php](app/batch/visit_stat_aggregate.php) 신규 — `service_expire_check.php`와 동일한 `bootConsole()` 부팅 패턴. 전일(어제)치를 집계
+- [app/batch/batch.php](app/batch/batch.php) — `$h==='02'` 블록에 require 추가. **crontab 자체는 안 건드림** — 이미 매분 `batch.php` 하나만 도는 구조라(#7·#9) 여기 블록만 추가하면 됨
+- 같은 02시대에 도는 것으로 확인된 `batch_schedule`의 `analytics_daily`(bomul-api 쪽, #36과 무관)와 이름이 비슷해 헷갈릴 수 있어 배치 파일 주석에 명시해둠
+- **검증 한계**: 이 세션 환경은 DB 접속 권한이 없어(`Access denied ...@'172.18.0.1'`, 이전 #36-d 처리내용과 동일 사유) `php app/batch/visit_stat_aggregate.php` 직접 실행 시 Service/Model 로직까지는 정상 진입하는 것까지만 확인, 실제 DB 반영은 확인 못 함. **02시 크론이 한 번 돈 뒤 `visit_stat_daily`에 행이 쌓이는지, 또는 지금 수동으로 `php app/batch/visit_stat_aggregate.php` 실행해서 확인 부탁드립니다**
 
 ### #36-d (2026-08-27) — 방문자 집계 공통 JS + 레이아웃 연결
 

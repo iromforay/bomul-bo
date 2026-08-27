@@ -131,6 +131,18 @@ tbody tr.row-link:hover {background:#E9F1F8;}
 .mini-list li .t {color:#33434F;}
 .mini-list li .d {color: var(--muted); white-space:nowrap;}
 
+/* ---------- 대시보드 간이 막대그래프(#36/#37) - 외부 차트 라이브러리 없이 CSS만으로 ---------- */
+.bar-chart {display:flex; align-items:flex-end; gap:8px; height:160px; padding:12px; }
+.bar-chart .col {flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; gap:4px;}
+.bar-chart .col .val {font-size:11px; color: var(--navy); font-weight:700;}
+.bar-chart .col .bar {width:100%; max-width:34px; background: var(--accent); border-radius:2px 2px 0 0; min-height:2px;}
+.bar-chart .col .bar.secondary {background: var(--ok);}
+.bar-chart .col .lbl {font-size:10.5px; color: var(--muted); white-space:nowrap;}
+.legend {display:flex; gap:14px; padding: 0 12px 10px; font-size:11px; color: var(--muted);}
+.legend .sw {display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:4px; vertical-align:middle;}
+.legend .sw.visit {background: var(--accent);}
+.legend .sw.signup {background: var(--ok);}
+
 @media (max-width: 960px) {
     .top-nav .side-toggle {display:flex; align-items:center; justify-content:center;}
     .top-nav ul {display:none;}

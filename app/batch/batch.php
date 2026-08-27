@@ -35,6 +35,11 @@ if (in_array($i, ['00', '10', '20', '30', '40', '50'], true)) {
     require __DIR__ . '/visit_stat_aggregate.php';
 }
 
+// bo 사용 현황(#37) - 하루 1번(03시대), 테넌트 DB에 직접 붙어 로그인/기본세팅/컨텐츠 스캔.
+if ($h === '03') {
+    require __DIR__ . '/bo_usage_scan.php';
+}
+
 // 단발성/시간대 배치 예시 (시:분까지 정확히 매칭될 때 딱 한 번만, 또는 특정 시간대 안에서만):
 // if ($h === '03' && $i === '00') {
 //     require __DIR__ . '/example.php';

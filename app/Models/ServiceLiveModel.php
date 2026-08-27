@@ -99,6 +99,18 @@ class ServiceLiveModel extends CI_Model
         return $rows[0] ?? null;
     }
 
+    // #37 bo 사용현황 배치 대상 - 설치가 끝났고(install_status=DONE) 완전종료(TERMINATED)는 아닌
+    // 테넌트만. server_list를 조인해서 접속용 db_host/db_port까지 한 번에 가져온다(배치가 테넌트마다
+    // 따로 server_list를 안 찾아도 되게).
+    public function get_active_for_usage_scan()
+    {
+        $sql = "SELECT sl.live_no, sl.customer_no, sl.fid, sl.server_no, s.db_host, s.db_port
+                FROM `$this->table` sl
+                JOIN `server_list` s ON s.server_no = sl.server_no
+                WHERE sl.install_status = 'DONE' AND sl.status != 'TERMINATED'";
+        return $this->getExecQuery($sql);
+    }
+
     // 마이페이지(#16) "내 서비스 현황" - 상품/서비스가 여러 개로 늘어나기 전까지는 고객당 가장 최근
     // service_live 1건만 "현재 서비스"로 보여준다(다중 서비스 지원은 추후 과제).
     public function getCurrentByCustomerNo($customer_no)

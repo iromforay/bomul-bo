@@ -29,6 +29,17 @@ class CustomerModel extends CI_Model
         return $rows[0] ?? null;
     }
 
+    // 대시보드 "가입사용자 추이" - 기간 내 가입일자별 신규가입 건수
+    public function get_daily_signup_counts($fromDate, $toDate)
+    {
+        $sql = "SELECT DATE(`reg_date`) AS signup_date, COUNT(*) AS signup_count
+                FROM `$this->table`
+                WHERE DATE(`reg_date`) BETWEEN " . $this->db->escape($fromDate) . " AND " . $this->db->escape($toDate) . "
+                GROUP BY DATE(`reg_date`)
+                ORDER BY signup_date";
+        return $this->getExecQuery($sql);
+    }
+
     // 아이디 중복체크 - use_yn 상관없이 전체에서 확인 (customer_id는 UNIQUE)
     public function existsByLoginId($customer_id, $exclude_no = null)
     {

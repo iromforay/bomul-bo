@@ -43,4 +43,32 @@ class VisitStatDailyModel extends CI_Model
                 ORDER BY `visit_count` DESC";
         return $this->getExecQuery($sql);
     }
+
+    // 대시보드 "주간 방문자 그래프" - 기간 내 날짜별 합계(검색어/유입경로 구분 없이 전체)
+    public function get_daily_totals($fromDate, $toDate)
+    {
+        $sql = "SELECT `stat_date`,
+                       SUM(`visit_count`) AS visit_total,
+                       SUM(`signup_count`) AS signup_total
+                FROM `$this->table`
+                WHERE `stat_date` BETWEEN " . $this->db->escape($fromDate) . " AND " . $this->db->escape($toDate) . "
+                GROUP BY `stat_date`
+                ORDER BY `stat_date`";
+        return $this->getExecQuery($sql);
+    }
+
+    // 대시보드 "주간 방문자 표(검색어)" - 기간 내 검색어별 합계, 많이 유입된 순. 검색어 없는 행(직접방문 등)은 제외.
+    public function get_top_keywords($fromDate, $toDate, $limit = 10)
+    {
+        $sql = "SELECT `search_keyword`, `referrer_host`,
+                       SUM(`visit_count`) AS visit_total,
+                       SUM(`signup_count`) AS signup_total
+                FROM `$this->table`
+                WHERE `stat_date` BETWEEN " . $this->db->escape($fromDate) . " AND " . $this->db->escape($toDate) . "
+                  AND `search_keyword` != ''
+                GROUP BY `search_keyword`, `referrer_host`
+                ORDER BY visit_total DESC
+                LIMIT " . (int) $limit;
+        return $this->getExecQuery($sql);
+    }
 }
