@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /login
+Disallow: /signup
+Disallow: /mypage
+Disallow: /service-apply
+Disallow: /pay
+Disallow: /pay-test
+Disallow: /qna/write
+Disallow: /*/uploadTemp
+
+Sitemap: https://www.bomul.ai.kr/sitemap.xml

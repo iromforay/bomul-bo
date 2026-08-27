@@ -7,6 +7,7 @@ class Terms extends BaseController
 {
     public function getIndex()
     {
-        echo $this->view("default", "terms");
+        $data['common']['title'] = '이용약관';
+        echo $this->view("default", "terms", $data);
     }
 }

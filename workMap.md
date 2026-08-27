@@ -61,12 +61,34 @@ Admin(BO)과 일반 고객용 사용자 페이지가 분리되어 있으며, 회
 - [x] 31. 서비스 신규 신청(`ServiceApply`)에 결제 연동 — 0원은 기존처럼 즉시 신청서 생성, 유료는 결제 성공 후에만 신청서 생성하도록 정책 통일
 - [ ] 32. 서비스 연장(`MyPage::getExtendPay`)/부가서비스 결제 연동, 자동결제(빌링) — #11 잔여 작업
 - [x] 33. 네이버 서치어드바이저 사이트 등록 매뉴얼 초안 (`app/html/naver_search_advisor_manual.html`) — 등록 절차만 남기고 정리, 스크린샷+캡션은 다음 단계
+- [x] 34. 약관,개인정보처리방침( link - 14)
+- [ ] 35. mypage 에서 bo.bomul.ai.kr 로 연결포인트 (연결포인트가 없다. 즉 중개사가 bo.bomul.ai.kr을 알 방법이 없음)
+- [ ] 36. 방문자 집계 (검색어), 가입자 , 검색어 대비 가입자 등
+     ```
+    a.수집 항목 분석 (개인정보 미수집 원칙 반영)
+    b.DDL 설계 및 테이블 구축
+    c.백엔드 처리 (컨트롤러/모델 저장 API)
+    d.공통 JS 개발 (위 API 호출)
+     ```
+- [ ] 37. bo 사용 기록 수집
+- [x] 38. seo 최적화 — 1단계(title/description/canonical/OG 태그, robots.txt, sitemap.xml) 완료. 콘텐츠 확장/구조화데이터 등은 다음 단계
 ```
 실제 서치어드바이저 진행별 화면 캡쳐후 캡션을 다는 형태로 진행.
 ```
 ---
 
 ## 처리내용
+
+### #38 (2026-08-27) — www 기본 SEO 1단계
+
+검색엔진 유입 전략(#34~38) 중 가장 단순한 항목부터 착수. 착수 전 확인해보니 www 공개 페이지 전체에 `<title>`/메타 description이 아예 없었고(`app/Views/common/header.php`에 관리자 화면(`admin_header.php`)과 달리 title 자체가 없었음), `robots.txt`/`sitemap.xml`도 `public/`에 없는 상태였음.
+
+- [BaseController::view()](app/Controllers/BaseController.php) — `$data['common']['title']`/`['description']`/`['noindex']` 기본값을 여기서 채워 넣도록 변경. 컨트롤러가 안 넘겨도 항상 안전하게 기본 description이 나가고, 넘기면 그 값으로 덮어씀
+- [common/header.php](app/Views/common/header.php) — `<title>`(페이지별 제목 + `| 보이는 매물`, 없으면 사이트 기본 타이틀), `meta description`, `canonical`, OG 태그(`og:title`/`og:description`/`og:url`/`og:type`/`og:site_name`) 추가. `noindex` 플래그 켜지면 `<meta name="robots" content="noindex, nofollow">`도 출력
+- [Home](app/Controllers/Home.php)/[Terms](app/Controllers/Terms.php)/[Privacy](app/Controllers/Privacy.php)/[Qna](app/Controllers/Qna.php)/[Notice](app/Controllers/Notice.php) — 페이지별 title 지정(게시글 상세는 글 제목을 title로). `Qna::getWrite()`는 로그인 게이트 뒤라 검색엔진이 볼 일은 없지만 `noindex` 플래그도 같이 켜둠
+- [public/robots.txt](public/robots.txt) 신규 — `/login`, `/signup`, `/mypage`, `/service-apply`, `/pay`, `/pay-test`, `/qna/write`, `*/uploadTemp` 등 로그인 전용/기능성 경로만 Disallow, 나머지 공개 페이지는 전부 허용. sitemap 위치 명시
+- [public/sitemap.xml](public/sitemap.xml) 신규 — 정적 공개 페이지(`/`, `/notice`, `/qna`, `/terms`, `/privacy`)만 우선 등록. 게시글 상세(`/qna/view/*`, `/notice/view/*`)는 동적 생성이 아니라 손으로 나열한 정적 파일이라 일단 제외 — 다음 단계로 게시글까지 포함하려면 동적 sitemap 라우트 필요
+- **확인/후속 필요**: 약관/개인정보처리방침(#34) 본문에 `[전화번호]`/`[시행일]` 같은 플레이스홀더가 아직 남아있어 실제 값으로 채우기 전엔 배포 품질이 애매함(SEO 태그는 이미 달아둠). `robots.txt`/`sitemap.xml`은 `public/`에 정적 파일로만 둬서 배포 시 그대로 따라가는지 확인 필요(#31 처리내용에 있던 부트파일 동기화 이슈와 같은 유형의 배포 누락 위험)
 
 ### #33 (2026-08-14) — 네이버 서치어드바이저 등록 매뉴얼 초안
 

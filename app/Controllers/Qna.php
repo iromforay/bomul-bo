@@ -16,6 +16,7 @@ class Qna extends BaseController
         $service = new BoardService();
 
         $data = [];
+        $data['common']['title'] = 'Q&A';
         $data['list'] = $service->get_public_list(self::BOARD_TYPE);
         echo $this->view("default", "qna_list", $data);
     }
@@ -31,6 +32,7 @@ class Qna extends BaseController
         }
 
         $data = [];
+        $data['common']['title'] = $row['title'] ?? 'Q&A';
         $data['row'] = $row;
         echo $this->view("default", "qna_view", $data);
     }
@@ -42,7 +44,9 @@ class Qna extends BaseController
             return redirect()->to(SITE . '/login?redirect_url=' . urlencode($this->currentPathWithQuery()));
         }
 
-        echo $this->view("default", "qna_write", []);
+        $data['common']['title'] = 'Q&A 작성';
+        $data['common']['noindex'] = true;
+        echo $this->view("default", "qna_write", $data);
     }
 
     public function postWrite()

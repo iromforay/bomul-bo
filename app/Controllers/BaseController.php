@@ -57,6 +57,10 @@ abstract class BaseController extends Controller
     {
         $layout = $layout !== "" ? $layout : "default";
         $data['common'] = $data['common'] ?? [];
+        $data['common']['title'] = $data['common']['title'] ?? '';
+        $data['common']['description'] = $data['common']['description']
+            ?? '보이는 매물은 공인중개사무소 전용 홈페이지 제작·관리 서비스입니다. 매물 등록부터 고객 상담까지, 필요한 기능을 한 곳에서 관리하세요.';
+        $data['common']['noindex'] = $data['common']['noindex'] ?? false;
         $data['FRESH_TIME'] = $data['FRESH_TIME'] ?? FRESH_TIME;
 
         $temp_layout = [

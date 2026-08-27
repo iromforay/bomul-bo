@@ -14,6 +14,7 @@ class Notice extends BaseController
         $service = new BoardService();
 
         $data = [];
+        $data['common']['title'] = '공지사항';
         $data['list'] = $service->get_public_list(self::BOARD_TYPE);
         echo $this->view("default", "notice_list", $data);
     }
@@ -29,6 +30,7 @@ class Notice extends BaseController
         }
 
         $data = [];
+        $data['common']['title'] = $row['title'] ?? '공지사항';
         $data['row'] = $row;
         echo $this->view("default", "notice_view", $data);
     }

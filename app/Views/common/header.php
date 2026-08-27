@@ -3,6 +3,26 @@
 
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
+<?php
+// SEO 기본 태그 - title/description/canonical/OG. $common['title']/['description']/['noindex']는
+// BaseController::view()에서 항상 기본값이 채워져 있음(컨트롤러가 안 넘겨도 안전).
+$__siteName = '보이는 매물';
+$__pageTitle = $common['title'] !== ''
+    ? $common['title'] . ' | ' . $__siteName
+    : $__siteName . ' - 공인중개사무소 전용 매물 홈페이지 제작·관리 서비스';
+$__canonicalUrl = rtrim(SITE, '/') . '/' . ltrim($_SERVER['REQUEST_URI'] ?? '', '/');
+?>
+<title><?= htmlspecialchars($__pageTitle, ENT_QUOTES) ?></title>
+<meta name="description" content="<?= htmlspecialchars($common['description'], ENT_QUOTES) ?>">
+<?php if ($common['noindex']): ?>
+<meta name="robots" content="noindex, nofollow">
+<?php endif; ?>
+<link rel="canonical" href="<?= htmlspecialchars($__canonicalUrl, ENT_QUOTES) ?>">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="<?= htmlspecialchars($__siteName, ENT_QUOTES) ?>">
+<meta property="og:title" content="<?= htmlspecialchars($__pageTitle, ENT_QUOTES) ?>">
+<meta property="og:description" content="<?= htmlspecialchars($common['description'], ENT_QUOTES) ?>">
+<meta property="og:url" content="<?= htmlspecialchars($__canonicalUrl, ENT_QUOTES) ?>">
 <link rel="icon" type="image/x-icon" href="<?=RS_IMG?>/header/favicon.ico">
 <style>
 

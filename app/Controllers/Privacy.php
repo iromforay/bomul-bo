@@ -7,6 +7,7 @@ class Privacy extends BaseController
 {
     public function getIndex()
     {
-        echo $this->view("default", "privacy");
+        $data['common']['title'] = '개인정보처리방침';
+        echo $this->view("default", "privacy", $data);
     }
 }
