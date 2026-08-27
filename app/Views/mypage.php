@@ -159,7 +159,10 @@ if ($service && $service['status'] === 'SUSPENDED' && !empty($service['suspended
             </table>
 
             <div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap;">
-                <a href="/mypage/extend" class="btn btn--primary">서비스 연장 신청</a>
+                <?php if (($service['install_status'] ?? null) === 'DONE'): ?>
+                    <button type="button" class="btn btn--primary js-mypage-session-login">매물 관리자 바로가기</button>
+                <?php endif; ?>
+                <a href="/mypage/extend" class="btn btn--outline">서비스 연장 신청</a>
                 <a href="/mypage/subscribe" class="btn btn--outline">정기결제 신청하기</a>
             </div>
         <?php endif; ?>
@@ -198,3 +201,12 @@ if ($service && $service['status'] === 'SUSPENDED' && !empty($service['suspended
 </div>
 
 <script src="<?= RS_JS ?>/common/upload.js?var=<?= FRESH_TIME ?>"></script>
+<?php if ($service && ($service['install_status'] ?? null) === 'DONE'): ?>
+<script>
+    window.BOMUL_SESSION_LOGIN_CONFIG = {
+        sessionUrl: '/mypage/sessionLogin',
+        boLoginUrl: '<?= BO_SITE ?>/session_login'
+    };
+</script>
+<script src="<?= RS_JS ?>/common/mypage_session_login.js?var=<?= FRESH_TIME ?>"></script>
+<?php endif; ?>

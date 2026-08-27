@@ -119,6 +119,7 @@ if (bomul_is_ad_host($host)) { //관리자
     $routes->get('mypage/subscribe',   'MyPage::getSubscribe');
     $routes->post('mypage/documents',  'MyPage::postDocuments');
     $routes->post('mypage/uploadTemp', 'MyPage::postUploadTemp');
+    $routes->get('mypage/sessionLogin', 'MyPage::getSessionLogin');
 
     $routes->get('qna',                'Qna::getIndex');
     $routes->get('qna/write',          'Qna::getWrite');

@@ -30,6 +30,21 @@ class MyPage extends BaseController
         echo $this->view("default", "mypage", $data);
     }
 
+    // #35 마이페이지 → bo.bomul.ai.kr 연결포인트 - 어드민 "고객 목록"의 자동로그인(#4,
+    // CustomerService::createSessionLogin())을 중개사 본인이 직접 트리거하는 버전. Admin/Customer::getSessionLogin()과
+    // 달리 URL 파라미터로 customer_no를 안 받고 세션에 로그인된 본인 것만 쓴다(다른 고객 토큰을 만들 수 없게).
+    public function getSessionLogin()
+    {
+        $customer = $this->requireLogin();
+        if ($customer === null) {
+            echo AT_Result::toJson(AT_Result::toFailData("로그인 후 이용 가능합니다."));
+            return;
+        }
+
+        $service = new CustomerService();
+        echo AT_Result::toJson($service->createSessionLogin($customer['customer_no']));
+    }
+
     // 서비스 연장 신청 - 연장 대상 서비스 확인 후 상품(기간) 선택 화면을 보여준다.
     public function getExtend()
     {
