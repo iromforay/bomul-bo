@@ -20,7 +20,7 @@ class TelegramService
             return false;
         }
 
-        $url = "https://api.telegram.org/{$botId}:{$secret}?" . http_build_query([
+        $url = "https://api.telegram.org/{$botId}:{$secret}/sendMessage?" . http_build_query([
             'chat_id' => $chatId,
             'text'    => $message,
         ]);
