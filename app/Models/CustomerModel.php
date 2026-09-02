@@ -40,6 +40,17 @@ class CustomerModel extends CI_Model
         return $this->getExecQuery($sql);
     }
 
+    // 텔레그램 알림 배치(#38) - (from, to] 구간에 가입한 신규 회원 목록
+    public function get_registered_between($from, $to)
+    {
+        $sql = "SELECT `customer_no`, `customer_id`, `company_name`, `phone`, `reg_date`
+                FROM `$this->table`
+                WHERE `reg_date` > " . $this->db->escape($from) . "
+                  AND `reg_date` <= " . $this->db->escape($to) . "
+                ORDER BY `reg_date` ASC";
+        return $this->getExecQuery($sql);
+    }
+
     // 아이디 중복체크 - use_yn 상관없이 전체에서 확인 (customer_id는 UNIQUE)
     public function existsByLoginId($customer_id, $exclude_no = null)
     {

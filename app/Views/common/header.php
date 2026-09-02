@@ -24,6 +24,7 @@ $__canonicalUrl = rtrim(SITE, '/') . '/' . ltrim($_SERVER['REQUEST_URI'] ?? '', 
 <meta property="og:description" content="<?= htmlspecialchars($common['description'], ENT_QUOTES) ?>">
 <meta property="og:url" content="<?= htmlspecialchars($__canonicalUrl, ENT_QUOTES) ?>">
 <link rel="icon" type="image/x-icon" href="<?=RS_IMG?>/header/favicon.ico">
+<meta name="naver-site-verification" content="3d0b45348b2234781e2510c72c8226589ce15b43" />
 <style>
 
 </style>

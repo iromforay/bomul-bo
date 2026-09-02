@@ -27,6 +27,18 @@ class BoardModel extends CI_Model
         return $this->getExecQuery($sql);
     }
 
+    // 텔레그램 알림 배치(#38) - (from, to] 구간에 등록된 게시글 목록(타입 한정)
+    public function get_registered_between($board_type, $from, $to)
+    {
+        $sql = "SELECT `board_no`, `title`, `writer_name`, `writer_phone`, `customer_no`, `created_at`
+                FROM `$this->table`
+                WHERE `board_type` = " . $this->db->escape($board_type) . "
+                  AND `created_at` > " . $this->db->escape($from) . "
+                  AND `created_at` <= " . $this->db->escape($to) . "
+                ORDER BY `created_at` ASC";
+        return $this->getExecQuery($sql);
+    }
+
     public function incrementViewCount($board_no)
     {
         $sql = "UPDATE `$this->table` SET `view_count` = `view_count` + 1 WHERE `$this->primaryKey` = " . $this->db->escape((int) $board_no);

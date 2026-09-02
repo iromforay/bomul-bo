@@ -71,6 +71,17 @@ class ServiceApplyModel extends CI_Model
         return !empty($rows);
     }
 
+    // 텔레그램 알림 배치(#38) - (from, to] 구간에 접수된 서비스 신청 목록
+    public function get_applied_between($from, $to)
+    {
+        $sql = "SELECT `apply_no`, `company_name`, `ceo_name`, `manager_phone`, `manager_email`, `created_at`
+                FROM `$this->table`
+                WHERE `created_at` > " . $this->db->escape($from) . "
+                  AND `created_at` <= " . $this->db->escape($to) . "
+                ORDER BY `created_at` ASC";
+        return $this->getExecQuery($sql);
+    }
+
     public function findByIdx($apply_no)
     {
         $rows = $this->findbyid((int) $apply_no);
